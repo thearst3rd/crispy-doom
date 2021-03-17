@@ -1916,6 +1916,14 @@ static default_t extra_defaults_list[] =
     //!
     // @game doom
     //
+    // Fix the blockmap bug.
+    //
+
+    CONFIG_VARIABLE_INT(crispy_blockmapfix),
+
+    //!
+    // @game doom
+    //
     // Variable player view bob.
     //
 

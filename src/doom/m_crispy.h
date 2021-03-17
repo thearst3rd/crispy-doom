@@ -44,6 +44,7 @@ extern multiitem_t multiitem_widgets[NUM_WIDGETS];
 extern multiitem_t multiitem_widescreen[NUM_RATIOS];
 
 extern void M_CrispyToggleAutomapstats(int choice);
+extern void M_CrispyToggleBlockmapfix(int choice);
 extern void M_CrispyToggleBobfactor(int choice);
 extern void M_CrispyToggleBrightmaps(int choice);
 extern void M_CrispyToggleCenterweapon(int choice);

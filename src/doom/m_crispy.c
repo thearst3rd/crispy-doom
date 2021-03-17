@@ -569,3 +569,10 @@ void M_CrispyToggleWidescreen(int choice)
 
     crispy->post_rendering_hook = M_CrispyToggleWidescreenHook;
 }
+
+void M_CrispyToggleBlockmapfix(int choice)
+{
+    choice = 0;
+
+    crispy->blockmapfix = !crispy->blockmapfix;
+}
