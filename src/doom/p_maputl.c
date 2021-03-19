@@ -532,7 +532,7 @@ P_BlockThingsIterator
 
     // [crispy] Blockmap bug fix - add other mobjs from
     // surrounding blocks that overlap this one
-    if (crispy->blockmapfix)
+    if (critical->blockmapfix)
     {
 	// Unwrapped for least number of bounding box checks
 	// (-1, -1)
