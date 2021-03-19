@@ -36,6 +36,8 @@
 // State.
 #include "r_state.h"
 
+extern boolean PIT_RadiusAttack (mobj_t* thing);
+
 //
 // P_AproxDistance
 // Gives an estimation of distance (not exact)
@@ -532,7 +534,7 @@ P_BlockThingsIterator
 
     // [crispy] Blockmap bug fix - add other mobjs from
     // surrounding blocks that overlap this one
-    if (critical->blockmapfix)
+    if (critical->blockmapfix && func != PIT_RadiusAttack)
     {
 	// Unwrapped for least number of bounding box checks
 	// (-1, -1)
