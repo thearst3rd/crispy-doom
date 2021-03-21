@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2019 Jonathan Dowland
 //
@@ -116,3 +117,4 @@ char *NET_GetRandomPetName()
 
     return M_StringJoin(a, " ", n, NULL);
 }
+#endif // !__WIIU__

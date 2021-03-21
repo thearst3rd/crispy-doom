@@ -19,7 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "doomtype.h"
 #include "deh_main.h"
 #include "deh_str.h"
@@ -173,6 +178,7 @@ unsigned int net_local_is_freedoom;
 #define NET_CL_ExpandTicNum(b) NET_ExpandTicNum(recvwindow_start, (b))
 
 // Called when we become disconnected from the server
+#ifndef __WIIU__
 
 static void NET_CL_Disconnected(void)
 {
@@ -1228,3 +1234,4 @@ void NET_BindVariables(void)
 {
     M_BindStringVariable("player_name", &net_player_name);
 }
+#endif // !__WIIU__

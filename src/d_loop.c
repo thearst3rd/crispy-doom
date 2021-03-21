@@ -184,10 +184,12 @@ static boolean BuildNewTic(void)
     memset(&cmd, 0, sizeof(ticcmd_t));
     loop_interface->BuildTiccmd(&cmd, maketic);
 
+#ifndef __WIIU__
     if (net_client_connected)
     {
         NET_CL_SendTiccmd(&cmd, maketic);
     }
+#endif // !__WIIU__
 
     ticdata[maketic % BACKUPTICS].cmds[localplayer] = cmd;
     ticdata[maketic % BACKUPTICS].ingame[localplayer] = true;
@@ -206,6 +208,7 @@ int      lasttime;
 
 void NetUpdate (void)
 {
+#ifndef __WIIU__
     int nowtime;
     int newtics;
     int	i;
@@ -247,6 +250,7 @@ void NetUpdate (void)
             break;
         }
     }
+#endif // !__WIIU__
 }
 
 static void D_Disconnected(void)
@@ -314,6 +318,7 @@ void D_StartGameLoop(void)
 static void BlockUntilStart(net_gamesettings_t *settings,
                             netgame_startup_callback_t callback)
 {
+#ifndef __WIIU__
     while (!NET_CL_GetSettings(settings))
     {
         NET_CL_Run();
@@ -332,11 +337,13 @@ static void BlockUntilStart(net_gamesettings_t *settings,
 
         I_Sleep(100);
     }
+#endif // !__WIIU__
 }
 
 void D_StartNetGame(net_gamesettings_t *settings,
                     netgame_startup_callback_t callback)
 {
+#ifndef __WIIU__
     int i;
 
     offsetms = 0;
@@ -426,11 +433,13 @@ void D_StartNetGame(net_gamesettings_t *settings,
     //{
     //    printf("Syncing netgames like Vanilla Doom.\n");
     //}
+#endif // !__WIIU__
 }
 
 boolean D_InitNetGame(net_connect_data_t *connect_data)
 {
     boolean result = false;
+#ifndef __WIIU__
     net_addr_t *addr = NULL;
     int i;
 
@@ -525,6 +534,7 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
         result = true;
     }
 
+#endif // !__WIIU__
     return result;
 }
 
@@ -536,8 +546,10 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 //
 void D_QuitNetGame (void)
 {
+#ifndef __WIIU__
     NET_SV_Shutdown();
     NET_CL_Disconnect();
+#endif // !__WIIU__
 }
 
 static int GetLowTic(void)

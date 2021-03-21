@@ -27,7 +27,12 @@
 
 #include "i_midipipe.h"
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "doomtype.h"
 #include "memio.h"
 #include "mus2mid.h"

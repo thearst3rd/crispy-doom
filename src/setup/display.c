@@ -26,7 +26,12 @@
 #include "mode.h"
 
 #include "display.h"
+
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #define WINDOW_HELP_URL "https://www.chocolate-doom.org/setup-display"
 

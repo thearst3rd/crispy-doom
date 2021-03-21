@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -18,7 +19,11 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #include "m_argv.h"
 #include "net_defs.h"
@@ -44,4 +49,4 @@ void D_DoomMain(void)
 
     NET_DedicatedServer();
 }
-
+#endif // !__WIIU__

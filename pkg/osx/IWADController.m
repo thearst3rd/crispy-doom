@@ -16,7 +16,12 @@
 #include <string.h>
 #include <AppKit/AppKit.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "IWADController.h"
 
 typedef enum

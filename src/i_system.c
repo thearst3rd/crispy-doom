@@ -32,7 +32,11 @@
 
 #include "SDL.h"
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #include "deh_str.h"
 #include "doomtype.h"
@@ -51,6 +55,15 @@
 
 #define DEFAULT_RAM 16*2 /* MiB [crispy] */
 #define MIN_RAM     4*4  /* MiB [crispy] */
+
+#ifdef __WIIU__
+#include <coreinit/thread.h>
+#include <coreinit/time.h>
+
+#include <whb/proc.h>
+#include <whb/log.h>
+#include <whb/log_console.h>
+#endif // __WIIU__
 
 
 typedef struct atexit_listentry_s atexit_listentry_t;
@@ -273,6 +286,30 @@ static boolean already_quitting = false;
 
 void I_Error (const char *error, ...)
 {
+#ifdef __WIIU__
+    char msgbuf[512];
+    va_list argptr;
+
+    // Write a copy of the message into buffer.
+    va_start(argptr, error);
+    memset(msgbuf, 0, sizeof(msgbuf));
+    M_vsnprintf(msgbuf, sizeof(msgbuf), error, argptr);
+    va_end(argptr);
+
+    WHBProcInit();
+    WHBLogConsoleInit();
+    WHBLogPrintf(msgbuf);
+
+    while (WHBProcIsRunning())
+    {
+        WHBLogConsoleDraw();
+        OSSleepTicks(OSMillisecondsToTicks(100));
+    }
+
+    WHBLogConsoleFree();
+    WHBProcShutdown();
+    exit(-1);
+#else
     char msgbuf[512];
     va_list argptr;
     atexit_listentry_t *entry;
@@ -338,6 +375,7 @@ void I_Error (const char *error, ...)
     SDL_Quit();
 
     exit(-1);
+#endif
 }
 
 //

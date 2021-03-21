@@ -754,6 +754,9 @@ static void BuildIWADDirList(void)
         AddIWADPath(env, "");
     }
 
+#ifdef __WIIU__
+    AddIWADDir("/crispy-doom");
+#else
 #ifdef _WIN32
 
     // Search the registry and find where IWADs have been installed.
@@ -773,6 +776,7 @@ static void BuildIWADDirList(void)
     AddSteamDirs();
 #endif
 #endif
+#endif // __WIIU__
 
     // Don't run this function again.
 

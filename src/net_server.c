@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -19,7 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #include "doomtype.h"
 #include "d_mode.h"
@@ -2047,3 +2052,4 @@ void NET_SV_Shutdown(void)
         I_Sleep(1);
     }
 }
+#endif // !__WIIU__

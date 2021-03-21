@@ -18,7 +18,12 @@
 
 #include <stdlib.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "d_iwad.h"
 #include "i_glob.h"
 #include "i_system.h"

@@ -22,7 +22,12 @@
 
 #include "i_glob.h"
 #include "m_misc.h"
+
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #if defined(_MSC_VER)
 // For Visual C++, we need to include the win_opendir module.

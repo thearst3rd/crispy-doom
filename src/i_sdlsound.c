@@ -17,7 +17,11 @@
 //	System interface for sound.
 //
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #include <stdio.h>
 #include <stdlib.h>

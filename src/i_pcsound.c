@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -329,4 +330,4 @@ sound_module_t sound_pcsound_module =
     I_PCS_StopSound,
     I_PCS_SoundIsPlaying,
 };
-
+#endif // !__WIIU__

@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -227,5 +228,5 @@ net_module_t net_loop_server_module =
     NET_SV_FreeAddress,
     NET_SV_ResolveAddress,
 };
-
+#endif // !__WIIU__
 

@@ -16,7 +16,12 @@
 //	Main program, simply calls D_DoomMain high level loop.
 //
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "crispy.h"
 
 #include <stdio.h>

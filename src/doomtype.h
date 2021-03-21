@@ -21,7 +21,11 @@
 #ifndef __DOOMTYPE__
 #define __DOOMTYPE__
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #if defined(_MSC_VER) && !defined(__cplusplus)
 #define inline __inline

@@ -15,7 +15,11 @@
 //     OPL Linux interface.
 //
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #if (defined(__i386__) || defined(__x86_64__)) && defined(HAVE_IOPERM)
 

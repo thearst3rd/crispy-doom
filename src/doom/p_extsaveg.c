@@ -20,7 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "doomstat.h"
 #include "doomtype.h"
 #include "m_misc.h"

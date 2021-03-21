@@ -19,7 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "pcsound.h"
 #include "pcsound_internal.h"
 

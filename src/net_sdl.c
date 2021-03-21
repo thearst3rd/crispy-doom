@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -375,4 +376,4 @@ net_module_t net_sdl_module =
     NET_SDL_FreeAddress,
     NET_SDL_ResolveAddress,
 };
-
+#endif // !__WIIU__

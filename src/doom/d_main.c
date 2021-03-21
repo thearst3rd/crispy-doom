@@ -26,7 +26,12 @@
 #include <string.h>
 #include <time.h> // [crispy] time_t, time(), struct tm, localtime()
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "deh_main.h"
 #include "doomdef.h"
 #include "doomstat.h"
@@ -395,7 +400,9 @@ void D_BindVariables(void)
     key_multi_msgplayer[2] = HUSTR_KEYBROWN;
     key_multi_msgplayer[3] = HUSTR_KEYRED;
 
+#ifndef __WIIU__
     NET_BindVariables();
+#endif // !__WIIU__
 
     M_BindIntVariable("mouse_sensitivity",      &mouseSensitivity);
     M_BindIntVariable("mouse_sensitivity_x2",   &mouseSensitivity_x2); // [crispy]
@@ -1279,6 +1286,7 @@ void PrintGameVersion(void)
 
 static void D_Endoom(void)
 {
+#ifndef __WIIU__
     byte *endoom;
 
     // Don't show ENDOOM if we have it disabled, or we're running
@@ -1294,6 +1302,7 @@ static void D_Endoom(void)
     endoom = W_CacheLumpName(DEH_String("ENDOOM"), PU_STATIC);
 
     I_Endoom(endoom);
+#endif // !__WIIU__
 }
 
 // Load dehacked patches needed for certain IWADs.
@@ -1382,6 +1391,7 @@ void D_DoomMain (void)
     DEH_printf("Z_Init: Init zone memory allocation daemon. \n");
     Z_Init ();
 
+#ifndef __WIIU__
     //!
     // @category net
     //
@@ -1437,6 +1447,7 @@ void D_DoomMain (void)
         NET_LANQuery();
         exit(0);
     }
+#endif // !__WIIU__
 
     //!
     // @category game
@@ -1687,6 +1698,8 @@ void D_DoomMain (void)
 
     crispy->pistolstart = M_ParmExists("-pistolstart");
 
+    // TODO - Research why this doesn't work on WiiU
+    #ifndef __WIIU__
     //!
     // @category mod
     //
@@ -1712,6 +1725,7 @@ void D_DoomMain (void)
         W_AutoLoadWADs(autoload_dir);
         free(autoload_dir);
     }
+    #endif // !__WIIU__
 
     // Load Dehacked patches specified on the command line with -deh.
     // Note that there's a very careful and deliberate ordering to how
@@ -2004,8 +2018,10 @@ void D_DoomMain (void)
         DEH_AddStringReplacement(PHUSTR_1, "level 33: betray");
     }
 
+#ifndef __WIIU__
     printf ("NET_Init: Init network subsystem.\n");
     NET_Init ();
+#endif // !__WIIU__
 
     // Initial netgame startup. Connect to server etc.
     D_ConnectNetGame();
@@ -2191,8 +2207,10 @@ void D_DoomMain (void)
     DEH_printf("S_Init: Setting up sound.\n");
     S_Init (sfxVolume * 8, musicVolume * 8);
 
+#ifndef __WIIU__
     DEH_printf("D_CheckNetGame: Checking network game status.\n");
     D_CheckNetGame ();
+#endif // !__WIIU__
 
     PrintGameVersion();
 

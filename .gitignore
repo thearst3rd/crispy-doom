@@ -57,3 +57,8 @@ GPATH
 GRTAGS
 GTAGS
 /HTML/
+
+# Wii U specific
+*.elf
+*.rpx
+build/

@@ -44,7 +44,12 @@
 #include "z_zone.h"
 #include "crispy.h"
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #ifdef HAVE_LIBPNG
 #include <png.h>
 #endif

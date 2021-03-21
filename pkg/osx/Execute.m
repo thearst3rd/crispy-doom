@@ -22,7 +22,11 @@
 
 #include <AppKit/AppKit.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
 
 #define RESPONSE_FILE "/tmp/launcher.rsp"
 #define TEMP_SCRIPT "/tmp/tempscript.sh"

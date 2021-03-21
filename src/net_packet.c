@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -322,7 +323,7 @@ void NET_WriteString(net_packet_t *packet, const char *string)
 
     packet->len += string_size;
 }
-
+#endif // !__WIIU__
 
 
 

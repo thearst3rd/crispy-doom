@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -21,7 +22,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "doomkeys.h"
 
 #include "i_system.h"
@@ -436,3 +442,4 @@ void NET_WaitForLaunch(void)
 
     TXT_Shutdown();
 }
+#endif // !__WIIU__

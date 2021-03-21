@@ -20,7 +20,12 @@
 
 #include "SDL_mixer.h"
 
+#ifdef __WIIU__
+#include "wiiu-config.h"
+#else
 #include "config.h"
+#endif // __WIIU__
+
 #include "doomtype.h"
 
 #include "gusconf.h"
@@ -99,7 +104,7 @@ static int snd_mport = 0;
 static sound_module_t *sound_modules[] = 
 {
     &sound_sdl_module,
-    &sound_pcsound_module,
+    //&sound_pcsound_module,
     NULL,
 };
 
@@ -228,8 +233,10 @@ void I_InitSound(boolean use_sfx_prefix)
 
     nomusicpacks = M_ParmExists("-nomusicpacks");
 
+    #ifndef __WIIU__
     // Auto configure the music pack directory.
     M_SetMusicPackDir();
+    #endif // !__WIIU__
 
     // Initialize the sound and music subsystems.
 

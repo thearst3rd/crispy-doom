@@ -1,3 +1,4 @@
+#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -144,4 +145,4 @@ void NET_ReleaseAddress(net_addr_t *addr)
         addr->module->FreeAddress(addr);
     }
 }
-
+#endif // !__WIIU__
