@@ -1,4 +1,3 @@
-#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -1003,4 +1002,4 @@ char *NET_EndSecureDemo(sha1_digest_t demo_hash)
 
     return signature;
 }
-#endif // !__WIIU__
+

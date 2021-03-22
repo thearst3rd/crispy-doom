@@ -1,4 +1,3 @@
-#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -2052,4 +2051,3 @@ void NET_SV_Shutdown(void)
         I_Sleep(1);
     }
 }
-#endif // !__WIIU__

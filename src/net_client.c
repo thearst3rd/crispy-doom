@@ -178,7 +178,6 @@ unsigned int net_local_is_freedoom;
 #define NET_CL_ExpandTicNum(b) NET_ExpandTicNum(recvwindow_start, (b))
 
 // Called when we become disconnected from the server
-#ifndef __WIIU__
 
 static void NET_CL_Disconnected(void)
 {
@@ -1234,4 +1233,3 @@ void NET_BindVariables(void)
 {
     M_BindStringVariable("player_name", &net_player_name);
 }
-#endif // !__WIIU__

@@ -400,9 +400,7 @@ void D_BindVariables(void)
     key_multi_msgplayer[2] = HUSTR_KEYBROWN;
     key_multi_msgplayer[3] = HUSTR_KEYRED;
 
-#ifndef __WIIU__
     NET_BindVariables();
-#endif // !__WIIU__
 
     M_BindIntVariable("mouse_sensitivity",      &mouseSensitivity);
     M_BindIntVariable("mouse_sensitivity_x2",   &mouseSensitivity_x2); // [crispy]
@@ -1543,11 +1541,15 @@ void D_DoomMain (void)
     }
     else
 #endif
+#ifdef __WIIU__
+    M_SetConfigDir("crispy-doom");
+#else
     {
         // Auto-detect the configuration dir.
 
         M_SetConfigDir(NULL);
     }
+#endif // __WIIU__
 
     //!
     // @category game
@@ -1597,8 +1599,13 @@ void D_DoomMain (void)
 
     if (iwadfile == NULL)
     {
+#ifdef __WIIU__
+        I_Error("No IWAD file was found. Make sure you put your WAD files\n"
+	        "in the folder sd:/crispy-doom");
+#else
         I_Error("Game mode indeterminate.  No IWAD file was found.  Try\n"
                 "specifying one with the '-iwad' command line parameter.\n");
+#endif // __WIIU__
     }
 
     modifiedgame = false;
@@ -1699,7 +1706,7 @@ void D_DoomMain (void)
     crispy->pistolstart = M_ParmExists("-pistolstart");
 
     // TODO - Research why this doesn't work on WiiU
-    #ifndef __WIIU__
+#ifndef __WIIU__
     //!
     // @category mod
     //
@@ -1725,7 +1732,7 @@ void D_DoomMain (void)
         W_AutoLoadWADs(autoload_dir);
         free(autoload_dir);
     }
-    #endif // !__WIIU__
+#endif // !__WIIU__
 
     // Load Dehacked patches specified on the command line with -deh.
     // Note that there's a very careful and deliberate ordering to how
@@ -2018,10 +2025,8 @@ void D_DoomMain (void)
         DEH_AddStringReplacement(PHUSTR_1, "level 33: betray");
     }
 
-#ifndef __WIIU__
     printf ("NET_Init: Init network subsystem.\n");
     NET_Init ();
-#endif // !__WIIU__
 
     // Initial netgame startup. Connect to server etc.
     D_ConnectNetGame();
@@ -2207,10 +2212,8 @@ void D_DoomMain (void)
     DEH_printf("S_Init: Setting up sound.\n");
     S_Init (sfxVolume * 8, musicVolume * 8);
 
-#ifndef __WIIU__
     DEH_printf("D_CheckNetGame: Checking network game status.\n");
     D_CheckNetGame ();
-#endif // !__WIIU__
 
     PrintGameVersion();
 

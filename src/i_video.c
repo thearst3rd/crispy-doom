@@ -138,12 +138,21 @@ int video_display = 0;
 
 // Screen width and height, from configuration file.
 
+#ifdef __WIIU__
+int window_width = 1280;
+int window_height = 720;
+#else
 int window_width = 800;
 int window_height = 600;
+#endif // __WIIU__
 
 // Fullscreen mode, 0x0 for SDL_WINDOW_FULLSCREEN_DESKTOP.
 
+#ifdef __WIIU__
+int fullscreen_width = 1280, fullscreen_height = 720;
+#else
 int fullscreen_width = 0, fullscreen_height = 0;
+#endif // __WIIU__
 
 // Maximum number of pixels to use for intermediate scale buffer.
 
@@ -1318,6 +1327,7 @@ static void SetVideoMode(void)
     w = window_width;
     h = window_height;
 
+#ifndef __WIIU__
     // In windowed mode, the window can be resized while the game is
     // running.
     window_flags = SDL_WINDOW_RESIZABLE;
@@ -1325,6 +1335,10 @@ static void SetVideoMode(void)
     // Set the highdpi flag - this makes a big difference on Macs with
     // retina displays, especially when using small window sizes.
     window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+#else
+    x = 0;
+    y = 0;
+#endif // !__WIIU__
 
     if (fullscreen)
     {
@@ -1343,6 +1357,8 @@ static void SetVideoMode(void)
         }
     }
 
+
+#ifndef __WIIU__
     // Running without window decorations is potentially useful if you're
     // playing in three window mode and want to line up three game windows
     // next to each other on a single desktop.
@@ -1353,6 +1369,7 @@ static void SetVideoMode(void)
     }
 
     I_GetWindowPosition(&x, &y, w, h);
+#endif // !__WIIU__
 
     // Create window and renderer contexts. We set the window title
     // later anyway and leave the window position "undefined". If
@@ -1395,6 +1412,10 @@ static void SetVideoMode(void)
         renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
       }
     }
+
+//#ifdef __WIIU__
+//    force_software_renderer = true;
+//#endif // __WIIU__
 
     if (force_software_renderer)
     {
@@ -1620,6 +1641,10 @@ void I_InitGraphics(void)
         I_Error("Failed to initialize video: %s", SDL_GetError());
     }
 
+    // For I_Error
+    extern boolean sdlStarted;
+    sdlStarted = true;
+
     // When in screensaver mode, run full screen and auto detect
     // screen dimensions (don't change video mode)
     if (screensaver_mode)
@@ -1673,10 +1698,12 @@ void I_InitGraphics(void)
     // setting the screen mode, so that the game doesn't start immediately
     // with the player unable to see anything.
 
+#ifndef __WIIU__
     if (fullscreen && !screensaver_mode)
     {
         SDL_Delay(startup_delay);
     }
+#endif // !__WIIU__
 
     // The actual 320x200 canvas that we draw to. This is the pixel buffer of
     // the 8-bit paletted screen buffer that gets blit on an intermediate

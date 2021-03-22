@@ -755,7 +755,7 @@ static void BuildIWADDirList(void)
     }
 
 #ifdef __WIIU__
-    AddIWADDir("/crispy-doom");
+    AddIWADDir("crispy-doom");
 #else
 #ifdef _WIN32
 

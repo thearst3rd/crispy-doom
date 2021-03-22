@@ -1,4 +1,3 @@
-#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -34,6 +33,7 @@
 // NETWORKING
 //
 
+#ifndef __WIIU__
 #include <SDL_net.h>
 
 #define DEFAULT_PORT 2342
@@ -136,9 +136,11 @@ static net_addr_t *NET_SDL_FindAddress(IPaddress *addr)
 
     return &new_entry->net_addr;
 }
+#endif // !__WIIU__
 
 static void NET_SDL_FreeAddress(net_addr_t *addr)
 {
+#ifndef __WIIU__
     int i;
     
     for (i=0; i<addr_table_size; ++i)
@@ -152,10 +154,12 @@ static void NET_SDL_FreeAddress(net_addr_t *addr)
     }
 
     I_Error("NET_SDL_FreeAddress: Attempted to remove an unused address!");
+#endif // !__WIIU__
 }
 
 static boolean NET_SDL_InitClient(void)
 {
+#ifndef __WIIU__
     int p;
 
     if (initted)
@@ -189,12 +193,14 @@ static boolean NET_SDL_InitClient(void)
 #endif
 
     initted = true;
+#endif // !__WIIU__
 
     return true;
 }
 
 static boolean NET_SDL_InitServer(void)
 {
+#ifndef __WIIU__
     int p;
 
     if (initted)
@@ -219,12 +225,14 @@ static boolean NET_SDL_InitServer(void)
 #endif
 
     initted = true;
+#endif // !__WIIU__
 
     return true;
 }
 
 static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
 {
+#ifndef __WIIU__
     UDPpacket sdl_packet;
     IPaddress ip;
    
@@ -269,10 +277,12 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
         I_Error("NET_SDL_SendPacket: Error transmitting packet: %s",
                 SDLNet_GetError());
     }
+#endif // !__WIIU__
 }
 
 static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 {
+#ifndef __WIIU__
     int result;
 
     result = SDLNet_UDP_Recv(udpsocket, recvpacket);
@@ -297,12 +307,14 @@ static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
     // Address
 
     *addr = NET_SDL_FindAddress(&recvpacket->address);
+#endif // !__WIIU__
 
     return true;
 }
 
 void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
 {
+#ifndef __WIIU__
     IPaddress *ip;
     uint32_t host;
     uint16_t port;
@@ -325,10 +337,14 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len)
         M_snprintf(portbuf, sizeof(portbuf), ":%i", port);
         M_StringConcat(buffer, portbuf, buffer_len);
     }
+#endif // !__WIIU__
 }
 
 net_addr_t *NET_SDL_ResolveAddress(const char *address)
 {
+#ifdef __WIIU__
+    return NULL;
+#else
     IPaddress ip;
     char *addr_hostname;
     int addr_port;
@@ -362,6 +378,7 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address)
     {
         return NET_SDL_FindAddress(&ip);
     }
+#endif // __WIIU__
 }
 
 // Complete module
@@ -376,4 +393,4 @@ net_module_t net_sdl_module =
     NET_SDL_FreeAddress,
     NET_SDL_ResolveAddress,
 };
-#endif // !__WIIU__
+

@@ -1,4 +1,3 @@
-#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -524,4 +523,4 @@ void NET_LogPacket(net_packet_t *packet)
     }
     fprintf(net_debug, "\n");
 }
-#endif // !__WIIU__
+

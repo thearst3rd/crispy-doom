@@ -283,10 +283,16 @@ void I_Quit (void)
 //
 
 static boolean already_quitting = false;
+boolean sdlStarted = false;
 
 void I_Error (const char *error, ...)
 {
 #ifdef __WIIU__
+    if (sdlStarted)
+    {
+        SDL_Quit();
+    }
+
     char msgbuf[512];
     va_list argptr;
 
@@ -299,6 +305,17 @@ void I_Error (const char *error, ...)
     WHBProcInit();
     WHBLogConsoleInit();
     WHBLogPrintf(msgbuf);
+
+    if (sdlStarted)
+    {
+        // Doesn't seem to respond to controller inputs anymore...
+        // Just close the whole thing after 5 seconds
+        WHBLogConsoleDraw();
+        OSSleepTicks(OSMillisecondsToTicks(5000));
+        WHBLogConsoleFree();
+        WHBProcShutdown();
+        exit(-1);
+    }
 
     while (WHBProcIsRunning())
     {

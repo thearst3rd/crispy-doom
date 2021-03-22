@@ -1,4 +1,3 @@
-#ifndef __WIIU__
 //
 // Copyright(C) 2005-2014 Simon Howard
 //
@@ -674,4 +673,4 @@ void NET_WriteProtocolList(net_packet_t *packet)
         NET_WriteProtocol(packet, i);
     }
 }
-#endif // !__WIIU__
+

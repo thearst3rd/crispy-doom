@@ -233,10 +233,11 @@ void I_InitSound(boolean use_sfx_prefix)
 
     nomusicpacks = M_ParmExists("-nomusicpacks");
 
-    #ifndef __WIIU__
+    // TODO: Research why this doesn't work on Wii U
+#ifndef __WIIU__
     // Auto configure the music pack directory.
     M_SetMusicPackDir();
-    #endif // !__WIIU__
+#endif // !__WIIU__
 
     // Initialize the sound and music subsystems.
 
