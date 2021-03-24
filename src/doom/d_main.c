@@ -80,6 +80,12 @@
 #include "r_local.h"
 #include "statdump.h"
 
+#ifdef __WIIU__
+#include <whb/proc.h>
+#include <whb/log.h>
+#include <whb/log_console.h>
+#endif // __WIIU__
+
 
 #include "d_main.h"
 
@@ -598,10 +604,19 @@ void D_DoomLoop (void)
         wipegamestate = gamestate;
     }
 
+#ifdef __WIIU__
+    while (WHBProcIsRunning())
+#else
     while (1)
+#endif // __WIIU__
     {
         D_RunFrame();
     }
+
+#ifdef __WIIU__
+    WHBProcShutdown();
+    I_Quit();
+#endif // __WIIU__
 }
 
 
@@ -1542,7 +1557,7 @@ void D_DoomMain (void)
     else
 #endif
 #ifdef __WIIU__
-    M_SetConfigDir("crispy-doom");
+    M_SetConfigDir(HOMEBREW_APP_PATH "/config/");
 #else
     {
         // Auto-detect the configuration dir.
@@ -1601,7 +1616,7 @@ void D_DoomMain (void)
     {
 #ifdef __WIIU__
         I_Error("No IWAD file was found. Make sure you put your WAD files\n"
-	        "in the folder sd:/crispy-doom");
+                "in the folder sd:/" HOMEBREW_APP_PATH "/wads");
 #else
         I_Error("Game mode indeterminate.  No IWAD file was found.  Try\n"
                 "specifying one with the '-iwad' command line parameter.\n");

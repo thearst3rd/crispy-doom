@@ -283,50 +283,12 @@ void I_Quit (void)
 //
 
 static boolean already_quitting = false;
+#ifdef __WIIU__
 boolean sdlStarted = false;
+#endif // __WIIU__
 
 void I_Error (const char *error, ...)
 {
-#ifdef __WIIU__
-    if (sdlStarted)
-    {
-        SDL_Quit();
-    }
-
-    char msgbuf[512];
-    va_list argptr;
-
-    // Write a copy of the message into buffer.
-    va_start(argptr, error);
-    memset(msgbuf, 0, sizeof(msgbuf));
-    M_vsnprintf(msgbuf, sizeof(msgbuf), error, argptr);
-    va_end(argptr);
-
-    WHBProcInit();
-    WHBLogConsoleInit();
-    WHBLogPrintf(msgbuf);
-
-    if (sdlStarted)
-    {
-        // Doesn't seem to respond to controller inputs anymore...
-        // Just close the whole thing after 5 seconds
-        WHBLogConsoleDraw();
-        OSSleepTicks(OSMillisecondsToTicks(5000));
-        WHBLogConsoleFree();
-        WHBProcShutdown();
-        exit(-1);
-    }
-
-    while (WHBProcIsRunning())
-    {
-        WHBLogConsoleDraw();
-        OSSleepTicks(OSMillisecondsToTicks(100));
-    }
-
-    WHBLogConsoleFree();
-    WHBProcShutdown();
-    exit(-1);
-#else
     char msgbuf[512];
     va_list argptr;
     atexit_listentry_t *entry;
@@ -334,14 +296,28 @@ void I_Error (const char *error, ...)
 
     if (already_quitting)
     {
+#ifdef __WIIU__
+        WHBLogPrintf("Warning: recursive call to I_Error detected.\n");
+        WHBLogConsoleDraw();
+        OSSleepTicks(OSMillisecondsToTicks(5000));
+        WHBLogConsoleFree();
+        WHBProcShutdown();
+#else
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
+#endif // __WIIU__
         exit(-1);
     }
     else
     {
+#ifdef __WIIU__
+        if (sdlStarted)
+            SDL_Quit();
+        WHBLogConsoleInit();
+#endif // __WIIU__
         already_quitting = true;
     }
 
+#ifndef __WIIU__
     // Message first.
     va_start(argptr, error);
     //fprintf(stderr, "\nError: ");
@@ -349,12 +325,19 @@ void I_Error (const char *error, ...)
     fprintf(stderr, "\n\n");
     va_end(argptr);
     fflush(stderr);
+#endif // !__WIIU__
 
     // Write a copy of the message into buffer.
     va_start(argptr, error);
     memset(msgbuf, 0, sizeof(msgbuf));
     M_vsnprintf(msgbuf, sizeof(msgbuf), error, argptr);
     va_end(argptr);
+
+#ifdef __WIIU__
+    WHBLogPrintf(msgbuf);
+    WHBLogConsoleDraw();
+    OSSleepTicks(OSMillisecondsToTicks(100));
+#endif // __WIIU__
 
     // Shutdown. Here might be other errors.
 
@@ -370,6 +353,7 @@ void I_Error (const char *error, ...)
         entry = entry->next;
     }
 
+#ifndef __WIIU__
     //!
     // @category obscure
     //
@@ -390,9 +374,14 @@ void I_Error (const char *error, ...)
     // abort();
 
     SDL_Quit();
+#else
+    WHBLogConsoleDraw();
+    OSSleepTicks(OSMillisecondsToTicks(5000));
+    WHBLogConsoleFree();
+    WHBProcShutdown();
+#endif // !__WIIU__
 
     exit(-1);
-#endif
 }
 
 //

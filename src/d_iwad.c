@@ -755,7 +755,7 @@ static void BuildIWADDirList(void)
     }
 
 #ifdef __WIIU__
-    AddIWADDir("crispy-doom");
+    AddIWADDir(HOMEBREW_APP_PATH "/wads");
 #else
 #ifdef _WIN32
 

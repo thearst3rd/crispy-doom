@@ -798,6 +798,7 @@ static default_t extra_defaults_list[] =
 
     CONFIG_VARIABLE_INT(vga_porch_flash),
 
+#ifndef __WIIU__
     //!
     // Window width when running in windowed mode.
     //
@@ -833,6 +834,7 @@ static default_t extra_defaults_list[] =
     //
 
     CONFIG_VARIABLE_INT(force_software_renderer),
+#endif // !__WIIU__
 
     //!
     // Maximum number of pixels to use for intermediate scaling buffer.

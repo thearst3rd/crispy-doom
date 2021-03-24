@@ -118,3 +118,6 @@
 
 /* Version number of package */
 #define VERSION "5.10.1"
+
+// TODO: Be able to change this rather than being a macro
+#define HOMEBREW_APP_PATH "wiiu/apps/crispy-doom"

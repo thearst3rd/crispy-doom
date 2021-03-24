@@ -34,6 +34,10 @@
 #include "m_argv.h"
 #include "m_misc.h" // [crispy] M_snprintf()
 
+#ifdef __WIIU__
+#include <whb/proc.h>
+#endif // __WIIU__
+
 //
 // D_DoomMain()
 // Not a globally visible function, just included for source reference,
@@ -44,6 +48,9 @@ void D_DoomMain (void);
 
 int main(int argc, char **argv)
 {
+#ifdef __WIIU__
+    WHBProcInit();
+#endif // __WIIU__
     // save arguments
 
     myargc = argc;

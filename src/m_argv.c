@@ -421,9 +421,13 @@ char *exedir = NULL;
 
 void M_SetExeDir(void)
 {
+#ifdef __WIIU__
+    exedir = HOMEBREW_APP_PATH "/";
+#else
     char *dirname;
 
     dirname = M_DirName(myargv[0]);
     exedir = M_StringJoin(dirname, DIR_SEPARATOR_S, NULL);
     free(dirname);
+#endif // __WIIU__
 }

@@ -130,7 +130,11 @@ char *video_driver = "";
 
 // Window position:
 
+#ifdef __WIIU__
+char *window_position = "";
+#else
 char *window_position = "center";
+#endif // __WIIU__
 
 // SDL display number on which to run.
 
@@ -139,8 +143,8 @@ int video_display = 0;
 // Screen width and height, from configuration file.
 
 #ifdef __WIIU__
-int window_width = 1280;
-int window_height = 720;
+int window_width = 1280; //0;
+int window_height = 720; //0;
 #else
 int window_width = 800;
 int window_height = 600;
@@ -178,7 +182,11 @@ int vga_porch_flash = false;
 // Force software rendering, for systems which lack effective hardware
 // acceleration
 
+//#ifdef __WIIU__
+//int force_software_renderer = true;
+//#else
 int force_software_renderer = false;
+//#endif // __WIIU__
 
 // Time to wait for the screen to settle on startup before starting the
 // game (ms)
@@ -238,6 +246,9 @@ unsigned int joywait = 0;
 
 static boolean MouseShouldBeGrabbed()
 {
+#ifdef __WIIU__
+    return false;
+#else
     // never grab the mouse when in screensaver mode
    
     if (screensaver_mode)
@@ -275,6 +286,7 @@ static boolean MouseShouldBeGrabbed()
     {
         return true;
     }
+#endif // __WIIU__
 }
 
 void I_SetGrabMouseCallback(grabmouse_callback_t func)
@@ -291,6 +303,7 @@ void I_DisplayFPSDots(boolean dots_on)
 
 static void SetShowCursor(boolean show)
 {
+#ifndef __WIIU__
     if (!screensaver_mode)
     {
         // When the cursor is hidden, grab the input.
@@ -298,6 +311,7 @@ static void SetShowCursor(boolean show)
         SDL_SetRelativeMouseMode(!show);
         SDL_GetRelativeMouseState(NULL, NULL);
     }
+#endif // !__WIIU__
 }
 
 void I_ShutdownGraphics(void)
@@ -418,6 +432,7 @@ static boolean ToggleFullScreenKeyShortcut(SDL_Keysym *sym)
 
 static void I_ToggleFullScreen(void)
 {
+#ifndef __WIIU__
     unsigned int flags = 0;
 
     // TODO: Consider implementing fullscreen toggle for SDL_WINDOW_FULLSCREEN
@@ -442,6 +457,7 @@ static void I_ToggleFullScreen(void)
         AdjustWindowSize();
         SDL_SetWindowSize(screen, window_width, window_height);
     }
+#endif // !__WIIU__
 }
 
 void I_GetEvent(void)
@@ -1615,12 +1631,13 @@ void I_InitGraphics(void)
 #ifndef CRISPY_TRUECOLOR
     byte *doompal;
 #endif
+
+#ifndef __WIIU__
     char *env;
 
     // Pass through the XSCREENSAVER_WINDOW environment variable to 
     // SDL_WINDOWID, to embed the SDL window into the Xscreensaver
     // window.
-
     env = getenv("XSCREENSAVER_WINDOW");
 
     if (env != NULL)
@@ -1633,6 +1650,7 @@ void I_InitGraphics(void)
 
         putenv(winenv);
     }
+#endif // !__WIIU__
 
     SetSDLVideoDriver();
 
@@ -1641,9 +1659,11 @@ void I_InitGraphics(void)
         I_Error("Failed to initialize video: %s", SDL_GetError());
     }
 
+#ifdef __WIIU__
     // For I_Error
     extern boolean sdlStarted;
     sdlStarted = true;
+#endif // __WIIU__
 
     // When in screensaver mode, run full screen and auto detect
     // screen dimensions (don't change video mode)
@@ -1943,12 +1963,16 @@ void I_BindVideoVariables(void)
     M_BindIntVariable("integer_scaling",           &integer_scaling);
     M_BindIntVariable("vga_porch_flash",           &vga_porch_flash);
     M_BindIntVariable("startup_delay",             &startup_delay);
+#ifndef __WIIU__
     M_BindIntVariable("fullscreen_width",          &fullscreen_width);
     M_BindIntVariable("fullscreen_height",         &fullscreen_height);
     M_BindIntVariable("force_software_renderer",   &force_software_renderer);
+#endif // !__WIIU__
     M_BindIntVariable("max_scaling_buffer_pixels", &max_scaling_buffer_pixels);
+#ifndef __WIIU__
     M_BindIntVariable("window_width",              &window_width);
     M_BindIntVariable("window_height",             &window_height);
+#endif
     M_BindIntVariable("grabmouse",                 &grabmouse);
     M_BindStringVariable("video_driver",           &video_driver);
     M_BindStringVariable("window_position",        &window_position);
