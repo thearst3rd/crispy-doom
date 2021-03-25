@@ -104,7 +104,9 @@ static int snd_mport = 0;
 static sound_module_t *sound_modules[] = 
 {
     &sound_sdl_module,
-    //&sound_pcsound_module,
+#ifndef __WIIU__
+    &sound_pcsound_module,
+#endif // !__WIIU__
     NULL,
 };
 

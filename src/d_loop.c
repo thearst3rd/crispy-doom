@@ -520,7 +520,9 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 
         // Wait for launch message received from server.
 
-        //NET_WaitForLaunch();
+#ifndef __WIIU__
+        NET_WaitForLaunch();
+#endif // !__WIIU__
 
         result = true;
     }

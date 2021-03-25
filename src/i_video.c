@@ -1429,10 +1429,6 @@ static void SetVideoMode(void)
       }
     }
 
-//#ifdef __WIIU__
-//    force_software_renderer = true;
-//#endif // __WIIU__
-
     if (force_software_renderer)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;
@@ -1638,6 +1634,7 @@ void I_InitGraphics(void)
     // Pass through the XSCREENSAVER_WINDOW environment variable to 
     // SDL_WINDOWID, to embed the SDL window into the Xscreensaver
     // window.
+
     env = getenv("XSCREENSAVER_WINDOW");
 
     if (env != NULL)
