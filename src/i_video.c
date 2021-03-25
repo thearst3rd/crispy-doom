@@ -143,8 +143,8 @@ int video_display = 0;
 // Screen width and height, from configuration file.
 
 #ifdef __WIIU__
-int window_width = 1280; //0;
-int window_height = 720; //0;
+int window_width = 1280;
+int window_height = 720;
 #else
 int window_width = 800;
 int window_height = 600;
@@ -904,6 +904,23 @@ void I_FinishUpdate (void)
 #endif
 
     // Draw!
+
+    // God awful hack, just make sure the buffer is loaded properly
+    SDL_Rect r;
+    r.w = 1;
+    r.h = 1;
+    for (int yy = 0; yy < SCREENHEIGHT; yy++)
+    {
+        r.y = yy;
+        for (int xx = 0; xx < SCREENWIDTH; xx++)
+        {
+            r.x = xx;
+            uint8_t pix = I_VideoBuffer[yy * SCREENWIDTH + xx];
+            SDL_Color col = palette[pix];
+            SDL_SetRenderDrawColor(renderer, col.r, col.g, col.b, 255);
+            SDL_RenderFillRect(renderer, &r);
+        }
+    }
 
     SDL_RenderPresent(renderer);
 
@@ -1954,13 +1971,15 @@ void I_RenderReadPixels(byte **data, int *w, int *h, int *p)
 void I_BindVideoVariables(void)
 {
     M_BindIntVariable("use_mouse",                 &usemouse);
+#ifndef __WIIU__
     M_BindIntVariable("fullscreen",                &fullscreen);
+#endif // !__WIIU__
     M_BindIntVariable("video_display",             &video_display);
     M_BindIntVariable("aspect_ratio_correct",      &aspect_ratio_correct);
     M_BindIntVariable("integer_scaling",           &integer_scaling);
     M_BindIntVariable("vga_porch_flash",           &vga_porch_flash);
-    M_BindIntVariable("startup_delay",             &startup_delay);
 #ifndef __WIIU__
+    M_BindIntVariable("startup_delay",             &startup_delay);
     M_BindIntVariable("fullscreen_width",          &fullscreen_width);
     M_BindIntVariable("fullscreen_height",         &fullscreen_height);
     M_BindIntVariable("force_software_renderer",   &force_software_renderer);
@@ -1972,7 +1991,9 @@ void I_BindVideoVariables(void)
 #endif
     M_BindIntVariable("grabmouse",                 &grabmouse);
     M_BindStringVariable("video_driver",           &video_driver);
+#ifndef __WIIU__
     M_BindStringVariable("window_position",        &window_position);
+#endif // !__WIIU__
     M_BindIntVariable("usegamma",                  &usegamma);
     M_BindIntVariable("png_screenshots",           &png_screenshots);
 }

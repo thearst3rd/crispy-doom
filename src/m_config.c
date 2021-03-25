@@ -762,6 +762,7 @@ static default_t extra_defaults_list[] =
     // window at the specified coordinates.
     //
 
+#ifndef __WIIU__
     CONFIG_VARIABLE_STRING(window_position),
 
     //!
@@ -776,6 +777,7 @@ static default_t extra_defaults_list[] =
     // effect if running in windowed mode (fullscreen=0) and
     // window_position is not set to "center".
     //
+#endif // !__WIIU__
 
     CONFIG_VARIABLE_INT(video_display),
 
@@ -851,6 +853,7 @@ static default_t extra_defaults_list[] =
     // for a brief interval after changing video modes.
     //
 
+#ifndef __WIIU__
     CONFIG_VARIABLE_INT(startup_delay),
 
     //!
@@ -858,6 +861,7 @@ static default_t extra_defaults_list[] =
     //
     // If non-zero, display the graphical startup screen.
     //
+#endif // !__WIIU__
 
     CONFIG_VARIABLE_INT(graphical_startup),
 
