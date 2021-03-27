@@ -152,11 +152,11 @@ int window_height = 600;
 
 // Fullscreen mode, 0x0 for SDL_WINDOW_FULLSCREEN_DESKTOP.
 
-#ifdef __WIIU__
-int fullscreen_width = 1280, fullscreen_height = 720;
-#else
+//#ifdef __WIIU__
+//int fullscreen_width = 1280, fullscreen_height = 720;
+//#else
 int fullscreen_width = 0, fullscreen_height = 0;
-#endif // __WIIU__
+//#endif // __WIIU__
 
 // Maximum number of pixels to use for intermediate scale buffer.
 
@@ -707,7 +707,20 @@ static void CreateUpscaledTexture(boolean force)
         h_upscale = 1;
     }
 
+#ifndef __WIIU__
     LimitTextureSize(&w_upscale, &h_upscale);
+#else
+    if (crispy->hires)
+    {
+        w_upscale = 1;
+        h_upscale = 1;
+    }
+    else
+    {
+        w_upscale = 2;
+        h_upscale = 2;
+    }
+#endif // !__WIIU__
 
     // Create a new texture only if the upscale factors have actually changed.
 
@@ -730,6 +743,11 @@ static void CreateUpscaledTexture(boolean force)
                                 SDL_TEXTUREACCESS_TARGET,
                                 w_upscale*SCREENWIDTH,
                                 h_upscale*SCREENHEIGHT);
+
+    if (new_texture == NULL)
+    {
+        I_Error("SDL_CreateTexture() failed: %s", SDL_GetError());
+    }
 
     old_texture = texture_upscaled;
     texture_upscaled = new_texture;
@@ -905,6 +923,7 @@ void I_FinishUpdate (void)
 
     // Draw!
 
+/*
     // God awful hack, just make sure the buffer is loaded properly
     SDL_Rect r;
     r.w = 1;
@@ -921,6 +940,7 @@ void I_FinishUpdate (void)
             SDL_RenderFillRect(renderer, &r);
         }
     }
+*/
 
     SDL_RenderPresent(renderer);
 
@@ -1452,6 +1472,10 @@ static void SetVideoMode(void)
         renderer_flags &= ~SDL_RENDERER_PRESENTVSYNC;
         crispy->vsync = false;
     }
+    else
+    {
+        renderer_flags |= SDL_RENDERER_ACCELERATED;
+    }
 
     if (renderer != NULL)
     {
@@ -1470,6 +1494,7 @@ static void SetVideoMode(void)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;
         renderer_flags &= ~SDL_RENDERER_PRESENTVSYNC;
+        renderer_flags &= ~SDL_RENDERER_ACCELERATED;
 
         renderer = SDL_CreateRenderer(screen, -1, renderer_flags);
 
@@ -1522,6 +1547,10 @@ static void SetVideoMode(void)
         screenbuffer = SDL_CreateRGBSurface(0,
                                             SCREENWIDTH, SCREENHEIGHT, 8,
                                             0, 0, 0, 0);
+        if (screenbuffer == NULL)
+        {
+            I_Error("SDL_CreateRGBSurface() failed: %s", SDL_GetError());
+        }
         SDL_FillRect(screenbuffer, NULL, 0);
     }
 #endif
@@ -1542,6 +1571,10 @@ static void SetVideoMode(void)
         argbbuffer = SDL_CreateRGBSurface(0,
                                           SCREENWIDTH, SCREENHEIGHT, bpp,
                                           rmask, gmask, bmask, amask);
+        if (argbbuffer == NULL)
+        {
+            I_Error("SDL_CreateRGBSurface() failed: %s", SDL_GetError());
+        }
 #ifdef CRISPY_TRUECOLOR
         SDL_FillRect(argbbuffer, NULL, I_MapRGB(0xff, 0x0, 0x0));
         redpane = SDL_CreateTextureFromSurface(renderer, argbbuffer);
@@ -1577,6 +1610,11 @@ static void SetVideoMode(void)
                                 pixel_format,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 SCREENWIDTH, SCREENHEIGHT);
+
+    if (texture == NULL)
+    {
+        I_Error("SDL_CreateTexture() failed: %s", SDL_GetError());
+    }
 
     // Initially create the upscaled texture for rendering to screen
 
@@ -1664,9 +1702,9 @@ void I_InitGraphics(void)
 
         putenv(winenv);
     }
-#endif // !__WIIU__
 
     SetSDLVideoDriver();
+#endif // !__WIIU__
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) 
     {
@@ -1973,8 +2011,8 @@ void I_BindVideoVariables(void)
     M_BindIntVariable("use_mouse",                 &usemouse);
 #ifndef __WIIU__
     M_BindIntVariable("fullscreen",                &fullscreen);
-#endif // !__WIIU__
     M_BindIntVariable("video_display",             &video_display);
+#endif // !__WIIU__
     M_BindIntVariable("aspect_ratio_correct",      &aspect_ratio_correct);
     M_BindIntVariable("integer_scaling",           &integer_scaling);
     M_BindIntVariable("vga_porch_flash",           &vga_porch_flash);
@@ -1990,8 +2028,8 @@ void I_BindVideoVariables(void)
     M_BindIntVariable("window_height",             &window_height);
 #endif
     M_BindIntVariable("grabmouse",                 &grabmouse);
-    M_BindStringVariable("video_driver",           &video_driver);
 #ifndef __WIIU__
+    M_BindStringVariable("video_driver",           &video_driver);
     M_BindStringVariable("window_position",        &window_position);
 #endif // !__WIIU__
     M_BindIntVariable("usegamma",                  &usegamma);

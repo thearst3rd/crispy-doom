@@ -748,6 +748,7 @@ static default_collection_t doom_defaults =
 
 static default_t extra_defaults_list[] =
 {
+#ifndef __WIIU__
     //!
     // Name of the SDL video driver to use.  If this is an empty string,
     // the default video driver is used.
@@ -762,7 +763,6 @@ static default_t extra_defaults_list[] =
     // window at the specified coordinates.
     //
 
-#ifndef __WIIU__
     CONFIG_VARIABLE_STRING(window_position),
 
     //!
@@ -777,9 +777,9 @@ static default_t extra_defaults_list[] =
     // effect if running in windowed mode (fullscreen=0) and
     // window_position is not set to "center".
     //
-#endif // !__WIIU__
 
     CONFIG_VARIABLE_INT(video_display),
+#endif // !__WIIU__
 
     //!
     // If non-zero, the screen will be stretched vertically to display
@@ -846,6 +846,7 @@ static default_t extra_defaults_list[] =
 
     CONFIG_VARIABLE_INT(max_scaling_buffer_pixels),
 
+#ifndef __WIIU__
     //!
     // Number of milliseconds to wait on startup after the video mode
     // has been set, before the game will start.  This allows the
@@ -853,15 +854,14 @@ static default_t extra_defaults_list[] =
     // for a brief interval after changing video modes.
     //
 
-#ifndef __WIIU__
     CONFIG_VARIABLE_INT(startup_delay),
+#endif // !__WIIU__
 
     //!
     // @game heretic hexen strife
     //
     // If non-zero, display the graphical startup screen.
     //
-#endif // !__WIIU__
 
     CONFIG_VARIABLE_INT(graphical_startup),
 
