@@ -152,11 +152,7 @@ int window_height = 600;
 
 // Fullscreen mode, 0x0 for SDL_WINDOW_FULLSCREEN_DESKTOP.
 
-//#ifdef __WIIU__
-//int fullscreen_width = 1280, fullscreen_height = 720;
-//#else
 int fullscreen_width = 0, fullscreen_height = 0;
-//#endif // __WIIU__
 
 // Maximum number of pixels to use for intermediate scale buffer.
 
@@ -182,11 +178,7 @@ int vga_porch_flash = false;
 // Force software rendering, for systems which lack effective hardware
 // acceleration
 
-//#ifdef __WIIU__
-//int force_software_renderer = true;
-//#else
 int force_software_renderer = false;
-//#endif // __WIIU__
 
 // Time to wait for the screen to settle on startup before starting the
 // game (ms)
@@ -743,11 +735,6 @@ static void CreateUpscaledTexture(boolean force)
                                 SDL_TEXTUREACCESS_TARGET,
                                 w_upscale*SCREENWIDTH,
                                 h_upscale*SCREENHEIGHT);
-
-    if (new_texture == NULL)
-    {
-        I_Error("SDL_CreateTexture() failed: %s", SDL_GetError());
-    }
 
     old_texture = texture_upscaled;
     texture_upscaled = new_texture;
@@ -1472,10 +1459,6 @@ static void SetVideoMode(void)
         renderer_flags &= ~SDL_RENDERER_PRESENTVSYNC;
         crispy->vsync = false;
     }
-    else
-    {
-        renderer_flags |= SDL_RENDERER_ACCELERATED;
-    }
 
     if (renderer != NULL)
     {
@@ -1494,7 +1477,6 @@ static void SetVideoMode(void)
     {
         renderer_flags |= SDL_RENDERER_SOFTWARE;
         renderer_flags &= ~SDL_RENDERER_PRESENTVSYNC;
-        renderer_flags &= ~SDL_RENDERER_ACCELERATED;
 
         renderer = SDL_CreateRenderer(screen, -1, renderer_flags);
 
@@ -1547,10 +1529,6 @@ static void SetVideoMode(void)
         screenbuffer = SDL_CreateRGBSurface(0,
                                             SCREENWIDTH, SCREENHEIGHT, 8,
                                             0, 0, 0, 0);
-        if (screenbuffer == NULL)
-        {
-            I_Error("SDL_CreateRGBSurface() failed: %s", SDL_GetError());
-        }
         SDL_FillRect(screenbuffer, NULL, 0);
     }
 #endif
@@ -1571,10 +1549,6 @@ static void SetVideoMode(void)
         argbbuffer = SDL_CreateRGBSurface(0,
                                           SCREENWIDTH, SCREENHEIGHT, bpp,
                                           rmask, gmask, bmask, amask);
-        if (argbbuffer == NULL)
-        {
-            I_Error("SDL_CreateRGBSurface() failed: %s", SDL_GetError());
-        }
 #ifdef CRISPY_TRUECOLOR
         SDL_FillRect(argbbuffer, NULL, I_MapRGB(0xff, 0x0, 0x0));
         redpane = SDL_CreateTextureFromSurface(renderer, argbbuffer);
@@ -1610,11 +1584,6 @@ static void SetVideoMode(void)
                                 pixel_format,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 SCREENWIDTH, SCREENHEIGHT);
-
-    if (texture == NULL)
-    {
-        I_Error("SDL_CreateTexture() failed: %s", SDL_GetError());
-    }
 
     // Initially create the upscaled texture for rendering to screen
 

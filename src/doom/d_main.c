@@ -82,8 +82,6 @@
 
 #ifdef __WIIU__
 #include <whb/proc.h>
-#include <whb/log.h>
-#include <whb/log_console.h>
 #endif // __WIIU__
 
 
