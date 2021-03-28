@@ -273,6 +273,10 @@ void I_Quit (void)
 
     SDL_Quit();
 
+#ifdef __WIIU__
+    WHBProcShutdown();
+#endif
+
     exit(0);
 }
 

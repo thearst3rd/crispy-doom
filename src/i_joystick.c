@@ -42,11 +42,19 @@ static SDL_Joystick *joystick = NULL;
 
 // Standard default.cfg Joystick enable/disable
 
+#ifdef __WIIU__
+static int usejoystick = 1;
+#else
 static int usejoystick = 0;
+#endif // __WIIU__
 
 // SDL GUID and index of the joystick to use.
 static char *joystick_guid = "";
+#ifdef __WIIU__
+static int joystick_index = 0; // Hard code Wii U Gamepad for now
+#else
 static int joystick_index = -1;
+#endif // __WIIU__
 
 // Which joystick axis to use for horizontal movement, and whether to
 // invert the direction:
@@ -148,17 +156,27 @@ void I_InitJoystick(void)
 {
     int index;
 
+#ifndef __WIIU__
     if (!usejoystick || !strcmp(joystick_guid, ""))
     {
         return;
     }
+#endif // !__WIIU__
 
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0)
     {
+#ifdef __WIIU__
+       I_Error("SDL_Init() joysticks failed: %s", SDL_GetError());
+#else
         return;
+#endif // __WIIU__
     }
 
+#ifdef __WIIU__
+    index = 0;
+#else
     index = DeviceIndex();
+#endif // __WIIU__
 
     if (index < 0)
     {
@@ -381,9 +399,11 @@ void I_BindJoystickVariables(void)
 {
     int i;
 
+#ifndef __WIIU__
     M_BindIntVariable("use_joystick",          &usejoystick);
     M_BindStringVariable("joystick_guid",      &joystick_guid);
     M_BindIntVariable("joystick_index",        &joystick_index);
+#endif // !__WIIU__
     M_BindIntVariable("joystick_x_axis",       &joystick_x_axis);
     M_BindIntVariable("joystick_y_axis",       &joystick_y_axis);
     M_BindIntVariable("joystick_strafe_axis",  &joystick_strafe_axis);

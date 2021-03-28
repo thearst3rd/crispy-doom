@@ -433,7 +433,9 @@ enum
     crispness_hires,
     crispness_widescreen,
     crispness_uncapped,
+#ifndef __WIIU__
     crispness_vsync,
+#endif // !__WIIU__
     crispness_smoothscaling,
     crispness_sep_rendering_,
 
@@ -457,7 +459,9 @@ static menuitem_t Crispness1Menu[]=
     {1,"",	M_CrispyToggleHires,'h'},
     {1,"",	M_CrispyToggleWidescreen,'w'},
     {1,"",	M_CrispyToggleUncapped,'u'},
+#ifndef __WIIU__
     {1,"",	M_CrispyToggleVsync,'v'},
+#endif // !__WIIU__
     {1,"",	M_CrispyToggleSmoothScaling,'s'},
     {-1,"",0,'\0'},
     {-1,"",0,'\0'},
@@ -1470,7 +1474,9 @@ static void M_DrawCrispness1(void)
     M_DrawCrispnessItem(crispness_hires, "High Resolution Rendering", crispy->hires, true);
     M_DrawCrispnessMultiItem(crispness_widescreen, "Widescreen Aspect Ratio", multiitem_widescreen, crispy->widescreen, aspect_ratio_correct);
     M_DrawCrispnessItem(crispness_uncapped, "Uncapped Framerate", crispy->uncapped, true);
+#ifndef __WIIU__
     M_DrawCrispnessItem(crispness_vsync, "Enable VSync", crispy->vsync, !force_software_renderer);
+#endif // !__WIIU__
     M_DrawCrispnessItem(crispness_smoothscaling, "Smooth Pixel Scaling", crispy->smoothscaling, true);
 
     M_DrawCrispnessSeparator(crispness_sep_visual, "Visual");

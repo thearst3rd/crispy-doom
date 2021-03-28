@@ -612,7 +612,6 @@ void D_DoomLoop (void)
     }
 
 #ifdef __WIIU__
-    WHBProcShutdown();
     I_Quit();
 #endif // __WIIU__
 }
