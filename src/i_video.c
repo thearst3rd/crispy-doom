@@ -910,25 +910,6 @@ void I_FinishUpdate (void)
 
     // Draw!
 
-/*
-    // God awful hack, just make sure the buffer is loaded properly
-    SDL_Rect r;
-    r.w = 1;
-    r.h = 1;
-    for (int yy = 0; yy < SCREENHEIGHT; yy++)
-    {
-        r.y = yy;
-        for (int xx = 0; xx < SCREENWIDTH; xx++)
-        {
-            r.x = xx;
-            uint8_t pix = I_VideoBuffer[yy * SCREENWIDTH + xx];
-            SDL_Color col = palette[pix];
-            SDL_SetRenderDrawColor(renderer, col.r, col.g, col.b, 255);
-            SDL_RenderFillRect(renderer, &r);
-        }
-    }
-*/
-
     SDL_RenderPresent(renderer);
 
     // [AM] Figure out how far into the current tic we're in as a fixed_t.
@@ -1002,6 +983,9 @@ void I_SetPalette (byte *doompalette)
         palette[i].r = gamma2table[usegamma][*doompalette++] & ~3;
         palette[i].g = gamma2table[usegamma][*doompalette++] & ~3;
         palette[i].b = gamma2table[usegamma][*doompalette++] & ~3;
+#ifdef __WIIU__
+        palette[i].a = 0xFF;
+#endif
     }
 
     palette_to_set = true;
