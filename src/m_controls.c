@@ -206,6 +206,43 @@ int key_menu_reloadlevel = 0; // [crispy]
 // Joystick controls
 //
 
+#ifdef __WIIU__
+/*
+// From wiiu-sdl/src/joystick/wiiu/SDL_wiiujoystick.h
+static VPADButtons vpad_button_map[] =
+{
+    VPAD_BUTTON_A, VPAD_BUTTON_B, VPAD_BUTTON_X, VPAD_BUTTON_Y,			0 1 2 3
+    VPAD_BUTTON_STICK_L, VPAD_BUTTON_STICK_R,					4 5
+    VPAD_BUTTON_L, VPAD_BUTTON_R,						6 7
+    VPAD_BUTTON_ZL, VPAD_BUTTON_ZR,						8 9
+    VPAD_BUTTON_PLUS, VPAD_BUTTON_MINUS,					10 11
+    VPAD_BUTTON_LEFT, VPAD_BUTTON_UP, VPAD_BUTTON_RIGHT, VPAD_BUTTON_DOWN,	12 13 14 15
+    VPAD_STICK_L_EMULATION_LEFT, VPAD_STICK_L_EMULATION_UP, VPAD_STICK_L_EMULATION_RIGHT, VPAD_STICK_L_EMULATION_DOWN,
+    VPAD_STICK_R_EMULATION_LEFT, VPAD_STICK_R_EMULATION_UP, VPAD_STICK_R_EMULATION_RIGHT, VPAD_STICK_R_EMULATION_DOWN
+};
+*/
+
+int joybaccept = 0; // A
+int joybcancel = 1; // B
+
+int joybfire = 9; // ZR
+int joybstrafe = -1;
+int joybuse = 0; // A
+int joybspeed = -1;
+
+int joybstrafeleft = -1;
+int joybstraferight = -1;
+
+int joybjump = 2; // X
+
+int joybprevweapon = 12; // dpad left
+int joybnextweapon = 14; // dpad right
+
+int joybmenu = 10; // plus
+int joybautomap = 11; // minus
+
+int joyboverlay = 3; // Y
+#else
 int joybfire = 0;
 int joybstrafe = 1;
 int joybuse = 3;
@@ -221,6 +258,7 @@ int joybnextweapon = -1;
 
 int joybmenu = -1;
 int joybautomap = -1;
+#endif // __WIIU__
 
 // Control whether if a mouse button is double clicked, it acts like 
 // "use" has been pressed

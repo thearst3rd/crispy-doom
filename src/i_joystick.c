@@ -34,7 +34,11 @@
 // When an axis is within the dead zone, it is set to zero.
 // This is 5% of the full range:
 
+#ifdef __WIIU__
+#define DEAD_ZONE (32768 / 6)
+#else
 #define DEAD_ZONE (32768 / 3)
+#endif // __WIIU__
 
 static SDL_Joystick *joystick = NULL;
 
@@ -59,7 +63,11 @@ static int joystick_index = -1;
 // Which joystick axis to use for horizontal movement, and whether to
 // invert the direction:
 
+#ifdef __WIIU__
+static int joystick_x_axis = 2; // Right stick x axis
+#else
 static int joystick_x_axis = 0;
+#endif // __WIIU__
 static int joystick_x_invert = 0;
 
 // Which joystick axis to use for vertical movement, and whether to
@@ -70,19 +78,34 @@ static int joystick_y_invert = 0;
 
 // Which joystick axis to use for strafing?
 
+#ifdef __WIIU__
+static int joystick_strafe_axis = 0; // Left stick x axis
+#else
 static int joystick_strafe_axis = -1;
+#endif // __WIIU__
 static int joystick_strafe_invert = 0;
 
 // Which joystick axis to use for looking?
 
+#ifdef __WIIU__
+static int joystick_look_axis = 3; // Right stick y axis
+#else
 static int joystick_look_axis = -1;
+#endif // __WIIU__
 static int joystick_look_invert = 0;
 
 // Virtual to physical button joystick button mapping. By default this
 // is a straight mapping.
+#ifdef __WIIU__
+static int joystick_physical_buttons[NUM_VIRTUAL_BUTTONS] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23
+};
+#else
 static int joystick_physical_buttons[NUM_VIRTUAL_BUTTONS] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 };
+#endif // __WIIU__
 
 void I_ShutdownJoystick(void)
 {
@@ -413,11 +436,13 @@ void I_BindJoystickVariables(void)
     M_BindIntVariable("joystick_look_axis",    &joystick_look_axis);
     M_BindIntVariable("joystick_look_invert",  &joystick_look_invert);
 
+#ifndef __WIIU__
     for (i = 0; i < NUM_VIRTUAL_BUTTONS; ++i)
     {
         char name[32];
         M_snprintf(name, sizeof(name), "joystick_physical_button%i", i);
         M_BindIntVariable(name, &joystick_physical_buttons[i]);
     }
+#endif
 }
 

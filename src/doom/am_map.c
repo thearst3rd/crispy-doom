@@ -738,6 +738,25 @@ AM_Responder
 
         return true;
     }
+#ifdef __WIIU__
+    if (automapactive)
+    {
+        if (ev->type == ev_joystick && joyboverlay >= 0
+            && (ev->data1 & (1 << joyboverlay)) != 0)
+        {
+            joywait = I_GetTime() + 5;
+
+            // [crispy] force redraw status bar
+            inhelpscreens = true;
+
+            crispy->automapoverlay = !crispy->automapoverlay;
+            if (crispy->automapoverlay)
+                plr->message = DEH_String(AMSTR_OVERLAYON);
+            else
+                plr->message = DEH_String(AMSTR_OVERLAYOFF);
+        }
+    }
+#endif
 
     if (!automapactive)
     {

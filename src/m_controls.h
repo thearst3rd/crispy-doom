@@ -164,6 +164,12 @@ extern int mousebnextweapon;
 extern int mousebinvleft;
 extern int mousebinvright;
 
+#ifdef __WIIU__
+extern int joybaccept;
+extern int joybcancel;
+extern int joyboverlay;
+#endif // __WIIU__
+
 extern int joybfire;
 extern int joybstrafe;
 extern int joybuse;

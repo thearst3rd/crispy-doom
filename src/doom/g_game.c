@@ -488,10 +488,19 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	    //	fprintf(stderr, "strafe left\n");
 	    side -= sidemove[speed]; 
 	}
+#ifdef __WIIU__
+	int analog_strafeside = joyxmove / (30000 / sidemove[1]);
+	if (analog_strafeside > sidemove[1])
+		analog_strafeside = sidemove[1];
+	if (analog_strafeside < -sidemove[1])
+		analog_strafeside = -sidemove[1];
+	side += analog_strafeside;
+#else
 	if (joyxmove > 0) 
 	    side += sidemove[speed]; 
 	if (joyxmove < 0) 
 	    side -= sidemove[speed]; 
+#endif // __WIIU__
  
     } 
     else 
@@ -500,10 +509,19 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	    cmd->angleturn -= angleturn[tspeed]; 
 	if (gamekeydown[key_left]) 
 	    cmd->angleturn += angleturn[tspeed]; 
+#ifdef __WIIU__
+	int analog_angleturn = joyxmove / 20;
+	if (analog_angleturn > 1500)
+	    analog_angleturn = 1500;
+	if (analog_angleturn < -1500)
+	    analog_angleturn = -1500;
+	cmd->angleturn -= analog_angleturn;
+#else
 	if (joyxmove > 0) 
 	    cmd->angleturn -= angleturn[tspeed]; 
 	if (joyxmove < 0) 
 	    cmd->angleturn += angleturn[tspeed]; 
+#endif // __WIIU__
     } 
  
     if (gamekeydown[key_up] || gamekeydown[key_alt_up]) // [crispy] add key_alt_*
@@ -517,15 +535,28 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 	forward -= forwardmove[speed]; 
     }
 
+#ifdef __WIIU__
+    int analog_forward = joyymove / (30000 / forwardmove[1]);
+    if (analog_forward > forwardmove[1])
+        analog_forward = forwardmove[1];
+    if (analog_forward < -forwardmove[1])
+        analog_forward = -forwardmove[1];
+    forward -= analog_forward;
+#else
     if (joyymove < 0) 
         forward += forwardmove[speed]; 
     if (joyymove > 0) 
         forward -= forwardmove[speed]; 
+#endif // __WIIU__
 
     if (gamekeydown[key_strafeleft] || gamekeydown[key_alt_strafeleft] // [crispy] add key_alt_*
      || joybuttons[joybstrafeleft]
      || mousebuttons[mousebstrafeleft]
+#ifdef __WIIU__
+     )
+#else
      || joystrafemove < 0)
+#endif // __WIIU__
     {
         side -= sidemove[speed];
     }
@@ -533,10 +564,23 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     if (gamekeydown[key_straferight] || gamekeydown[key_alt_straferight] // [crispy] add key_alt_*
      || joybuttons[joybstraferight]
      || mousebuttons[mousebstraferight]
+#ifdef __WIIU__
+     )
+#else
      || joystrafemove > 0)
+#endif // __WIIU__
     {
         side += sidemove[speed]; 
     }
+
+#ifdef __WIIU__
+    int analog_side = joystrafemove / (30000 / sidemove[1]);
+    if (analog_side > sidemove[1])
+        analog_side = sidemove[1];
+    if (analog_side < -sidemove[1])
+        analog_side = -sidemove[1];
+    side += analog_side;
+#endif
 
     // [crispy] look up/down/center keys
     if (crispy->freelook)

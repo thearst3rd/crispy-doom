@@ -33,8 +33,13 @@
 //
 //	M_Menu.C
 //
+#ifdef __WIIU__
+#define PRESSKEY 	"press a btn."
+#define PRESSYN 	"press a or b."
+#else
 #define PRESSKEY 	"press a key."
 #define PRESSYN 	"press y or n."
+#endif // __WIIU__
 #define QUITMSG	"are you sure you want to\nquit this great game?"
 #define LOADNET 	"you can't do load while in a net game!\n\n"PRESSKEY
 #define QLOADNET	"you can't quickload during a netgame!\n\n"PRESSKEY
@@ -60,7 +65,11 @@
 #define NETEND	"you can't end a netgame!\n\n"PRESSKEY
 #define ENDGAME	"are you sure you want to end the game?\n\n"PRESSYN
 
+#ifdef __WIIU__
+#define DOSY		"(press a to quit.)" // [crispy] remove " to dos.)"
+#else
 #define DOSY		"(press y to quit.)" // [crispy] remove " to dos.)"
+#endif // __WIIU__
 
 #define DETAILHI	"High detail"
 #define DETAILLO	"Low detail"

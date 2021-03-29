@@ -2284,7 +2284,11 @@ boolean M_Responder (event_t* ev)
 #define JOY_BUTTON_MAPPED(x) ((x) >= 0)
 #define JOY_BUTTON_PRESSED(x) (JOY_BUTTON_MAPPED(x) && (ev->data1 & (1 << (x))) != 0)
 
+#ifdef __WIIU__
+            if (JOY_BUTTON_PRESSED(joybaccept))
+#else
             if (JOY_BUTTON_PRESSED(joybfire))
+#endif // __WIIU__
             {
                 // Simulate a 'Y' keypress when Doom show a Y/N dialog with Fire button.
                 if (messageToPrint && messageNeedsInput)
@@ -2307,7 +2311,11 @@ boolean M_Responder (event_t* ev)
                 }
                 joywait = I_GetTime() + 5;
             }
+#ifdef __WIIU__
+            if (JOY_BUTTON_PRESSED(joybcancel))
+#else
             if (JOY_BUTTON_PRESSED(joybuse))
+#endif // __WIIU__
             {
                 // Simulate a 'N' keypress when Doom show a Y/N dialog with Use button.
                 if (messageToPrint && messageNeedsInput)

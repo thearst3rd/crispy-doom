@@ -1222,6 +1222,7 @@ static default_t extra_defaults_list[] =
 
     CONFIG_VARIABLE_INT(joystick_look_invert),
 
+#ifndef __WIIU__
     //!
     // The physical joystick button that corresponds to joystick
     // virtual button #0.
@@ -1298,6 +1299,7 @@ static default_t extra_defaults_list[] =
     //
 
     CONFIG_VARIABLE_INT(joystick_physical_button10),
+#endif // !__WIIU__
 
     //!
     // Joystick virtual button to make the player strafe left.
