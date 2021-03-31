@@ -983,9 +983,6 @@ void I_SetPalette (byte *doompalette)
         palette[i].r = gamma2table[usegamma][*doompalette++] & ~3;
         palette[i].g = gamma2table[usegamma][*doompalette++] & ~3;
         palette[i].b = gamma2table[usegamma][*doompalette++] & ~3;
-#ifdef __WIIU__
-        palette[i].a = 0xFF;
-#endif
     }
 
     palette_to_set = true;
@@ -1410,7 +1407,11 @@ static void SetVideoMode(void)
             SDL_GetError());
         }
 
+#ifdef __WIIU__
+        pixel_format = SDL_PIXELFORMAT_RGBX8888;
+#else
         pixel_format = SDL_GetWindowPixelFormat(screen);
+#endif // __WIIU__
 
         SDL_SetWindowMinimumSize(screen, SCREENWIDTH, actualheight);
 
