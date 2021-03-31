@@ -167,7 +167,10 @@ extern int mousebinvright;
 #ifdef __WIIU__
 extern int joybaccept;
 extern int joybcancel;
+extern int joybdelete;
+
 extern int joyboverlay;
+extern int joybrotate;
 #endif // __WIIU__
 
 extern int joybfire;

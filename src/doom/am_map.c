@@ -755,6 +755,17 @@ AM_Responder
             else
                 plr->message = DEH_String(AMSTR_OVERLAYOFF);
         }
+        if (ev->type == ev_joystick && joybrotate >= 0
+            && (ev->data1 & (1 << joybrotate)) != 0)
+        {
+            joywait = I_GetTime() + 5;
+
+            crispy->automaprotate = !crispy->automaprotate;
+            if (crispy->automaprotate)
+                plr->message = DEH_String(AMSTR_ROTATEON);
+            else
+                plr->message = DEH_String(AMSTR_ROTATEOFF);
+        }
     }
 #endif
 

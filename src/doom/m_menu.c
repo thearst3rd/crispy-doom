@@ -2347,6 +2347,15 @@ boolean M_Responder (event_t* ev)
                 joywait = I_GetTime() + 5;
             }
         }
+#ifdef __WIIU__
+        if (JOY_BUTTON_PRESSED(joybdelete))
+        {
+            if (currentMenu == &SaveDef || currentMenu == &LoadDef)
+            {
+                key = key_menu_del;
+            }
+        }
+#endif
         if (JOY_BUTTON_PRESSED(joybmenu))
         {
             key = key_menu_activate;

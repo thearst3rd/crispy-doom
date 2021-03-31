@@ -222,8 +222,10 @@ static VPADButtons vpad_button_map[] =
 };
 */
 
+// These few are HARD CODED menu controls
 int joybaccept = 0; // A
 int joybcancel = 1; // B
+int joybdelete = 2; // X
 
 int joybfire = 9; // ZR
 int joybstrafe = -1;
@@ -241,7 +243,9 @@ int joybnextweapon = 14; // dpad right
 int joybmenu = 10; // plus
 int joybautomap = 11; // minus
 
+// TODO - add these to the config so they can be changed
 int joyboverlay = 3; // Y
+int joybrotate = 2; // X (conficts with jump if that's enabled...)
 #else
 int joybfire = 0;
 int joybstrafe = 1;
