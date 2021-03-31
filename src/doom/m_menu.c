@@ -364,7 +364,9 @@ enum
     detail,
     scrnsize,
     option_empty1,
+#ifndef __WIIU__
     mousesens,
+#endif // !__WIIU__
     soundvol,
     crispness, // [crispy] Crispness menu
     opt_end
@@ -377,7 +379,9 @@ menuitem_t OptionsMenu[]=
     {1,"M_DETAIL",	M_ChangeDetail,'g', "Graphic Detail: "},
     {2,"M_SCRNSZ",	M_SizeDisplay,'s', "Screen Size"},
     {-1,"",0,'\0'},
+#ifndef __WIIU__
     {1,"M_MSENS",	M_Mouse,'m', "Mouse Sensitivity"}, // [crispy] mouse sensitivity menu
+#endif // !__WIIU__
     {1,"M_SVOL",	M_Sound,'s', "Sound Volume"},
     {1,"M_CRISPY",	M_CrispnessCur,'c', "Crispness"} // [crispy] Crispness menu
 };

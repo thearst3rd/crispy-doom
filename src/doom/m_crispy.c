@@ -548,6 +548,11 @@ static void M_CrispyToggleWidescreenHook (void)
 {
     crispy->widescreen = (crispy->widescreen + 1) % NUM_RATIOS;
 
+#ifdef __WIIU__
+    if (crispy->widescreen == RATIO_MATCH_SCREEN || crispy->widescreen == RATIO_16_10)
+	crispy->widescreen = RATIO_16_9;
+#endif
+
     // [crispy] no need to re-init when switching from wide to compact
     {
 	// [crispy] re-initialize framebuffers, textures and renderer
