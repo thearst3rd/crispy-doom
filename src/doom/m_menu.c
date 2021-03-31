@@ -2274,12 +2274,21 @@ boolean M_Responder (event_t* ev)
                 key = key_menu_down;
                 joywait = I_GetTime() + 5;
             }
+#ifdef BETTER_ANALOG
+            // Use strafe axis for this instead
+            if (ev->data4 < 0)
+#else
             if (ev->data2 < 0)
+#endif // BETTER_ANALOG
             {
                 key = key_menu_left;
                 joywait = I_GetTime() + 2;
             }
+#ifdef BETTER_ANALOG
+            else if (ev->data4 > 0)
+#else
             else if (ev->data2 > 0)
+#endif
             {
                 key = key_menu_right;
                 joywait = I_GetTime() + 2;
