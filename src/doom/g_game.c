@@ -1038,10 +1038,17 @@ boolean G_Responder (event_t* ev)
 	    (ev->type == ev_mouse && ev->data1) || 
 	    (ev->type == ev_joystick && ev->data1) ) 
 	{ 
+#ifdef BETTER_JOYWAIT
+	    if (crispy->soundfix && !menuactive)
+		S_StartSound(NULL,sfx_swtchn);
+#endif // BETTER_JOYWAIT
 	    M_StartControlPanel (); 
 	    // [crispy] play a sound if the menu is activated with a different key than ESC
+
+#ifndef BETTER_JOYWAIT
 	    if (crispy->soundfix)
 		S_StartSound(NULL,sfx_swtchn);
+#endif // !BETTER_JOYWAIT
 	    return true; 
 	} 
 	return false; 
