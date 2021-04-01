@@ -2219,6 +2219,12 @@ int shouldDoJoywaitAction(unsigned int initialOff, unsigned int repeatInterval)
 }
 #endif // BETTER_JOYWAIT
 
+#ifdef BETTER_ANALOG
+#define ANALOG_MENU_THRESHOLD 20000 // About 2/3s through the stick
+#else
+#define ANALOG_MENU_THRESHOLD 0
+#endif // BETTER_ANALOG
+
 //
 // CONTROL PANEL
 //
@@ -2283,10 +2289,10 @@ boolean M_Responder (event_t* ev)
 
         if (menuactive)
         {
-            if (ev->data3 < 0)
+            if (ev->data3 < -ANALOG_MENU_THRESHOLD)
             {
 #ifdef BETTER_JOYWAIT
-                if (prevJoystick.data3 >= 0)
+                if (prevJoystick.data3 >= -ANALOG_MENU_THRESHOLD)
                     pressJoywait();
                 if (shouldDoJoywaitAction(20, 5))
                     key = key_menu_up;
@@ -2295,10 +2301,10 @@ boolean M_Responder (event_t* ev)
                 joywait = I_GetTime() + 5;
 #endif // BETTER_JOYWAIT
             }
-            else if (ev->data3 > 0)
+            else if (ev->data3 > ANALOG_MENU_THRESHOLD)
             {
 #ifdef BETTER_JOYWAIT
-                if (prevJoystick.data3 <= 0)
+                if (prevJoystick.data3 <= ANALOG_MENU_THRESHOLD)
                     pressJoywait();
                 if (shouldDoJoywaitAction(20, 5))
                     key = key_menu_down;
@@ -2309,16 +2315,16 @@ boolean M_Responder (event_t* ev)
             }
 #ifdef BETTER_ANALOG
             // Use strafe axis for this instead
-            if (ev->data4 < 0)
+            if (ev->data4 < -ANALOG_MENU_THRESHOLD)
 #else
-            if (ev->data2 < 0)
+            if (ev->data2 < -ANALOG_MENU_THRESHOLD)
 #endif // BETTER_ANALOG
             {
 #ifdef BETTER_JOYWAIT
 #ifdef BETTER_ANALOG
-               if (prevJoystick.data4 >= 0)
+               if (prevJoystick.data4 >= -ANALOG_MENU_THRESHOLD)
 #else
-               if (prevJoystick.data2 >= 0)
+               if (prevJoystick.data2 >= -ANALOG_MENU_THRESHOLD)
 #endif // BETTER_ANALOG
                     pressJoywait();
                 if (shouldDoJoywaitAction(12, 3))
@@ -2329,16 +2335,16 @@ boolean M_Responder (event_t* ev)
 #endif // BETTER_JOYWAIT
             }
 #ifdef BETTER_ANALOG
-            else if (ev->data4 > 0)
+            else if (ev->data4 > ANALOG_MENU_THRESHOLD)
 #else
-            else if (ev->data2 > 0)
+            else if (ev->data2 > ANALOG_MENU_THRESHOLD)
 #endif
             {
 #ifdef BETTER_JOYWAIT
 #ifdef BETTER_ANALOG
-               if (prevJoystick.data4 <= 0)
+               if (prevJoystick.data4 <= ANALOG_MENU_THRESHOLD)
 #else
-               if (prevJoystick.data2 <= 0)
+               if (prevJoystick.data2 <= ANALOG_MENU_THRESHOLD)
 #endif // BETTER_ANALOG
                     pressJoywait();
                 if (shouldDoJoywaitAction(12, 3))
