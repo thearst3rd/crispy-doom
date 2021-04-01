@@ -236,6 +236,11 @@ int usegamma = 0;
 // Joystick/gamepad hysteresis
 unsigned int joywait = 0;
 
+#ifdef BETTER_JOYWAIT
+unsigned int joywaitDiff = 0;
+event_t prevJoystick = {0};
+#endif // BETTER_JOYWAIT
+
 static boolean MouseShouldBeGrabbed()
 {
 #ifdef __WIIU__
@@ -528,7 +533,9 @@ void I_StartTic (void)
         I_ReadMouse();
     }
 
+#ifndef BETTER_JOYWAIT
     if (joywait < I_GetTime())
+#endif // !BETTER_JOYWAIT
     {
         I_UpdateJoystick();
     }

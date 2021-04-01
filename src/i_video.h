@@ -117,5 +117,10 @@ void I_GetWindowPosition(int *x, int *y, int w, int h);
 
 // Joystic/gamepad hysteresis
 extern unsigned int joywait;
+#ifdef BETTER_JOYWAIT
+extern unsigned int joywaitDiff;
+#include "d_event.h"
+extern event_t prevJoystick;
+#endif // BETTER_JOYWAIT
 
 #endif

@@ -2200,6 +2200,25 @@ static int G_GotoNextLevel(void)
   return changed;
 }
 
+#ifdef BETTER_JOYWAIT
+int pressJoywait()
+{
+    joywait = I_GetTime();
+    joywaitDiff = 0;
+}
+
+int shouldDoJoywaitAction(unsigned int initialOff, unsigned int repeatInterval)
+{
+    if (joywaitDiff == 0)
+        return 1;
+
+    if (joywaitDiff < initialOff)
+        return 0;
+
+    return (joywaitDiff - initialOff) % repeatInterval == 0;
+}
+#endif // BETTER_JOYWAIT
+
 //
 // CONTROL PANEL
 //
@@ -2266,13 +2285,27 @@ boolean M_Responder (event_t* ev)
         {
             if (ev->data3 < 0)
             {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data3 >= 0)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(20, 5))
+                    key = key_menu_up;
+#else
                 key = key_menu_up;
                 joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
             }
             else if (ev->data3 > 0)
             {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data3 <= 0)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(20, 5))
+                    key = key_menu_down;
+#else
                 key = key_menu_down;
                 joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
             }
 #ifdef BETTER_ANALOG
             // Use strafe axis for this instead
@@ -2281,8 +2314,19 @@ boolean M_Responder (event_t* ev)
             if (ev->data2 < 0)
 #endif // BETTER_ANALOG
             {
+#ifdef BETTER_JOYWAIT
+#ifdef BETTER_ANALOG
+               if (prevJoystick.data4 >= 0)
+#else
+               if (prevJoystick.data2 >= 0)
+#endif // BETTER_ANALOG
+                    pressJoywait();
+                if (shouldDoJoywaitAction(12, 3))
+                    key = key_menu_left;
+#else
                 key = key_menu_left;
                 joywait = I_GetTime() + 2;
+#endif // BETTER_JOYWAIT
             }
 #ifdef BETTER_ANALOG
             else if (ev->data4 > 0)
@@ -2290,12 +2334,27 @@ boolean M_Responder (event_t* ev)
             else if (ev->data2 > 0)
 #endif
             {
+#ifdef BETTER_JOYWAIT
+#ifdef BETTER_ANALOG
+               if (prevJoystick.data4 <= 0)
+#else
+               if (prevJoystick.data2 <= 0)
+#endif // BETTER_ANALOG
+                    pressJoywait();
+                if (shouldDoJoywaitAction(12, 3))
+                    key = key_menu_right;
+#else
                 key = key_menu_right;
                 joywait = I_GetTime() + 2;
+#endif // BETTER_JOYWAIT
             }
 
 #define JOY_BUTTON_MAPPED(x) ((x) >= 0)
+#ifdef BETTER_JOYWAIT
+#define JOY_BUTTON_PRESSED(x) (JOY_BUTTON_MAPPED(x) && (ev->data1 & (1 << (x))) != 0 && (prevJoystick.data1 & (1 << (x))) == 0)
+#else
 #define JOY_BUTTON_PRESSED(x) (JOY_BUTTON_MAPPED(x) && (ev->data1 & (1 << (x))) != 0)
+#endif // BETTER_JOYWAIT
 
 #ifdef __WIIU__
             if (JOY_BUTTON_PRESSED(joybaccept))
@@ -2322,7 +2381,9 @@ boolean M_Responder (event_t* ev)
                     }
                     key = key_menu_forward;
                 }
+#ifndef BETTER_JOYWAIT
                 joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
             }
 #ifdef __WIIU__
             if (JOY_BUTTON_PRESSED(joybcancel))
@@ -2344,7 +2405,9 @@ boolean M_Responder (event_t* ev)
                 {
                     key = key_menu_back;
                 }
+#ifndef BETTER_JOYWAIT
                 joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
             }
         }
 #ifdef __WIIU__
@@ -2359,7 +2422,9 @@ boolean M_Responder (event_t* ev)
         if (JOY_BUTTON_PRESSED(joybmenu))
         {
             key = key_menu_activate;
+#ifndef BETTER_JOYWAIT
             joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
         }
     }
     else

@@ -107,6 +107,13 @@ static int joystick_physical_buttons[NUM_VIRTUAL_BUTTONS] = {
 };
 #endif // __WIIU__
 
+#ifdef BETTER_JOYWAIT
+event_t currentJoystick = {0};
+extern event_t prevJoystick;
+extern unsigned int joywait;
+extern unsigned int joywaitDiff;
+#endif // BETTER_JOYWAIT
+
 void I_ShutdownJoystick(void)
 {
     if (joystick != NULL)
@@ -413,6 +420,13 @@ void I_UpdateJoystick(void)
         ev.data3 = GetAxisState(joystick_y_axis, joystick_y_invert);
         ev.data4 = GetAxisState(joystick_strafe_axis, joystick_strafe_invert);
         ev.data5 = GetAxisState(joystick_look_axis, joystick_look_invert);
+
+#ifdef BETTER_JOYWAIT
+        prevJoystick = currentJoystick;
+        currentJoystick = ev;
+
+        joywaitDiff = I_GetTime() - joywait;
+#endif // BETTER_JOYWAIT
 
         D_PostEvent(&ev);
     }

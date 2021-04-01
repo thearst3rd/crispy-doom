@@ -720,9 +720,15 @@ AM_Responder
     rc = false;
 
     if (ev->type == ev_joystick && joybautomap >= 0
-        && (ev->data1 & (1 << joybautomap)) != 0)
+        && (ev->data1 & (1 << joybautomap)) != 0
+#ifdef BETTER_JOYWAIT
+        && (prevJoystick.data1 & (1 << joybautomap)) == 0
+#endif // BETTER_JOYWAIT
+        )
     {
+#ifndef BETTER_JOYWAIT
         joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
 
         if (!automapactive)
         {
@@ -742,9 +748,15 @@ AM_Responder
     if (automapactive)
     {
         if (ev->type == ev_joystick && joyboverlay >= 0
-            && (ev->data1 & (1 << joyboverlay)) != 0)
+            && (ev->data1 & (1 << joyboverlay)) != 0
+#ifdef BETTER_JOYWAIT
+            && (prevJoystick.data1 & (1 << joyboverlay)) == 0
+#endif // BETTER_JOYWAIT
+            )
         {
+#ifndef BETTER_JOYWAIT
             joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
 
             // [crispy] force redraw status bar
             inhelpscreens = true;
@@ -756,9 +768,15 @@ AM_Responder
                 plr->message = DEH_String(AMSTR_OVERLAYOFF);
         }
         if (ev->type == ev_joystick && joybrotate >= 0
-            && (ev->data1 & (1 << joybrotate)) != 0)
+            && (ev->data1 & (1 << joybrotate)) != 0
+#ifdef BETTER_JOYWAIT
+            && (prevJoystick.data1 & (1 << joybrotate)) == 0
+#endif // BETTER_JOYWAIT
+            )
         {
+#ifndef BETTER_JOYWAIT
             joywait = I_GetTime() + 5;
+#endif // !BETTER_JOYWAIT
 
             crispy->automaprotate = !crispy->automaprotate;
             if (crispy->automaprotate)
@@ -767,7 +785,7 @@ AM_Responder
                 plr->message = DEH_String(AMSTR_ROTATEOFF);
         }
     }
-#endif
+#endif // __WIIU__
 
     if (!automapactive)
     {
