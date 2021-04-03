@@ -579,6 +579,12 @@ void MIDI_FreeFile(midi_file_t *file)
     free(file);
 }
 
+#ifdef __WIIU__
+// Nasty Wii U MIDI file hack...
+extern void *midiBuffer;
+extern size_t midiBufferSize;
+#endif
+
 midi_file_t *MIDI_LoadFile(char *filename)
 {
     midi_file_t *file;
@@ -598,6 +604,13 @@ midi_file_t *MIDI_LoadFile(char *filename)
 
     // Open file
 
+#ifdef __WIIU__
+    if (strcmp(filename, "/tmp/doom.mid") == 0)
+    {
+        stream = fmemopen(midiBuffer, midiBufferSize, "rb");
+    }
+    else
+#endif // __WIIU__
     stream = fopen(filename, "rb");
 
     if (stream == NULL)

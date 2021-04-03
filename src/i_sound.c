@@ -267,11 +267,15 @@ void I_InitSound(boolean use_sfx_prefix)
             active_music_module = music_module;
         }
 
+#ifndef __WIIU__
         // We may also have substitute MIDIs we can load.
         if (!nomusicpacks && music_module != NULL)
         {
             music_packs_active = music_pack_module.Init();
         }
+#else
+        music_packs_active = false;
+#endif // !__WIIU__
     }
     // [crispy] print the SDL audio backend
     {

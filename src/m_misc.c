@@ -178,11 +178,32 @@ long M_FileLength(FILE *handle)
 // M_WriteFile
 //
 
+#ifdef __WIIU__
+// HACK - for MIDIs, instead of writing to disk then rereading, store in buffer
+// Way faster since SD cards are slow as heck
+void *midiBuffer = NULL;
+size_t midiBufferSize;
+#endif // __WIIU__
+
 boolean M_WriteFile(const char *name, const void *source, int length)
 {
     FILE *handle;
     int	count;
 	
+#ifdef __WIIU__
+    if (strcmp(name, "/tmp/doom.mid") == 0)
+    {
+        if (midiBuffer != NULL)
+            free(midiBuffer);
+
+        midiBuffer = malloc(length);
+        memcpy(midiBuffer, source, length);
+        midiBufferSize = length;
+
+        return true;
+    }
+#endif // __WIIU__
+
     handle = fopen(name, "wb");
 
     if (handle == NULL)
