@@ -6,7 +6,7 @@ This is a Wii U port of the Crispy Doom. It is possible thanks to the amazing ef
 **NOTE:** Right now this port is a pre-release, and therefore has bugs that can affect critical things. The most notable is that saving and loading is currently unstable and _can_ cause your game to crash. Even when it doesn't crash, it still takes quite some time for the save/load to occur. Additionally, when running the game in high resolution mode, the game does not reach a perfect 60fps. More
 
 ## Download
-Download the Wii U port of Crispy Doom on the releases page. (todo, insert link)
+Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thearst3rd/crispy-doom/releases) page.
 
 To install, extract the release's contents onto `sd:/wiiu/apps/crispy-doom` and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
