@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+	<name>Crispy Doom</name>
+	<coder>Fabian Greffrath, thearst3rd</coder>
+	<version>0.1-5.10.1</version>
+	<url>https://github.com/thearst3rd/crispy-doom/tree/wiiu-port</url>
+	<release_date>20210403000000</release_date>
+	<short_description>Limit-removing Doom source port</short_description>
+	<long_description>Crispy Doom is a limit-removing enhanced-resolution Doom source port based on Chocolate Doom. For more information on the original PC version, visit https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom
+
+Crispy Doom was ported to the Wii U by Terry Hearst (thearst3rd). It is up to date with Crispy Doom 5.10.1 up to commit 68b800ea3b32. It also includes an optional toggle to fix the blockmap bug from my PC Crispy Doom fork.
+
+Notes about version 0.1:
+* Saving/loading is unstable and can cause your game to crash. I'm looking into why this happens. Even when it doesn't crash, it can take a very very long time to perform the save.
+* Music causes a bit of a stutter when it needs to load. Most levels aren't too bad but some (such as E1M8) take longer.
+* Currently you cannot pick which WAD you would like to play. I plan on adding a launcher that lets you pick which WAD to load along with other command line options, but for now it will pick which WAD based on Crispy/Chocolate Doom's priority is.
+
+Thanks for playing!</long_description>
+</app>

@@ -1,3 +1,61 @@
+# Crispy Doom Wii U Port
+![Screenshot of game in Wii U Gamepad](wiiu/CrispyWiiUScreenshot.png)
+
+This is a Wii U port of the Crispy Doom. It is possible thanks to the amazing efforts of the Crispy/Chocolate Doom authors, devkitPro, and the team that ported SDL2 to the Wii U. Without these people, this port would be a lot harder to make :)
+
+**NOTE:** Right now this port is a pre-release, and therefore has bugs that can affect critical things. The most notable is that saving and loading is currently unstable and _can_ cause your game to crash. Even when it doesn't crash, it still takes quite some time for the save/load to occur. Additionally, when running the game in high resolution mode, the game does not reach a perfect 60fps. More
+
+## Download
+Download the Wii U port of Crispy Doom on the releases page. (todo, insert link)
+
+To install, extract the release's contents onto `sd:/wiiu/apps/crispy-doom` and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
+
+## Features
+* Up to date with Crispy Doom 5.10.1 (up to commit [68b800ea3b32](https://github.com/fabiangreffrath/crispy-doom/commit/68b800ea3b3253ca97c28b3119054a99c82e1849))
+* Very high feature parity with the PC version, full Crispy menu intact
+	* (no option for vsync toggle however)
+* Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
+* Music support using OPL3
+	* Causes a bit of a stutter when loading a new music track.
+* Optional toggle to fix the blockmap bug (on page 4 of the Crispy menu)
+
+### What's not perfect
+* **SAVING AND LOADING IS UNSTABLE**
+	* Saving and loading takes a _very_ long time to do, and depending on the situation, can cause the game to crash. I am looking into this behavior.
+* High resolution rendering is laggy
+	* When high resolution rendering is enabled (especially when combined with widescreen), the game becomes notibly laggy. This is a bit of a surprise to me since I figured the Wii U would be totally capable of running this game at higher resolutions right out of the box. More optimizations are needed, I hope that I will be able to get this to work at full speed without major changes to the renderer. I also might just be doing something very wrong/inefficient so we'll see :)
+* No networking support
+	* SDL_net is not supported on the Wii U, so for now, this is single player only.
+* No WAD picking
+	* Version 0.1 does not include any kind of "launcher" program, and instead Crispy Doom will scan over all your WADs and pick based on its own priority. I plan on adding a launcher in the future to let you select between all of your WADs, including loading PWADS, and add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc.)
+* No controller rebinding
+	* This will be a part of the launcher above
+* No controllers other than the Wii U Gamepad
+	* Currently, I have hard coded it to only use the Wii U Gamepad. I will expand it with support for other controllers in the future, it doesn't seem to be too hard.
+* No cheats
+	* Since there is no keyboard, you cannot enter any cheat codes. I plan to rectify this by adding a menu to control the cheats from there.
+
+## Compiling
+The Wii U version of Crispy Doom compiles using [wut](https://github.com/devkitPro/wut).
+
+Get setup with [devkitPro](https://devkitpro.org/wiki/Getting_Started), and make sure to enable Wii U development (wiiu-dev).
+
+Download necessary dependancies:
+
+```bash
+(dkp-)pacman -S wiiu-sdl{,_mixer}
+```
+
+Build the executable
+
+```bash
+make -f Makefile.wiiu
+```
+
+NOTE: This repository is fully capable of building the original PC version as well. If you plan on doing so, I recommend `clean`ing the repository in between building the two different versions because the build system can get confused.
+
+The rest of the readme is the original Crispy Doom readme. Thanks for playing!
+
 # Crispy Doom
 [![Crispy Doom Icon](https://www.chocolate-doom.org/wiki/images/b/be/Crispy-doom.png)](https://github.com/fabiangreffrath/crispy-doom)
 
