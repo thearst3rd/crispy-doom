@@ -547,7 +547,9 @@ enum
 {
     crispness_sep_tactical,
     crispness_freelook,
+#ifndef __WIIU__
     crispness_mouselook,
+#endif // !__WIIU__
     crispness_bobfactor,
     crispness_centerweapon,
     crispness_weaponsquat,
@@ -571,7 +573,9 @@ static menuitem_t Crispness3Menu[]=
 {
     {-1,"",0,'\0'},
     {1,"",	M_CrispyToggleFreelook,'a'},
+#ifndef __WIIU__
     {1,"",	M_CrispyToggleMouseLook,'p'},
+#endif // !__WIIU__
     {1,"",	M_CrispyToggleBobfactor,'p'},
     {1,"",	M_CrispyToggleCenterweapon,'c'},
     {1,"",	M_CrispyToggleWeaponSquat,'w'},
@@ -1532,7 +1536,9 @@ static void M_DrawCrispness3(void)
     M_DrawCrispnessSeparator(crispness_sep_tactical, "Tactical");
 
     M_DrawCrispnessMultiItem(crispness_freelook, "Allow Free Look", multiitem_freelook, crispy->freelook, true);
+#ifndef __WIIU__
     M_DrawCrispnessItem(crispness_mouselook, "Permanent Mouse Look", crispy->mouselook, true);
+#endif // !__WIIU__
     M_DrawCrispnessMultiItem(crispness_bobfactor, "Player View/Weapon Bobbing", multiitem_bobfactor, crispy->bobfactor, true);
     M_DrawCrispnessMultiItem(crispness_centerweapon, "Weapon Attack Alignment", multiitem_centerweapon, crispy->centerweapon, crispy->bobfactor != BOBFACTOR_OFF);
     M_DrawCrispnessItem(crispness_weaponsquat, "Squat weapon down on impact", crispy->weaponsquat, true);
