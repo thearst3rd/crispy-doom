@@ -1,7 +1,7 @@
 # Crispy Doom Wii U Port
 ![Screenshot of game in Wii U Gamepad](wiiu/CrispyWiiUScreenshot.png)
 
-This is a Wii U port of the Crispy Doom. It is possible thanks to the amazing efforts of the Crispy/Chocolate Doom authors, devkitPro, and the team that ported SDL2 to the Wii U. Without these people, this port would be a lot harder to make :)
+This is a Wii U port of [Crispy Doom](https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom). It is possible thanks to the amazing efforts of the Crispy/Chocolate Doom authors, devkitPro, and the team that ported SDL2 to the Wii U. Without these people, this port would be a lot harder to make :)
 
 ## Download
 Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thearst3rd/crispy-doom/releases) page.
