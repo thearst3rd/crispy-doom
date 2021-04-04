@@ -2309,7 +2309,14 @@ void G_DoSaveGame (void)
     // and then rename it at the end if it was successfully written.
     // This prevents an existing savegame from being overwritten by
     // a corrupted one, or if a savegame buffer overrun occurs.
+#ifdef __WIIU__
+    // Open a stream in memory. All writes will happen to this stream instead
+    char *fake_save_buffer = NULL;
+    size_t fake_save_buffer_size = 0;
+    save_stream = open_memstream(&fake_save_buffer, &fake_save_buffer_size);
+#else
     save_stream = fopen(temp_savegame_file, "wb");
+#endif // __WIIU__
 
     if (save_stream == NULL)
     {
@@ -2365,7 +2372,19 @@ void G_DoSaveGame (void)
 
     // Finish up, close the savegame file.
 
+#ifdef __WIIU__
+    // Now, write this entire stream to disk
+    fflush(save_stream);
+    FILE *real_save_stream = fopen(temp_savegame_file, "wb");
+    fwrite(fake_save_buffer, fake_save_buffer_size, 1, real_save_stream);
+    fclose(real_save_stream);
+#endif // __WIIU__
+
     fclose(save_stream);
+
+#ifdef __WIIU__
+    free(fake_save_buffer);
+#endif
 
     if (recovery_savegame_file != NULL)
     {
