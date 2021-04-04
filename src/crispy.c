@@ -25,7 +25,15 @@ static crispy_t crispy_s = {
 	0,
 	.extautomap = 1,
 	.extsaveg = 1,
+#ifdef __WIIU__
+	// High resolution can lag on Wii U...
+	// But, lets enable smooth framerate and widescreen by default
+	// Give users a good first impression :)
+	.uncapped = 1,
+	.widescreen = RATIO_16_9,
+#else
 	.hires = 1,
+#endif // __WIIU__
 	.smoothscaling = 1,
 	.soundfix = 1,
 #ifdef CRISPY_TRUECOLOR
