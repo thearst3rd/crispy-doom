@@ -171,6 +171,15 @@ extern int joybdelete;
 
 extern int joyboverlay;
 extern int joybrotate;
+
+extern int joybweapon1;
+extern int joybweapon2;
+extern int joybweapon3;
+extern int joybweapon4;
+extern int joybweapon5;
+extern int joybweapon6;
+extern int joybweapon7;
+extern int joybweapon8;
 #endif // __WIIU__
 
 extern int joybfire;

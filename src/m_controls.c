@@ -226,6 +226,7 @@ static VPADButtons vpad_button_map[] =
 int joybaccept = 0; // A
 int joybcancel = 1; // B
 int joybdelete = 2; // X
+// The rest are all configurable as normal
 
 int joybfire = 9; // ZR
 int joybstrafe = -1;
@@ -235,17 +236,25 @@ int joybspeed = -1;
 int joybstrafeleft = -1;
 int joybstraferight = -1;
 
-int joybjump = 2; // X
+int joybjump = 1; // B
 
-int joybprevweapon = 12; // dpad left
-int joybnextweapon = 14; // dpad right
+int joybprevweapon = 6; // L
+int joybnextweapon = 7; // R
 
 int joybmenu = 10; // plus
 int joybautomap = 11; // minus
 
-// TODO - add these to the config so they can be changed
 int joyboverlay = 3; // Y
-int joybrotate = 2; // X (conficts with jump if that's enabled...)
+int joybrotate = 2; // X
+
+int joybweapon1 = -1;
+int joybweapon2 = -1;
+int joybweapon3 = 13; // dpad up
+int joybweapon4 = 14; // dpad right
+int joybweapon5 = 15; // dpad down
+int joybweapon6 = 12; // dpad left
+int joybweapon7 = -1;
+int joybweapon8 = -1;
 #else
 int joybfire = 0;
 int joybstrafe = 1;
@@ -327,6 +336,20 @@ void M_BindBaseControls(void)
     M_BindIntVariable("key_reverse",        &key_reverse); // [crispy]
     M_BindIntVariable("key_toggleautorun",  &key_toggleautorun); // [crispy]
     M_BindIntVariable("key_togglenovert",   &key_togglenovert); // [crispy]
+
+#ifdef __WIIU__
+    M_BindIntVariable("joyb_weapon1",       &joybweapon1);
+    M_BindIntVariable("joyb_weapon2",       &joybweapon2);
+    M_BindIntVariable("joyb_weapon3",       &joybweapon3);
+    M_BindIntVariable("joyb_weapon4",       &joybweapon4);
+    M_BindIntVariable("joyb_weapon5",       &joybweapon5);
+    M_BindIntVariable("joyb_weapon6",       &joybweapon6);
+    M_BindIntVariable("joyb_weapon7",       &joybweapon7);
+    M_BindIntVariable("joyb_weapon8",       &joybweapon8);
+
+    M_BindIntVariable("joyb_map_overlay",   &joyboverlay); // [crispy]
+    M_BindIntVariable("joyb_map_rotate",    &joybrotate); // [crispy]
+#endif // __WIIU__
 }
 
 void M_BindHereticControls(void)

@@ -1337,6 +1337,68 @@ static default_t extra_defaults_list[] =
 
     CONFIG_VARIABLE_INT(joyb_nextweapon),
 
+#ifdef __WIIU__
+    //!
+    // Joystick virtual button to toggle the overlay mode when in the map view.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_map_overlay),
+
+    //!
+    // Joystick virtual button to toggle the rotate mode when in the map view.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_map_rotate),
+
+    //!
+    // Joystick virtual button to select weapon 1.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon1),
+
+    //!
+    // Joystick virtual button to select weapon 2.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon2),
+
+    //!
+    // Joystick virtual button to select weapon 3.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon3),
+
+    //!
+    // Joystick virtual button to select weapon 4.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon4),
+
+    //!
+    // Joystick virtual button to select weapon 5.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon5),
+
+    //!
+    // Joystick virtual button to select weapon 6.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon6),
+
+    //!
+    // Joystick virtual button to select weapon 7.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon7),
+
+    //!
+    // Joystick virtual button to select weapon 8.
+    //
+
+    CONFIG_VARIABLE_INT(joyb_weapon8),
+#endif // __WIIU__
+
     //!
     // Key to pause or unpause the game.
     //
