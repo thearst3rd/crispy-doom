@@ -2192,7 +2192,20 @@ void G_DoLoadGame (void)
     }
     gameaction = ga_nothing; 
 	 
+#ifdef __WIIU__
+    // Read in entire file, rather than byte by byte
+    FILE *real_loading_stream = fopen(savename, "rb");
+    fseek(real_loading_stream, 0, SEEK_END); // This is supported on Wii U
+    long int real_loading_stream_size = ftell(real_loading_stream);
+    char *fake_loading_buffer = malloc(real_loading_stream_size);
+    fseek(real_loading_stream, 0, SEEK_SET);
+    fread(fake_loading_buffer, real_loading_stream_size, 1, real_loading_stream);
+    fclose(real_loading_stream);
+
+    save_stream = fmemopen(fake_loading_buffer, real_loading_stream_size, "rb");
+#else
     save_stream = fopen(savename, "rb");
+#endif // __WIIU__
 
     if (save_stream == NULL)
     {
@@ -2262,6 +2275,9 @@ void G_DoLoadGame (void)
     }
 
     fclose(save_stream);
+#ifdef __WIIU__
+    free(fake_loading_buffer);
+#endif // __WIIU__
     
     if (setsizeneeded)
 	R_ExecuteSetViewSize ();
