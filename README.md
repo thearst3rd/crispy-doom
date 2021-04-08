@@ -9,7 +9,7 @@ Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thea
 To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
 ## Features
-* Up to date with Crispy Doom 5.10.1 (up to commit [f90b0a4](https://github.com/fabiangreffrath/crispy-doom/tree/f90b0a47e3e48b2d6a2100a571a612e47accc748))
+* Up to date with Crispy Doom 5.10.1 (up to commit [40fd021](https://github.com/fabiangreffrath/crispy-doom/tree/40fd021c6368ea3ac82315730c36c92f3496643f))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
 * Music support using OPL3
@@ -21,9 +21,9 @@ To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (thi
 ### What's not perfect (yet)
 As this is a pre-release, not everything is perfect yet. Here are a list of some things to be aware of.
 * High resolution rendering is laggy
-	* When high resolution rendering is enabled (especially when combined with widescreen), the game becomes notibly laggy. This is a bit of a surprise to me since I figured the Wii U would be totally capable of running this game at higher resolutions right out of the box. More optimizations are needed, I hope that I will be able to get this to work at full speed without major changes to the renderer. I also might just be doing something very wrong/inefficient so we'll see :)
+	* When high resolution rendering is enabled (especially when combined with widescreen), the game becomes notably laggy. This is a bit of a surprise to me since I figured the Wii U would be totally capable of running this game at higher resolutions right out of the box. More optimizations are needed, I hope that I will be able to get this to work at full speed without major changes to the renderer. I also might just be doing something very wrong/inefficient so we'll see :)
 * No networking support
-	* `SDL_net` is not supported on the Wii U, so for now, this is single player only.
+	* `SDL2_net` is not supported on the Wii U, so for now, this is single player only.
 * No WAD picking
 	* Version 0.1 does not include any kind of "launcher" program, and instead Crispy Doom will scan over all your WADs and pick based on its own priority. I plan on adding a launcher in the future to let you select between all of your WADs, including loading PWADS, and add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc.)
 * No controllers other than the Wii U Gamepad
