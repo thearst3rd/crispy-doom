@@ -1752,8 +1752,12 @@ void M_QuitResponse(int key)
 
     if (key != key_menu_confirm)
 	return;
+#ifdef __WIIU__
+    if (!netgame)
+#else
     // [crispy] play quit sound only if the ENDOOM screen is also shown
     if (!netgame && show_endoom)
+#endif // __WIIU__
     {
 	if (gamemode == commercial)
 	    S_StartSound(NULL,quitsounds2[(gametic>>2)&7]);
