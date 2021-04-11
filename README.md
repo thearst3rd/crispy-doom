@@ -12,10 +12,12 @@ To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (thi
 * Up to date with Crispy Doom 5.10.1 (up to commit [40fd021](https://github.com/fabiangreffrath/crispy-doom/tree/40fd021c6368ea3ac82315730c36c92f3496643f))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
+* Simple WAD picker
 * Music support using OPL3
 	* Causes a bit of a stutter when loading a new music track. I'm looking into making this faster, but it's not too bad for most levels.
+	* Note: There is a known bug involving the Freedoom WADs (and probably others) - details below
 * Controller rebinding
-	* Currently this can only be achieved by editing `crispy-doom.cfg`. In the future this will be made easier by doing it through a launcher.
+	* Currently this can only be achieved by editing `crispy-doom.cfg`. In the future this will be made easier by doing it through the launcher.
 * Optional toggle to fix the [blockmap bug](https://youtu.be/-IYz6-KnvWU) (on page 4 of the Crispy menu)
 
 ### What's not perfect (yet)
@@ -24,12 +26,18 @@ As this is a pre-release, not everything is perfect yet. Here are a list of some
 	* When high resolution rendering is enabled (especially when combined with widescreen), the game becomes notably laggy. This is a bit of a surprise to me since I figured the Wii U would be totally capable of running this game at higher resolutions right out of the box. More optimizations are needed, I hope that I will be able to get this to work at full speed without major changes to the renderer. I also might just be doing something very wrong/inefficient so we'll see :)
 * No networking support
 	* `SDL2_net` is not supported on the Wii U, so for now, this is single player only.
-* No WAD picking
-	* Version 0.1 does not include any kind of "launcher" program, and instead Crispy Doom will scan over all your WADs and pick based on its own priority. I plan on adding a launcher in the future to let you select between all of your WADs, including loading PWADS, and add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc.)
+* Launcher is lacking features
+	* I plan on improving the launcher in the future to let you load PWADS, add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc), and rebind controls.
 * No controllers other than the Wii U Gamepad
 	* Currently, I have hard coded it to only use the Wii U Gamepad. I will expand it with support for other controllers in the future, it doesn't seem to be too hard.
 * No cheats
 	* Since there is no keyboard, you cannot enter any cheat codes. I plan to rectify this by adding a menu to control the cheats from there.
+
+### Known Bugs
+
+* If the Wii U Gamepad disconnects, reconnecting it will NOT regain control of the game. Quitting with the Home button still works though.
+* When playing with a [Freedoom](https://freedoom.github.io/) WAD (and probably others), the music will _sometimes_ not work. You might need to switch to a different stage then switch back to kick-start music into working.
+	* I have a feeling this is because Freedoom uses `midi` files rather than `mus` files that that doesn't play perfectly with my music speedup hack. Looking into it.
 
 ## Default Controls
 

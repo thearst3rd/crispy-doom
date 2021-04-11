@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
 	<name>Crispy Doom</name>
-	<coder>Fabian Greffrath, thearst3rd</coder>
-	<version>0.1 (5.10.1)</version>
+	<coder>thearst3rd</coder>
+	<version>0.2 (5.10.1)</version>
 	<url>https://github.com/thearst3rd/crispy-doom/tree/wiiu-port</url>
 	<release_date>20210403000000</release_date>
 	<short_description>Play Doom on the Wii U</short_description>
@@ -10,6 +10,8 @@
 
 https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom
 https://github.com/thearst3rd/crispy-doom/tree/wiiu-port
+
+Put your limit-removing WADs in sd:/wiiu/apps/crispy-doom/wads
 
 Thanks for playing!</long_description>
 </app>
