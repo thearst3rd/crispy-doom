@@ -124,7 +124,29 @@ void launcherRun()
         {
             foundWadsCount++;
             foundWads = realloc(foundWads, foundWadsCount * sizeof(char *));
-            foundWads[foundWadsCount - 1] = strdup(files->d_name);
+            // Insert alphabetically
+            bool added = false;
+            char *filename = strdup(files->d_name);
+            for (int i = 0; i < foundWadsCount - 1; i++)
+            {
+                if (strcmp(filename, foundWads[i]) < 0)
+                {
+                    // Shift all other entries down
+                    for (int j = foundWadsCount - 1; j >= i; j--)
+                    {
+                        foundWads[j + 1] = foundWads[j];
+                    }
+                    foundWads[i] = filename;
+                    added = true;
+                    break;
+                }
+            }
+            // If we made it all the way to the end and it still hasn't been
+            // added, make it the last thing in the list
+            if (!added)
+            {
+                foundWads[foundWadsCount - 1] = filename;
+            }
         }
         closedir(dir);
     }
