@@ -36,6 +36,7 @@
 
 #ifdef __WIIU__
 #include <whb/proc.h>
+#include "launcher.h"
 #endif // __WIIU__
 
 //
@@ -48,13 +49,15 @@ void D_DoomMain (void);
 
 int main(int argc, char **argv)
 {
-#ifdef __WIIU__
-    WHBProcInit();
-#endif // __WIIU__
     // save arguments
 
     myargc = argc;
     myargv = argv;
+
+#ifdef __WIIU__
+    WHBProcInit();
+    launcherRun();
+#endif // __WIIU__
 
     //!
     // Print the program version and exit.
