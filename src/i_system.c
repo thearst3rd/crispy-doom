@@ -275,7 +275,10 @@ void I_Quit (void)
 
 #ifdef __WIIU__
     WHBProcShutdown();
-    free(myargv[2]); // iwad name
+    for (int i = 0; i < myargc; i++)
+    {
+        free(myargv[i]);
+    }
     free(myargv);
 #endif
 

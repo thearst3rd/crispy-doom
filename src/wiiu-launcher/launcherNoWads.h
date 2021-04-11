@@ -12,19 +12,17 @@
 // GNU General Public License for more details.
 //
 //
-//	Wii U Launcher header file
+//	Wii U Launcher - No WADs screen
 //
 
 #ifdef __WIIU__
 
-typedef enum
-{
-    LAUNCHER_MAIN,
-    LAUNCHER_NOWADS,
-} launcherState;
+#include <vpad/input.h>
+#include <coreinit/screen.h>
 
-// Run the launcher. Blocking - will return when done
-// This will update myargc and myargv with the user's selected launch params
-void launcherRun();
+void launcherNoWadsInit();
+void launcherNoWadsUpdate(VPADStatus status);
+void launcherNoWadsDraw(OSScreenID screenID);
+void launcherNoWadsCleanup();
 
 #endif // __WIIU__

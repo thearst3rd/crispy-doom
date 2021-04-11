@@ -15,15 +15,15 @@
 //	Wii U Launcher/WAD picker implementation
 //
 
+#include "launcher.h"
+
 #ifdef __WIIU__
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <malloc.h>
-#include <dirent.h>
 
 #include <vpad/input.h>
 #include <coreinit/screen.h>
@@ -34,54 +34,54 @@
 #include "i_system.h"
 #include "m_argv.h"
 
-// Global variables
-bool launcherRunning = true;
+#include "launcherMain.h"
+#include "launcherNoWads.h"
 
-char **foundWads = NULL;
-int foundWadsCount = 0;
-int selectedWadIndex = 0;
+// Global variables
+int launcherRunning = 1; // 0 means go to game, -1 means quit
+launcherState state = LAUNCHER_MAIN;
+
+extern char **foundWads;
+extern int selectedWadIndex;
 
 void launcherUpdate(VPADStatus status)
 {
-    if (status.trigger & VPAD_BUTTON_PLUS)
-        launcherRunning = false;
-
-    if (foundWadsCount > 0)
+    switch (state)
     {
-        if (status.trigger & (VPAD_BUTTON_UP | VPAD_STICK_L_EMULATION_UP))
-            selectedWadIndex--;
-        if (status.trigger & (VPAD_BUTTON_DOWN | VPAD_STICK_L_EMULATION_DOWN))
-            selectedWadIndex++;
-
-        if (selectedWadIndex < 0)
-            selectedWadIndex = foundWadsCount - 1;
-        else if (selectedWadIndex >= foundWadsCount)
-            selectedWadIndex = 0;
+        case LAUNCHER_MAIN: launcherMainUpdate(status); break;
+        case LAUNCHER_NOWADS: launcherNoWadsUpdate(status); break;
+        default:
+            // NOP...
+            break;
     }
 }
 
 void launcherDraw(OSScreenID screenID)
 {
-    OSScreenPutFontEx(screenID, 0, 0, "Crispy Doom");
+    char buf[60];
+    switch (state)
+    {
+        case LAUNCHER_MAIN: launcherMainDraw(screenID); break;
+        case LAUNCHER_NOWADS: launcherNoWadsDraw(screenID); break;
+        default:
+            sprintf(buf, "ERROR: Unknown launcher state: %d", state);
+            OSScreenPutFontEx(screenID, 0, 0, buf);
+            OSScreenPutFontEx(screenID, 0, 1, "Press Home to exit");
+            break;
+    }
+}
 
-    if (foundWadsCount > 0)
-    {
-        OSScreenPutFontEx(screenID, 0, 2, "Press up and down to select a WAD");
-        OSScreenPutFontEx(screenID, 0, 3, "Press + to start playing");
-        for (int i = 0; i < foundWadsCount; i++)
-        {
-            int y = i + 5;
-            OSScreenPutFontEx(screenID, 5, y, foundWads[i]);
-            if (selectedWadIndex == i)
-                OSScreenPutFontEx(screenID, 2, y, ">>");
-        }
-    }
-    else
-    {
-        OSScreenPutFontEx(screenID, 5, 2, "No WAD files found!");
-        OSScreenPutFontEx(screenID, 5, 3, "Put your WADs in: sd:/" HOMEBREW_APP_PATH "/wads");
-        OSScreenPutFontEx(screenID, 0, 5, "Press + to exit");
-    }
+void generateArgcArgv()
+{
+    // Build up "myargc" and "myargv" from stuff user selected
+    char *origArgv0 = myargv[0];
+
+    myargc = 3;
+    myargv = malloc(myargc * sizeof(char *));
+
+    myargv[0] = strdup(origArgv0);
+    myargv[1] = strdup("-iwad");
+    myargv[2] = strdup(foundWads[selectedWadIndex]);
 }
 
 void launcherRun()
@@ -113,49 +113,15 @@ void launcherRun()
     VPADStatus status;
     VPADReadError error;
 
-    // Scan for WADs
-    foundWads = NULL;
-    foundWadsCount = 0;
-    struct dirent *files;
-    DIR *dir = opendir(HOMEBREW_APP_PATH "/wads");
-    if (dir != NULL)
-    {
-        while ((files = readdir(dir)) != NULL)
-        {
-            foundWadsCount++;
-            foundWads = realloc(foundWads, foundWadsCount * sizeof(char *));
-            // Insert alphabetically
-            bool added = false;
-            char *filename = strdup(files->d_name);
-            for (int i = 0; i < foundWadsCount - 1; i++)
-            {
-                if (strcmp(filename, foundWads[i]) < 0)
-                {
-                    // Shift all other entries down
-                    for (int j = foundWadsCount - 1; j >= i; j--)
-                    {
-                        foundWads[j + 1] = foundWads[j];
-                    }
-                    foundWads[i] = filename;
-                    added = true;
-                    break;
-                }
-            }
-            // If we made it all the way to the end and it still hasn't been
-            // added, make it the last thing in the list
-            if (!added)
-            {
-                foundWads[foundWadsCount - 1] = filename;
-            }
-        }
-        closedir(dir);
-    }
+    // Init launcher states
+    launcherMainInit();
+    launcherNoWadsInit();
 
     // I need this variable because with out it, WHBProcIsRunning becomes true
     // again before exiting, causing a crash
-    int wbhRunning = true;
+    bool wbhRunning = true;
 
-    while (launcherRunning && (wbhRunning = WHBProcIsRunning()))
+    while ((launcherRunning > 0) && (wbhRunning = WHBProcIsRunning()))
     {
         // Poll input
         VPADRead(VPAD_CHAN_0, &status, 1, &error);
@@ -191,6 +157,9 @@ void launcherRun()
         OSScreenFlipBuffersEx(SCREEN_DRC);
     }
 
+    if (!wbhRunning)
+        launcherRunning = -1; // Quit
+
     // Cleanup launcher
     if (tvBuffer)
         free(tvBuffer);
@@ -198,30 +167,16 @@ void launcherRun()
         free(drcBuffer);
     OSScreenShutdown();
 
-    if (foundWadsCount > 0)
+    if (launcherRunning >= 0)
     {
-        if (wbhRunning)
-        {
-            // Build up "myargc" and "myargv" from stuff user selected
-            char *origArgv0 = myargv[0];
-
-            myargc = 3;
-            myargv = malloc(myargc * sizeof(char *));
-
-            myargv[0] = origArgv0;
-            myargv[1] = "-iwad";
-            myargv[2] = strdup(foundWads[selectedWadIndex]);
-        }
-
-        // Free found WADs
-        for (int i = 0; i < foundWadsCount; i++)
-        {
-            free(foundWads[i]);
-        }
-        free(foundWads);
+        generateArgcArgv();
     }
 
-    if (!wbhRunning || foundWadsCount == 0)
+    // Cleanup launcher states
+    launcherMainCleanup();
+    launcherNoWadsCleanup();
+
+    if (launcherRunning < 0)
     {
         WHBProcShutdown();
         exit(0);
