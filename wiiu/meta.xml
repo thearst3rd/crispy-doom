@@ -2,7 +2,7 @@
 <app version="1">
 	<name>Crispy Doom</name>
 	<coder>thearst3rd</coder>
-	<version>0.2 (5.10.1)</version>
+	<version>0.2.1 (5.10.1)</version>
 	<url>https://github.com/thearst3rd/crispy-doom/tree/wiiu-port</url>
 	<release_date>20210403000000</release_date>
 	<short_description>Play Doom on the Wii U</short_description>

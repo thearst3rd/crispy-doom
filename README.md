@@ -9,10 +9,10 @@ Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thea
 To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
 ## Features
-* Up to date with Crispy Doom 5.10.1 (up to commit [40fd021](https://github.com/fabiangreffrath/crispy-doom/tree/40fd021c6368ea3ac82315730c36c92f3496643f))
+* Up to date with Crispy Doom 5.10.1 (up to commit [c028707](https://github.com/fabiangreffrath/crispy-doom/commit/c028707bf7d7fb51fd8361cb748811e79d7c4f27))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
-* Simple WAD picker
+* Simple launcher that lets you pick an IWAD and optionally PWADs
 * Music support using OPL3
 	* Causes a bit of a stutter when loading a new music track. I'm looking into making this faster, but it's not too bad for most levels.
 	* Note: There is a known bug involving the Freedoom WADs (and probably others) - details below
@@ -27,7 +27,7 @@ As this is a pre-release, not everything is perfect yet. Here are a list of some
 * No networking support
 	* `SDL2_net` is not supported on the Wii U, so for now, this is single player only.
 * Launcher is lacking features
-	* I plan on improving the launcher in the future to let you load PWADS, add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc), and rebind controls.
+	* I plan on improving the launcher in the future to let you add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc), record/play back demos, and rebind controls.
 * No controllers other than the Wii U Gamepad
 	* Currently, I have hard coded it to only use the Wii U Gamepad. I will expand it with support for other controllers in the future, it doesn't seem to be too hard.
 * No cheats
