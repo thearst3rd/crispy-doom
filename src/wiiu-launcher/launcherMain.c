@@ -38,7 +38,11 @@ extern launcherState state;
 // Scanned WADs
 char **foundWads = NULL;
 int foundWadsCount = 0;
-int selectedWadIndex = 0;
+int menuHoverIndex = 0;
+
+// Selected WADs
+int *selectedWads = NULL;
+int selectedWadsCount = 0;
 
 void addWad(char *wadname)
 {
@@ -116,28 +120,63 @@ void addWadsInDir(char *dirname, char *relDirname)
 
 void launcherMainInit()
 {
-    foundWads = NULL;
-    foundWadsCount = 0;
     // Scan for WADs
     addWadsInDir(HOMEBREW_APP_PATH "/wads", "");
 
     if (foundWadsCount == 0)
+    {
         state = LAUNCHER_NOWADS;
+        return;
+    }
+
+    selectedWads = (int *) malloc(foundWadsCount * sizeof(int));
+}
+
+// Gets if this WAD is selected. If so, return the index (0 means IWAD)
+// If not, return -1
+int getSelectedIndex(int wadIndex)
+{
+    for (int i = 0; i < selectedWadsCount; i++)
+    {
+        if (selectedWads[i] == wadIndex)
+            return i;
+    }
+    return -1;
+}
+
+// Selects or deselects the given WAD
+void selectWad(int wadIndex)
+{
+    int selected = getSelectedIndex(wadIndex);
+    if (selected >= 0)
+    {
+        selectedWadsCount--;
+        for (int i = selected; i < selectedWadsCount; i++)
+        {
+            selectedWads[i] = selectedWads[i + 1];
+        }
+        return;
+    }
+    selectedWads[selectedWadsCount] = wadIndex;
+    selectedWadsCount++;
 }
 
 void launcherMainUpdate(VPADStatus status)
 {
     if (status.trigger & (VPAD_BUTTON_UP | VPAD_STICK_L_EMULATION_UP))
-        selectedWadIndex--;
+        menuHoverIndex--;
     if (status.trigger & (VPAD_BUTTON_DOWN | VPAD_STICK_L_EMULATION_DOWN))
-        selectedWadIndex++;
+        menuHoverIndex++;
 
-    if (selectedWadIndex < 0)
-        selectedWadIndex = foundWadsCount - 1;
-    else if (selectedWadIndex >= foundWadsCount)
-        selectedWadIndex = 0;
+    if (menuHoverIndex < 0)
+        menuHoverIndex = foundWadsCount - 1;
+    else if (menuHoverIndex >= foundWadsCount)
+        menuHoverIndex = 0;
 
-    if (status.trigger & VPAD_BUTTON_PLUS)
+    if (status.trigger & VPAD_BUTTON_A)
+        selectWad(menuHoverIndex);
+
+    if ((status.trigger & VPAD_BUTTON_PLUS) && (selectedWadsCount > 0))
         launcherRunning = 0;
 }
 
@@ -145,14 +184,33 @@ void launcherMainDraw(OSScreenID screenID)
 {
     OSScreenPutFontEx(screenID, 0, 0, "Crispy Doom");
 
-    OSScreenPutFontEx(screenID, 0, 2, "Press up and down to select a WAD");
-    OSScreenPutFontEx(screenID, 0, 3, "Press + to start playing");
+    if (selectedWadsCount == 0)
+    {
+        OSScreenPutFontEx(screenID, 0, 2, "Press A to select an IWAD");
+    }
+    else
+    {
+        OSScreenPutFontEx(screenID, 0, 2, "Press + to start playing");
+        OSScreenPutFontEx(screenID, 0, 3, "Optionally, press A to select/deselect additional PWADs");
+    }
     for (int i = 0; i < foundWadsCount; i++)
     {
         int y = i + 5;
-        OSScreenPutFontEx(screenID, 5, y, foundWads[i]);
-        if (selectedWadIndex == i)
-            OSScreenPutFontEx(screenID, 2, y, ">>");
+        OSScreenPutFontEx(screenID, 9, y, foundWads[i]);
+        if (menuHoverIndex == i)
+            OSScreenPutFontEx(screenID, 6, y, ">>");
+
+        int selectedIndex = getSelectedIndex(i);
+        if (selectedIndex == 0)
+        {
+            OSScreenPutFontEx(screenID, 1, y, "IWAD");
+        }
+        else if (selectedIndex > 0)
+        {
+            char buf[11];
+            sprintf(buf, "%4d", selectedIndex);
+            OSScreenPutFontEx(screenID, 1, y, buf);
+        }
     }
 }
 
@@ -166,6 +224,7 @@ void launcherMainCleanup()
             free(foundWads[i]);
         }
         free(foundWads);
+        free(selectedWads);
     }
 }
 

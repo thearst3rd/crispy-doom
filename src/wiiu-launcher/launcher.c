@@ -42,7 +42,8 @@ int launcherRunning = 1; // 0 means go to game, -1 means quit
 launcherState state = LAUNCHER_MAIN;
 
 extern char **foundWads;
-extern int selectedWadIndex;
+extern int *selectedWads;
+extern int selectedWadsCount;
 
 void launcherUpdate(VPADStatus status)
 {
@@ -75,13 +76,31 @@ void generateArgcArgv()
 {
     // Build up "myargc" and "myargv" from stuff user selected
     char *origArgv0 = myargv[0];
+    if (selectedWadsCount > 1)
+        myargc = selectedWadsCount + 3;
+    else if (selectedWadsCount == 1)
+        myargc = 3;
+    else
+        myargc = 1;
 
-    myargc = 3;
     myargv = malloc(myargc * sizeof(char *));
+    int currArg = 0;
+    myargv[currArg++] = strdup(origArgv0);
 
-    myargv[0] = strdup(origArgv0);
-    myargv[1] = strdup("-iwad");
-    myargv[2] = strdup(foundWads[selectedWadIndex]);
+    if (selectedWadsCount > 0)
+    {
+        myargv[currArg++] = strdup("-iwad");
+        myargv[currArg++] = strdup(foundWads[selectedWads[0]]);
+
+        if (selectedWadsCount > 1)
+        {
+            myargv[currArg++] = strdup("-file");
+            for (int i = 1; i < selectedWadsCount; i++)
+            {
+                myargv[currArg++] = strdup(foundWads[selectedWads[i]]);
+            }
+        }
+    }
 }
 
 void launcherRun()
