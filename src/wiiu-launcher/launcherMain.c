@@ -26,6 +26,8 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "wiiu-config.h"
 #include "launcher.h"
@@ -38,45 +40,86 @@ char **foundWads = NULL;
 int foundWadsCount = 0;
 int selectedWadIndex = 0;
 
-void launcherMainInit()
+void addWad(char *wadname)
 {
-    // Scan for WADs
-    foundWads = NULL;
-    foundWadsCount = 0;
+    foundWadsCount++;
+    foundWads = realloc(foundWads, foundWadsCount * sizeof(char *));
+    // Insert alphabetically
+    bool added = false;
+    for (int i = 0; i < foundWadsCount - 1; i++)
+    {
+        if (strcmp(wadname, foundWads[i]) < 0)
+        {
+            // Shift all other entries down
+            for (int j = foundWadsCount - 2; j >= i; j--)
+            {
+                foundWads[j + 1] = foundWads[j];
+            }
+            foundWads[i] = wadname;
+            added = true;
+            break;
+        }
+    }
+    // If we made it all the way to the end and it still hasn't been added,
+    // added, make it the last thing in the list
+    if (!added)
+    {
+        foundWads[foundWadsCount - 1] = wadname;
+    }
+}
+
+char *joinDirs(char *dirname, char *filename)
+{
+    size_t dirlen = strlen(dirname);
+    if (dirlen == 0)
+        return strdup(filename);
+    // + 2 for slash and null terminator
+    size_t joinedLen = dirlen + strlen(filename) + 2;
+    char *joined = (char *) malloc(joinedLen * sizeof(char));
+    strcpy(joined, dirname);
+    joined[dirlen] = '/';
+    strcpy(joined + dirlen + 1, filename);
+    return joined;
+}
+
+void addWadsInDir(char *dirname, char *relDirname)
+{
     struct dirent *files;
-    DIR *dir = opendir(HOMEBREW_APP_PATH "/wads");
+    DIR *dir = opendir(dirname);
     if (dir != NULL)
     {
         while ((files = readdir(dir)) != NULL)
         {
-            foundWadsCount++;
-            foundWads = realloc(foundWads, foundWadsCount * sizeof(char *));
-            // Insert alphabetically
-            bool added = false;
-            char *filename = strdup(files->d_name);
-            for (int i = 0; i < foundWadsCount - 1; i++)
+            char *filename = joinDirs(dirname, files->d_name);
+            char *relFilename = joinDirs(relDirname, files->d_name);
+
+            // Check if file or directory
+            struct stat path_stat;
+            stat(filename, &path_stat);
+            if (S_ISREG(path_stat.st_mode))
             {
-                if (strcmp(filename, foundWads[i]) < 0)
+                addWad(relFilename);
+            }
+            else
+            {
+                if (S_ISDIR(path_stat.st_mode))
                 {
-                    // Shift all other entries down
-                    for (int j = foundWadsCount - 1; j >= i; j--)
-                    {
-                        foundWads[j + 1] = foundWads[j];
-                    }
-                    foundWads[i] = filename;
-                    added = true;
-                    break;
+                    addWadsInDir(filename, relFilename);
                 }
+                free(relFilename);
             }
-            // If we made it all the way to the end and it still hasn't been
-            // added, make it the last thing in the list
-            if (!added)
-            {
-                foundWads[foundWadsCount - 1] = filename;
-            }
+            free(filename);
         }
         closedir(dir);
     }
+}
+
+void launcherMainInit()
+{
+    foundWads = NULL;
+    foundWadsCount = 0;
+    // Scan for WADs
+    addWadsInDir(HOMEBREW_APP_PATH "/wads", "");
 
     if (foundWadsCount == 0)
         state = LAUNCHER_NOWADS;
