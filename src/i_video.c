@@ -509,6 +509,12 @@ void I_GetEvent(void)
                     HandleWindowEvent(&sdlevent.window);
                 }
                 break;
+#ifdef __WIIU__
+            case SDL_JOYDEVICEADDED:
+            case SDL_JOYDEVICEREMOVED:
+                WiiU_SetupJoysticks();
+                break;
+#endif
 
             default:
                 break;

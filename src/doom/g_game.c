@@ -350,6 +350,12 @@ boolean speedkeydown (void)
            (joybspeed < MAX_JOY_BUTTONS && joybuttons[joybspeed]);
 }
 
+#ifdef BETTER_ANALOG
+#define ANALOG_LOOK_THRESHOLD 10000
+#else
+#define ANALOG_LOOK_THRESHOLD 0
+#endif // BETTER_ANALOG
+
 //
 // G_BuildTiccmd
 // Builds a ticcmd from all of the available inputs
@@ -602,13 +608,13 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     {
         static unsigned int kbdlookctrl = 0;
 
-        if (gamekeydown[key_lookup] || joylook < 0)
+        if (gamekeydown[key_lookup] || joylook < -ANALOG_LOOK_THRESHOLD)
         {
             look = lspeed;
             kbdlookctrl += ticdup;
         }
         else
-        if (gamekeydown[key_lookdown] || joylook > 0)
+        if (gamekeydown[key_lookdown] || joylook > ANALOG_LOOK_THRESHOLD)
         {
             look = -lspeed;
             kbdlookctrl += ticdup;

@@ -64,6 +64,11 @@
 #define HAT_AXIS_HORIZONTAL 1
 #define HAT_AXIS_VERTICAL   2
 
+#ifdef __WIIU__
+void WiiU_CloseJoysticks();
+void WiiU_SetupJoysticks();
+#endif // __WIIU__
+
 void I_InitJoystick(void);
 void I_ShutdownJoystick(void);
 void I_UpdateJoystick(void);

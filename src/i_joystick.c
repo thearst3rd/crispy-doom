@@ -35,7 +35,7 @@
 // This is 5% of the full range:
 
 #ifdef __WIIU__
-#define DEAD_ZONE (32768 / 6)
+#define DEAD_ZONE (32768 / 10)
 #else
 #define DEAD_ZONE (32768 / 3)
 #endif // __WIIU__
@@ -46,19 +46,13 @@ static SDL_Joystick *joystick = NULL;
 
 // Standard default.cfg Joystick enable/disable
 
-#ifdef __WIIU__
-static int usejoystick = 1;
-#else
+#ifndef __WIIU__
 static int usejoystick = 0;
-#endif // __WIIU__
 
 // SDL GUID and index of the joystick to use.
 static char *joystick_guid = "";
-#ifdef __WIIU__
-static int joystick_index = 0; // Hard code Wii U Gamepad for now
-#else
 static int joystick_index = -1;
-#endif // __WIIU__
+#endif // !__WIIU__
 
 // Which joystick axis to use for horizontal movement, and whether to
 // invert the direction:
@@ -148,6 +142,7 @@ static boolean IsValidAxis(int axis)
     return axis < num_axes;
 }
 
+#ifndef __WIIU__
 static int DeviceIndex(void)
 {
     SDL_JoystickGUID guid, dev_guid;
@@ -181,12 +176,30 @@ static int DeviceIndex(void)
     // No joystick found with the expected GUID.
     return -1;
 }
+#endif // !__WIIU__
+
+#ifdef __WIIU__
+void WiiU_CloseJoysticks()
+{
+    if (joystick)
+    {
+        SDL_JoystickClose(joystick);
+        joystick = NULL;
+    }
+}
+
+void WiiU_SetupJoysticks()
+{
+    WiiU_CloseJoysticks();
+    joystick = SDL_JoystickOpen(0);
+}
+#endif // __WIIU__
 
 void I_InitJoystick(void)
 {
+#ifndef __WIIU__
     int index;
 
-#ifndef __WIIU__
     if (!usejoystick || !strcmp(joystick_guid, ""))
     {
         return;
@@ -195,18 +208,13 @@ void I_InitJoystick(void)
 
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0)
     {
-#ifdef __WIIU__
-       I_Error("SDL_Init() joysticks failed: %s", SDL_GetError());
-#else
         return;
-#endif // __WIIU__
     }
 
 #ifdef __WIIU__
-    index = 0;
+    WiiU_SetupJoysticks();
 #else
     index = DeviceIndex();
-#endif // __WIIU__
 
     if (index < 0)
     {
@@ -227,6 +235,7 @@ void I_InitJoystick(void)
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
         return;
     }
+#endif // __WIIU__
 
     if (!IsValidAxis(joystick_x_axis)
      || !IsValidAxis(joystick_y_axis)
@@ -236,8 +245,12 @@ void I_InitJoystick(void)
         printf("I_InitJoystick: Invalid joystick axis for configured joystick "
                "(run joystick setup again)\n");
 
+#ifdef __WIIU__
+        WiiU_CloseJoysticks();
+#else
         SDL_JoystickClose(joystick);
         joystick = NULL;
+#endif // __WIIU__
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     }
 
@@ -434,9 +447,9 @@ void I_UpdateJoystick(void)
 
 void I_BindJoystickVariables(void)
 {
+#ifndef __WIIU__
     int i;
 
-#ifndef __WIIU__
     M_BindIntVariable("use_joystick",          &usejoystick);
     M_BindStringVariable("joystick_guid",      &joystick_guid);
     M_BindIntVariable("joystick_index",        &joystick_index);
@@ -457,6 +470,6 @@ void I_BindJoystickVariables(void)
         M_snprintf(name, sizeof(name), "joystick_physical_button%i", i);
         M_BindIntVariable(name, &joystick_physical_buttons[i]);
     }
-#endif
+#endif // !__WIIU__
 }
 

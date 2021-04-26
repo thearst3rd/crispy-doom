@@ -505,11 +505,13 @@ static default_t	doom_defaults_list[] =
 
     CONFIG_VARIABLE_INT(mouseb_reverse),
 
+#ifndef __WIIU__
     //!
     // If non-zero, joystick input is enabled.
     //
 
     CONFIG_VARIABLE_INT(use_joystick),
+#endif // !__WIIU__
 
     //!
     // Joystick virtual button that fires the current weapon.
@@ -1169,6 +1171,7 @@ static default_t extra_defaults_list[] =
 
     CONFIG_VARIABLE_INT(dclick_use),
 
+#ifndef __WIIU__
     //!
     // SDL GUID string indicating the joystick to use. An empty string
     // indicates that no joystick is configured.
@@ -1183,6 +1186,7 @@ static default_t extra_defaults_list[] =
     //
 
     CONFIG_VARIABLE_INT(joystick_index),
+#endif // !__WIIU__
 
     //!
     // Joystick axis to use to for horizontal (X) movement.
