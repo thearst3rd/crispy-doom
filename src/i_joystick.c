@@ -41,6 +41,12 @@
 #endif // __WIIU__
 
 static SDL_Joystick *joystick = NULL;
+#ifdef __WIIU__
+static SDL_Joystick *joystick_extra1 = NULL;
+static SDL_Joystick *joystick_extra2 = NULL;
+static SDL_Joystick *joystick_extra3 = NULL;
+static SDL_Joystick *joystick_extra4 = NULL;
+#endif // __WIIU__
 
 // Configuration variables:
 
@@ -110,12 +116,17 @@ extern unsigned int joywaitDiff;
 
 void I_ShutdownJoystick(void)
 {
+#ifdef __WIIU__
+    WiiU_CloseJoysticks();
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+#else
     if (joystick != NULL)
     {
         SDL_JoystickClose(joystick);
         joystick = NULL;
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     }
+#endif // __WIIU__
 }
 
 static boolean IsValidAxis(int axis)
@@ -186,12 +197,36 @@ void WiiU_CloseJoysticks()
         SDL_JoystickClose(joystick);
         joystick = NULL;
     }
+    if (joystick_extra1)
+    {
+        SDL_JoystickClose(joystick_extra1);
+        joystick_extra1 = NULL;
+    }
+    if (joystick_extra2)
+    {
+        SDL_JoystickClose(joystick_extra2);
+        joystick_extra2 = NULL;
+    }
+    if (joystick_extra3)
+    {
+        SDL_JoystickClose(joystick_extra3);
+        joystick_extra3 = NULL;
+    }
+    if (joystick_extra4)
+    {
+        SDL_JoystickClose(joystick_extra4);
+        joystick_extra4 = NULL;
+    }
 }
 
 void WiiU_SetupJoysticks()
 {
     WiiU_CloseJoysticks();
     joystick = SDL_JoystickOpen(0);
+    joystick_extra1 = SDL_JoystickOpen(1);
+    joystick_extra2 = SDL_JoystickOpen(2);
+    joystick_extra3 = SDL_JoystickOpen(3);
+    joystick_extra4 = SDL_JoystickOpen(4);
 }
 #endif // __WIIU__
 
@@ -323,7 +358,17 @@ static int ReadButtonState(int vbutton)
         return 0;
     }
 
+#ifdef __WIIU__
+    int value = 0;
+    if (joystick)        value |= SDL_JoystickGetButton(joystick,        physbutton);
+    if (joystick_extra1) value |= SDL_JoystickGetButton(joystick_extra1, physbutton);
+    if (joystick_extra2) value |= SDL_JoystickGetButton(joystick_extra2, physbutton);
+    if (joystick_extra3) value |= SDL_JoystickGetButton(joystick_extra3, physbutton);
+    if (joystick_extra4) value |= SDL_JoystickGetButton(joystick_extra4, physbutton);
+    return value;
+#else
     return SDL_JoystickGetButton(joystick, physbutton);
+#endif // __WIIU__
 }
 
 // Get a bitmask of all currently-pressed buttons
@@ -348,8 +393,25 @@ static int GetButtonsState(void)
 
 // Read the state of an axis, inverting if necessary.
 
+#ifdef __WIIU__
+static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick);
+#endif // __WIIU__
+
 static int GetAxisState(int axis, int invert)
 {
+#ifdef __WIIU__
+    int value = 0;
+    if (value == 0 && joystick)        value = GetAxisStateOrig(axis, invert, joystick);
+    if (value == 0 && joystick_extra1) value = GetAxisStateOrig(axis, invert, joystick_extra1);
+    if (value == 0 && joystick_extra2) value = GetAxisStateOrig(axis, invert, joystick_extra2);
+    if (value == 0 && joystick_extra3) value = GetAxisStateOrig(axis, invert, joystick_extra3);
+    if (value == 0 && joystick_extra4) value = GetAxisStateOrig(axis, invert, joystick_extra4);
+    return value;
+}
+
+static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
+{
+#endif // __WIIU__
     int result;
 
     // Axis -1 means disabled.
