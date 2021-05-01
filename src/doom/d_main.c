@@ -603,11 +603,20 @@ void D_DoomLoop (void)
     }
 
 #ifdef __WIIU__
+#define RESCAN_THRESHOLD 60
+    int rescanCounter = 0;
     while (WHBProcIsRunning())
+    {
+        if (rescanCounter < RESCAN_THRESHOLD)
+        {
+            rescanCounter++;
+            if (rescanCounter == RESCAN_THRESHOLD)
+                WiiU_SetupJoysticks();
+        }
 #else
     while (1)
-#endif // __WIIU__
     {
+#endif // __WIIU__
         D_RunFrame();
     }
 
