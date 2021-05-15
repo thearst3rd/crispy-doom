@@ -1099,7 +1099,6 @@ static void R_InitTranMap()
 	    byte *fg, *bg, blend[3], *tp = tranmap;
 	    int i, j, btmp;
 
-	    I_SetPalette(playpal);
 	    // [crispy] background color
 	    for (i = 0; i < 256; i++)
 	    {
@@ -1125,7 +1124,7 @@ static void R_InitTranMap()
 		    blend[g] = (tran_filter_pct * fg[g] + (100 - tran_filter_pct) * bg[g]) / (100 + btmp);
 		    blend[b] = (tran_filter_pct * fg[b] + (100 - tran_filter_pct) * bg[b]) / 100;
 
-		    *tp++ = I_GetPaletteIndex(blend[r], blend[g], blend[b]);
+		    *tp++ = V_GetPaletteIndex(playpal, blend[r], blend[g], blend[b]);
 		}
 	    }
 
@@ -1249,7 +1248,6 @@ void R_InitColormaps (void)
 	char c[3];
 	int i, j;
 	boolean keepgray = false;
-	extern byte V_Colorize (byte *playpal, int cr, byte source, boolean keepgray109);
 
 	if (!crstr)
 	    crstr = I_Realloc(NULL, CRMAX * sizeof(*crstr));
