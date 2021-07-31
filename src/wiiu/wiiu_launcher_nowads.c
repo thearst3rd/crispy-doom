@@ -15,7 +15,7 @@
 //	Wii U Launcher - No WADs screen
 //
 
-#include "launcherNoWads.h"
+#include "wiiu_launcher_nowads.h"
 
 #ifdef __WIIU__
 
@@ -28,7 +28,7 @@
 #include <dirent.h>
 
 #include "wiiu-config.h"
-#include "launcher.h"
+#include "wiiu_launcher.h"
 
 extern int launcherRunning;
 extern launcherState state;

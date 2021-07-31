@@ -15,7 +15,7 @@
 //	Wii U Launcher - Main screen
 //
 
-#include "launcherMain.h"
+#include "wiiu_launcher_main.h"
 
 #ifdef __WIIU__
 
@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 
 #include "wiiu-config.h"
-#include "launcher.h"
+#include "wiiu_launcher.h"
 
 extern int launcherRunning;
 extern launcherState state;

@@ -36,7 +36,7 @@
 
 #ifdef __WIIU__
 #include <whb/proc.h>
-#include "launcher.h"
+#include "wiiu_launcher.h"
 #endif // __WIIU__
 
 //

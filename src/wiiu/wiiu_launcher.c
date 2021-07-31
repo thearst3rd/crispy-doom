@@ -15,7 +15,7 @@
 //	Wii U Launcher/WAD picker implementation
 //
 
-#include "launcher.h"
+#include "wiiu_launcher.h"
 
 #ifdef __WIIU__
 
@@ -34,8 +34,8 @@
 #include "i_system.h"
 #include "m_argv.h"
 
-#include "launcherMain.h"
-#include "launcherNoWads.h"
+#include "wiiu_launcher_main.h"
+#include "wiiu_launcher_nowads.h"
 
 // Global variables
 int launcherRunning = 1; // 0 means go to game, -1 means quit

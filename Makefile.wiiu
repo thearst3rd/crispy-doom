@@ -19,9 +19,9 @@ include $(DEVKITPRO)/wut/share/wut_rules
 #-------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	src src/doom opl src/wiiu-launcher
+SOURCES		:=	src src/doom opl src/wiiu
 DATA		:=	wiiu-data
-INCLUDES	:=	. src src/doom opl src/wiiu-launcher
+INCLUDES	:=	. src src/doom opl src/wiiu
 
 #-------------------------------------------------------------------------------
 # options for code generation
