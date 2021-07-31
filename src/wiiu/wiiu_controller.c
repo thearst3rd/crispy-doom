@@ -21,11 +21,13 @@
 
 #include "wiiu_controller.h"
 
+#include <string.h>
+
 #include <vpad/input.h>
 #include <padscore/wpad.h>
 #include <padscore/kpad.h>
 
-// Button maps, taken directly from
+// Button maps, taken directly (with minor changes) from
 // https://github.com/devkitPro/SDL/blob/wiiu-sdl2-2.0.9/src/joystick/wiiu/SDL_wiiujoystick.h
 
 #define SIZEOF_ARR(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -55,8 +57,13 @@ static WPADClassicButton classic_button_map[] = {
     WPAD_CLASSIC_BUTTON_A, WPAD_CLASSIC_BUTTON_B, WPAD_CLASSIC_BUTTON_X,
     WPAD_CLASSIC_BUTTON_Y,
     0, 0,
+    // Inverting these two seems more consistent to me... Though it goes against the labels. TODO: make configurable?
+    WPAD_CLASSIC_BUTTON_ZL, WPAD_CLASSIC_BUTTON_ZR,
+    WPAD_CLASSIC_BUTTON_L, WPAD_CLASSIC_BUTTON_R,
+/*
     WPAD_CLASSIC_BUTTON_L, WPAD_CLASSIC_BUTTON_R,
     WPAD_CLASSIC_BUTTON_ZL, WPAD_CLASSIC_BUTTON_ZR,
+*/
     WPAD_CLASSIC_BUTTON_PLUS, WPAD_CLASSIC_BUTTON_MINUS,
     WPAD_CLASSIC_BUTTON_LEFT, WPAD_CLASSIC_BUTTON_UP, WPAD_CLASSIC_BUTTON_RIGHT,
     WPAD_CLASSIC_BUTTON_DOWN,
@@ -84,6 +91,10 @@ int32_t stickX;
 int32_t stickY;
 int32_t rStickX;
 int32_t rStickY;
+
+
+KPADStatus lastKpad[4] = {{0}, {0}, {0}, {0}};
+int kpadTimeout[4] = {10, 10, 10, 10};
 
 void WiiU_InitJoystick()
 {
@@ -126,9 +137,105 @@ static void read_vpad()
     rStickY = -status.rightStick.y * 0x7ff0;
 }
 
+static void read_wpad_chan(WPADChan chan)
+{
+    WPADExtensionType ext;
+    int res = WPADProbe(chan, &ext);
+    if (res != 0)
+        return;
+
+    KPADStatus status;
+    int err;
+    int read = KPADReadEx(chan, &status, 1, &err);
+    if (read == 0)
+    {
+        kpadTimeout[chan]--;
+        if (kpadTimeout <= 0)
+        {
+            WPADDisconnect(chan);
+            memset(&lastKpad[chan], 0, sizeof(KPADStatus));
+            return;
+        }
+        status = lastKpad[chan];
+    }
+    else
+    {
+        kpadTimeout[chan] = 10;
+        lastKpad[chan] = status;
+    }
+
+    int stickNotSet = stickX == 0 && stickY == 0;
+    int rStickNotSet = rStickX == 0 && rStickY == 0;
+
+    if (status.extensionType == WPAD_EXT_NUNCHUK || status.extensionType == WPAD_EXT_MPLUS_NUNCHUK)
+    {
+        // Probably won't be very fun...
+        // TODO: find a mapping that will make this playable somehow??
+        for (int i = 0; i < SIZEOF_ARR(wiimote_button_map); i++)
+        {
+            if (status.hold & wiimote_button_map[i])
+                buttons |= (1 << i);
+            if (status.trigger & wiimote_button_map[i])
+                buttonsPressed |= (1 << i);
+        }
+
+        if (stickNotSet)
+        {
+            stickX = status.nunchuck.stick.x * 0x7ff0;
+            stickY = -status.nunchuck.stick.y * 0x7ff0;
+        }
+        // no rStick...
+    }
+    else if (status.extensionType == WPAD_EXT_CLASSIC || status.extensionType == WPAD_EXT_MPLUS_CLASSIC)
+    {
+        for (int i = 0; i < SIZEOF_ARR(classic_button_map); i++)
+        {
+            if (status.classic.hold & classic_button_map[i])
+                buttons |= (1 << i);
+            if (status.classic.trigger & classic_button_map[i])
+                buttonsPressed |= (1 << i);
+        }
+
+        if (stickNotSet)
+        {
+            stickX = status.classic.leftStick.x * 0x7ff0;
+            stickY = -status.classic.leftStick.y * 0x7ff0;
+        }
+        if (rStickNotSet)
+        {
+            rStickX = status.classic.rightStick.x * 0x7ff0;
+            rStickY = -status.classic.rightStick.y * 0x7ff0;
+        }
+    }
+    else if (status.extensionType == WPAD_EXT_PRO_CONTROLLER)
+    {
+        for (int i = 0; i < SIZEOF_ARR(pro_button_map); i++)
+        {
+            if (status.pro.hold & pro_button_map[i])
+                buttons |= (1 << i);
+            if (status.pro.trigger & pro_button_map[i])
+                buttonsPressed |= (1 << i);
+        }
+
+        if (stickNotSet)
+        {
+            stickX = status.pro.leftStick.x * 0x7ff0;
+            stickY = -status.pro.leftStick.y * 0x7ff0;
+        }
+        if (rStickNotSet)
+        {
+            rStickX = status.pro.rightStick.x * 0x7ff0;
+            rStickY = -status.pro.rightStick.y * 0x7ff0;
+        }
+    }
+}
+
 static void read_wpad()
 {
-    // todo
+    read_wpad_chan(WPAD_CHAN_0);
+    read_wpad_chan(WPAD_CHAN_1);
+    read_wpad_chan(WPAD_CHAN_2);
+    read_wpad_chan(WPAD_CHAN_3);
 }
 
 void WiiU_PollJoystick()
