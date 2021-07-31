@@ -27,6 +27,10 @@
 #include <padscore/wpad.h>
 #include <padscore/kpad.h>
 
+#define MAX(value1, value2) (value1 > value2 ? value1 : value2)
+#define MIN(value1, value2) (value1 < value2 ? value1 : value2)
+#define CLAMP(value, min, max) (MAX(MIN(value, max), min))
+
 // Button maps, taken directly (with minor changes) from
 // https://github.com/devkitPro/SDL/blob/wiiu-sdl2-2.0.9/src/joystick/wiiu/SDL_wiiujoystick.h
 
@@ -91,6 +95,8 @@ int32_t stickX;
 int32_t stickY;
 int32_t rStickX;
 int32_t rStickY;
+int32_t gyroX;
+int32_t gyroY;
 
 
 KPADStatus lastKpad[4] = {{0}, {0}, {0}, {0}};
@@ -99,6 +105,7 @@ int kpadTimeout[4] = {10, 10, 10, 10};
 void WiiU_InitJoystick()
 {
     VPADInit();
+    VPADEnableGyroAccRevise(VPAD_CHAN_0);
     KPADInit();
     WPADEnableURCC(1);
     WPADEnableWiiRemote(1);
@@ -135,6 +142,9 @@ static void read_vpad()
 
     rStickX = status.rightStick.x * 0x7ff0;
     rStickY = -status.rightStick.y * 0x7ff0;
+
+    gyroX = -0x20000 * status.gyro.z;
+    gyroY = 0x20000 * status.gyro.x;
 }
 
 static void read_wpad_chan(WPADChan chan)
@@ -246,9 +256,19 @@ void WiiU_PollJoystick()
     stickY = 0;
     rStickX = 0;
     rStickY = 0;
+    gyroX = 0;
+    gyroY = 0;
 
     read_vpad();
     read_wpad();
+
+    if (buttons & (1 << 8))
+    {
+        rStickX += gyroX;
+        rStickY += gyroY;
+        rStickX = CLAMP(rStickX, -0x7ff0, 0x7ff0);
+        rStickY = CLAMP(rStickY, -0x7ff0, 0x7ff0);
+    }
 }
 
 int WiiU_JoystickGetButton(int button)
