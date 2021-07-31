@@ -16,8 +16,10 @@
 //
 
 
+#ifndef __WIIU__
 #include "SDL.h"
 #include "SDL_joystick.h"
+#endif // !__WIIU__
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,6 +33,10 @@
 #include "m_config.h"
 #include "m_misc.h"
 
+#ifdef __WIIU__
+#include "wiiu_controller.h"
+#endif // __WIIU__
+
 // When an axis is within the dead zone, it is set to zero.
 // This is 5% of the full range:
 
@@ -40,13 +46,9 @@
 #define DEAD_ZONE (32768 / 3)
 #endif // __WIIU__
 
+#ifndef __WIIU__
 static SDL_Joystick *joystick = NULL;
-#ifdef __WIIU__
-static SDL_Joystick *joystick_extra1 = NULL;
-static SDL_Joystick *joystick_extra2 = NULL;
-static SDL_Joystick *joystick_extra3 = NULL;
-static SDL_Joystick *joystick_extra4 = NULL;
-#endif // __WIIU__
+#endif // !__WIIU__
 
 // Configuration variables:
 
@@ -117,8 +119,7 @@ extern unsigned int joywaitDiff;
 void I_ShutdownJoystick(void)
 {
 #ifdef __WIIU__
-    WiiU_CloseJoysticks();
-    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+    WiiU_ShutdownJoystick();
 #else
     if (joystick != NULL)
     {
@@ -145,10 +146,18 @@ static boolean IsValidAxis(int axis)
 
     if (IS_HAT_AXIS(axis))
     {
+#ifdef __WIIU__
+        return HAT_AXIS_HAT(axis) < 0; // same as comment below
+#else
         return HAT_AXIS_HAT(axis) < SDL_JoystickNumHats(joystick);
+#endif // __WIIU__
     }
 
+#ifdef __WIIU__
+    num_axes = 0; // TODO: check if this really should be 0. Looks like it, based on the wiiu SDL2 code
+#else
     num_axes = SDL_JoystickNumAxes(joystick);
+#endif // __WIIU__
 
     return axis < num_axes;
 }
@@ -189,66 +198,23 @@ static int DeviceIndex(void)
 }
 #endif // !__WIIU__
 
-#ifdef __WIIU__
-void WiiU_CloseJoysticks()
-{
-    if (joystick)
-    {
-        SDL_JoystickClose(joystick);
-        joystick = NULL;
-    }
-    if (joystick_extra1)
-    {
-        SDL_JoystickClose(joystick_extra1);
-        joystick_extra1 = NULL;
-    }
-    if (joystick_extra2)
-    {
-        SDL_JoystickClose(joystick_extra2);
-        joystick_extra2 = NULL;
-    }
-    if (joystick_extra3)
-    {
-        SDL_JoystickClose(joystick_extra3);
-        joystick_extra3 = NULL;
-    }
-    if (joystick_extra4)
-    {
-        SDL_JoystickClose(joystick_extra4);
-        joystick_extra4 = NULL;
-    }
-}
-
-void WiiU_SetupJoysticks()
-{
-    WiiU_CloseJoysticks();
-    joystick = SDL_JoystickOpen(0);
-    joystick_extra1 = SDL_JoystickOpen(1);
-    joystick_extra2 = SDL_JoystickOpen(2);
-    joystick_extra3 = SDL_JoystickOpen(3);
-    joystick_extra4 = SDL_JoystickOpen(4);
-}
-#endif // __WIIU__
-
 void I_InitJoystick(void)
 {
-#ifndef __WIIU__
+#ifdef __WIIU__
+    // We're initing our joysticks in the launcher, do nothing here
+#else
     int index;
 
     if (!usejoystick || !strcmp(joystick_guid, ""))
     {
         return;
     }
-#endif // !__WIIU__
 
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0)
     {
         return;
     }
 
-#ifdef __WIIU__
-    WiiU_SetupJoysticks();
-#else
     index = DeviceIndex();
 
     if (index < 0)
@@ -270,7 +236,6 @@ void I_InitJoystick(void)
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
         return;
     }
-#endif // __WIIU__
 
     if (!IsValidAxis(joystick_x_axis)
      || !IsValidAxis(joystick_y_axis)
@@ -280,12 +245,8 @@ void I_InitJoystick(void)
         printf("I_InitJoystick: Invalid joystick axis for configured joystick "
                "(run joystick setup again)\n");
 
-#ifdef __WIIU__
-        WiiU_CloseJoysticks();
-#else
         SDL_JoystickClose(joystick);
         joystick = NULL;
-#endif // __WIIU__
         SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     }
 
@@ -294,6 +255,7 @@ void I_InitJoystick(void)
     // Initialized okay!
 
     printf("I_InitJoystick: %s\n", SDL_JoystickName(joystick));
+#endif // __WIIU__
 
     I_AtExit(I_ShutdownJoystick, true);
 }
@@ -359,13 +321,7 @@ static int ReadButtonState(int vbutton)
     }
 
 #ifdef __WIIU__
-    int value = 0;
-    if (joystick)        value |= SDL_JoystickGetButton(joystick,        physbutton);
-    if (joystick_extra1) value |= SDL_JoystickGetButton(joystick_extra1, physbutton);
-    if (joystick_extra2) value |= SDL_JoystickGetButton(joystick_extra2, physbutton);
-    if (joystick_extra3) value |= SDL_JoystickGetButton(joystick_extra3, physbutton);
-    if (joystick_extra4) value |= SDL_JoystickGetButton(joystick_extra4, physbutton);
-    return value;
+    return WiiU_JoystickGetButton(physbutton);
 #else
     return SDL_JoystickGetButton(joystick, physbutton);
 #endif // __WIIU__
@@ -393,25 +349,8 @@ static int GetButtonsState(void)
 
 // Read the state of an axis, inverting if necessary.
 
-#ifdef __WIIU__
-static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick);
-#endif // __WIIU__
-
 static int GetAxisState(int axis, int invert)
 {
-#ifdef __WIIU__
-    int value = 0;
-    if (value == 0 && joystick)        value = GetAxisStateOrig(axis, invert, joystick);
-    if (value == 0 && joystick_extra1) value = GetAxisStateOrig(axis, invert, joystick_extra1);
-    if (value == 0 && joystick_extra2) value = GetAxisStateOrig(axis, invert, joystick_extra2);
-    if (value == 0 && joystick_extra3) value = GetAxisStateOrig(axis, invert, joystick_extra3);
-    if (value == 0 && joystick_extra4) value = GetAxisStateOrig(axis, invert, joystick_extra4);
-    return value;
-}
-
-static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
-{
-#endif // __WIIU__
     int result;
 
     // Axis -1 means disabled.
@@ -428,6 +367,16 @@ static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
 
     if (IS_BUTTON_AXIS(axis))
     {
+#ifdef __WIIU__
+        if (WiiU_JoystickGetButton(BUTTON_AXIS_NEG(axis)))
+        {
+            result -= 32767;
+        }
+        if (WiiU_JoystickGetButton(BUTTON_AXIS_POS(axis)))
+        {
+            result += 32767;
+        }
+#else
         if (SDL_JoystickGetButton(joystick, BUTTON_AXIS_NEG(axis)))
         {
             result -= 32767;
@@ -436,10 +385,13 @@ static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
         {
             result += 32767;
         }
+#endif __WIIU__
     }
     else if (IS_HAT_AXIS(axis))
     {
         int direction = HAT_AXIS_DIRECTION(axis);
+        // WiiU TODO: maybe implement
+#ifndef __WIIU__
         int hatval = SDL_JoystickGetHat(joystick, HAT_AXIS_HAT(axis));
 
         if (direction == HAT_AXIS_HORIZONTAL)
@@ -464,10 +416,15 @@ static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
                 result += 32767;
             }
         }
+#endif // !__WIIU__
     }
     else
     {
+#ifdef __WIIU__
+        result = WiiU_JoystickGetAxis(axis);
+#else
         result = SDL_JoystickGetAxis(joystick, axis);
+#endif // __WIIU__
 
         if (result < DEAD_ZONE && result > -DEAD_ZONE)
         {
@@ -485,9 +442,15 @@ static int GetAxisStateOrig(int axis, int invert, SDL_Joystick *joystick)
 
 void I_UpdateJoystick(void)
 {
+#ifndef __WIIU__
     if (joystick != NULL)
+#endif // !__WIIU__
     {
         event_t ev;
+
+#ifdef __WIIU__
+        WiiU_PollJoystick();
+#endif // __WIIU__
 
         ev.type = ev_joystick;
         ev.data1 = GetButtonsState();

@@ -37,6 +37,7 @@
 #ifdef __WIIU__
 #include <whb/proc.h>
 #include "wiiu_launcher.h"
+#include "wiiu_controller.h"
 #endif // __WIIU__
 
 //
@@ -56,6 +57,7 @@ int main(int argc, char **argv)
 
 #ifdef __WIIU__
     WHBProcInit();
+    WiiU_InitJoystick();
     launcherRun();
 #endif // __WIIU__
 
