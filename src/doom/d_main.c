@@ -1730,7 +1730,7 @@ void D_DoomMain (void)
 
     crispy->pistolstart = M_ParmExists("-pistolstart");
 
-    // TODO - Research why this doesn't work on WiiU
+    // TODO: Research why this doesn't work on Wii U
 #ifndef __WIIU__
     //!
     // @category mod
@@ -1845,6 +1845,8 @@ void D_DoomMain (void)
     // Debug:
 //    W_PrintDirectory();
 
+    // TODO: Research why this doesn't work on Wii U
+#ifndef __WIIU__
     // [crispy] add wad files from autoload PWAD directories
 
     if (!M_ParmExists("-noautoload") && gamemode != shareware)
@@ -1867,6 +1869,7 @@ void D_DoomMain (void)
             }
         }
     }
+#endif // !__WIIU__
 
     //!
     // @arg <demo>
@@ -1987,6 +1990,8 @@ void D_DoomMain (void)
 
     // [crispy] process .deh files from PWADs autoload directories
 
+    // TODO: Research why this doesn't work on Wii U
+#ifndef __WIIU__
     if (!M_ParmExists("-noautoload") && gamemode != shareware)
     {
         int i;
@@ -2007,6 +2012,7 @@ void D_DoomMain (void)
             }
         }
     }
+#endif // !__WIIU__
 
     // Set the gamedescription string. This is only possible now that
     // we've finished loading Dehacked patches.
