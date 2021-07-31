@@ -21,7 +21,7 @@
 #include <coreinit/screen.h>
 
 void launcherMainInit();
-void launcherMainUpdate(VPADStatus status);
+void launcherMainUpdate();
 void launcherMainDraw(OSScreenID screenID);
 void launcherMainCleanup();
 

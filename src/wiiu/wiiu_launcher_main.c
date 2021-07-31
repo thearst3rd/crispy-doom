@@ -31,6 +31,7 @@
 
 #include "wiiu-config.h"
 #include "wiiu_launcher.h"
+#include "wiiu_controller.h"
 
 extern int launcherRunning;
 extern launcherState state;
@@ -161,11 +162,11 @@ void selectWad(int wadIndex)
     selectedWadsCount++;
 }
 
-void launcherMainUpdate(VPADStatus status)
+void launcherMainUpdate()
 {
-    if (status.trigger & (VPAD_BUTTON_UP | VPAD_STICK_L_EMULATION_UP))
+    if (WiiU_JoystickGetButtonPressed(13) || WiiU_JoystickGetButtonPressed(17))	// Up
         menuHoverIndex--;
-    if (status.trigger & (VPAD_BUTTON_DOWN | VPAD_STICK_L_EMULATION_DOWN))
+    if (WiiU_JoystickGetButtonPressed(15) || WiiU_JoystickGetButtonPressed(19))	// Down
         menuHoverIndex++;
 
     if (menuHoverIndex < 0)
@@ -173,10 +174,10 @@ void launcherMainUpdate(VPADStatus status)
     else if (menuHoverIndex >= foundWadsCount)
         menuHoverIndex = 0;
 
-    if (status.trigger & VPAD_BUTTON_A)
+    if (WiiU_JoystickGetButtonPressed(0))	// A
         selectWad(menuHoverIndex);
 
-    if ((status.trigger & VPAD_BUTTON_PLUS) && (selectedWadsCount > 0))
+    if (WiiU_JoystickGetButtonPressed(10) && (selectedWadsCount > 0))	// Plus
         launcherRunning = 0;
 }
 

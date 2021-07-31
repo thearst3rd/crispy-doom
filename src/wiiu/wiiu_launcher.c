@@ -36,6 +36,7 @@
 
 #include "wiiu_launcher_main.h"
 #include "wiiu_launcher_nowads.h"
+#include "wiiu_controller.h"
 
 // Global variables
 int launcherRunning = 1; // 0 means go to game, -1 means quit
@@ -45,12 +46,12 @@ extern char **foundWads;
 extern int *selectedWads;
 extern int selectedWadsCount;
 
-void launcherUpdate(VPADStatus status)
+void launcherUpdate()
 {
     switch (state)
     {
-        case LAUNCHER_MAIN: launcherMainUpdate(status); break;
-        case LAUNCHER_NOWADS: launcherNoWadsUpdate(status); break;
+        case LAUNCHER_MAIN: launcherMainUpdate(); break;
+        case LAUNCHER_NOWADS: launcherNoWadsUpdate(); break;
         default:
             // NOP...
             break;
@@ -129,9 +130,6 @@ void launcherRun()
     OSScreenEnableEx(SCREEN_TV, true);
     OSScreenEnableEx(SCREEN_DRC, true);
 
-    VPADStatus status;
-    VPADReadError error;
-
     // Init launcher states
     launcherMainInit();
     launcherNoWadsInit();
@@ -143,24 +141,8 @@ void launcherRun()
     while ((launcherRunning > 0) && (wbhRunning = WHBProcIsRunning()))
     {
         // Poll input
-        VPADRead(VPAD_CHAN_0, &status, 1, &error);
-        switch(error)
-        {
-            case VPAD_READ_SUCCESS:
-                break;
-
-            case VPAD_READ_NO_SAMPLES:
-                continue;
-
-            case VPAD_READ_INVALID_CONTROLLER:
-                status = (VPADStatus) {0};
-                break;
-
-            default:
-                I_Error("Unknown VPAD status error: %d", error);
-        }
-
-        launcherUpdate(status);
+        WiiU_PollJoystick();
+        launcherUpdate();
 
         // Draw screen
         OSScreenClearBufferEx(SCREEN_TV, 0x00000000);

@@ -29,6 +29,7 @@
 
 #include "wiiu-config.h"
 #include "wiiu_launcher.h"
+#include "wiiu_controller.h"
 
 extern int launcherRunning;
 extern launcherState state;
@@ -38,9 +39,9 @@ void launcherNoWadsInit()
     // NOP
 }
 
-void launcherNoWadsUpdate(VPADStatus status)
+void launcherNoWadsUpdate()
 {
-    if (status.trigger & VPAD_BUTTON_PLUS)
+    if (WiiU_JoystickGetButtonPressed(10))	// Plus
         launcherRunning = -1; // Quit
 }
 

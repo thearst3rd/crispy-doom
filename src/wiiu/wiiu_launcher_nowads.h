@@ -21,7 +21,7 @@
 #include <coreinit/screen.h>
 
 void launcherNoWadsInit();
-void launcherNoWadsUpdate(VPADStatus status);
+void launcherNoWadsUpdate();
 void launcherNoWadsDraw(OSScreenID screenID);
 void launcherNoWadsCleanup();
 
