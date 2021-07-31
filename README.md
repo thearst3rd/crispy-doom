@@ -9,13 +9,14 @@ Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thea
 To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
 ## Features
-* Up to date with Crispy Doom 5.10.1 (up to commit [c028707](https://github.com/fabiangreffrath/crispy-doom/commit/c028707bf7d7fb51fd8361cb748811e79d7c4f27))
+* Up to date with Crispy Doom 5.10.1 (up to commit [c072715](https://github.com/fabiangreffrath/crispy-doom/commit/c072715483a55161ef586819cf68ad89198a3aa4))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
 * Simple launcher that lets you pick an IWAD and optionally PWADs
 * Music support using OPL3
 	* Causes a bit of a stutter when loading a new music track. I'm looking into making this faster, but it's not too bad for most levels.
 	* Note: There is a known bug involving the Freedoom WADs (and probably others) - details below
+* Wii U Pro Controller and Wii Classic Controller support
 * Controller rebinding
 	* Currently this can only be achieved by editing `crispy-doom.cfg`. In the future this will be made easier by doing it through the launcher.
 * Optional toggle to fix the [blockmap bug](https://youtu.be/-IYz6-KnvWU) (on page 4 of the Crispy menu)
@@ -28,14 +29,11 @@ As this is a pre-release, not everything is perfect yet. Here are a list of some
 	* `SDL2_net` is not supported on the Wii U, so for now, this is single player only.
 * Launcher is lacking features
 	* I plan on improving the launcher in the future to let you add additional parameters if you'd like (such as `-fast`, `-nomonsters`, `-warp xy` etc), record/play back demos, and rebind controls.
-* No controllers other than the Wii U Gamepad
-	* Currently, I have hard coded it to only use the Wii U Gamepad. I will expand it with support for other controllers in the future, it doesn't seem to be too hard.
 * No cheats
 	* Since there is no keyboard, you cannot enter any cheat codes. I plan to rectify this by adding a menu to control the cheats from there.
 
 ### Known Bugs
 
-* If the Wii U Gamepad disconnects, reconnecting it will NOT regain control of the game. Quitting with the Home button still works though.
 * When playing with a [Freedoom](https://freedoom.github.io/) WAD (and probably others), the music will _sometimes_ not work. You might need to switch to a different stage then switch back to kick-start music into working.
 	* I have a feeling this is because Freedoom uses `midi` files rather than `mus` files that that doesn't play perfectly with my music speedup hack. Looking into it.
 
@@ -57,6 +55,8 @@ Select shotgun | D-pad up
 Select chaingun | D-pad right
 Select rocket launcher | D-pad down
 Select plasma rifle | D-pad left
+
+*Note: on the Wii Classic Controller, ZL and L are swapped, as well as ZR and R.*
 
 ## Compiling
 If you just want to play the game, you do not need to compile - instead, checkout the download section above. If you are a developer and want to compile the game yourself, feel free to check out these instructions.
