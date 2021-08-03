@@ -30,7 +30,8 @@
 #include <coreinit/cache.h>
 #include <whb/proc.h>
 
-#include "wiiu-config.h"
+#include "config.h"
+
 #include "i_system.h"
 #include "m_argv.h"
 

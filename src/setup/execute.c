@@ -38,12 +38,7 @@
 
 #include "textscreen.h"
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #include "execute.h"
 #include "mode.h"
 #include "m_argv.h"

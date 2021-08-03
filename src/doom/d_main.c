@@ -26,12 +26,7 @@
 #include <string.h>
 #include <time.h> // [crispy] time_t, time(), struct tm, localtime()
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #include "deh_main.h"
 #include "doomdef.h"
 #include "doomstat.h"

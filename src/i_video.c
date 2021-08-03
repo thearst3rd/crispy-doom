@@ -33,12 +33,7 @@
 
 #include "crispy.h"
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #include "d_loop.h"
 #include "deh_str.h"
 #include "doomtype.h"
@@ -130,11 +125,7 @@ char *video_driver = "";
 
 // Window position:
 
-#ifdef __WIIU__
-char *window_position = "";
-#else
 char *window_position = "center";
-#endif // __WIIU__
 
 // SDL display number on which to run.
 
@@ -1385,7 +1376,6 @@ static void SetVideoMode(void)
         }
     }
 
-
 #ifndef __WIIU__
     // Running without window decorations is potentially useful if you're
     // playing in three window mode and want to line up three game windows
@@ -1987,7 +1977,7 @@ void I_BindVideoVariables(void)
 #ifndef __WIIU__
     M_BindIntVariable("window_width",              &window_width);
     M_BindIntVariable("window_height",             &window_height);
-#endif
+#endif // !__WIIU__
     M_BindIntVariable("grabmouse",                 &grabmouse);
 #ifndef __WIIU__
     M_BindStringVariable("video_driver",           &video_driver);

@@ -16,11 +16,7 @@
 //    (Should be NetBSD as well, but untested).
 //
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
 
 // OpenBSD/NetBSD:
 

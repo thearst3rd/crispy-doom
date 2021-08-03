@@ -26,12 +26,7 @@
 #include "z_zone.h"
 
 // [crispy] support maps with compressed ZDBSP nodes
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #endif

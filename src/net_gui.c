@@ -22,12 +22,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #include "doomkeys.h"
 
 #include "i_system.h"

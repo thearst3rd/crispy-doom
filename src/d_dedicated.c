@@ -19,11 +19,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
 
 #include "m_argv.h"
 #include "net_defs.h"

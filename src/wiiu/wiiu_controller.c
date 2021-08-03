@@ -137,11 +137,11 @@ static void read_vpad()
             buttonsPressed |= (1 << i);
     }
 
-    stickX = status.leftStick.x * 0x7ff0;
-    stickY = -status.leftStick.y * 0x7ff0;
+    stickX += status.leftStick.x * 0x7ff0;
+    stickY -= status.leftStick.y * 0x7ff0;
 
-    rStickX = status.rightStick.x * 0x7ff0;
-    rStickY = -status.rightStick.y * 0x7ff0;
+    rStickX += status.rightStick.x * 0x7ff0;
+    rStickY -= status.rightStick.y * 0x7ff0;
 
     gyroX = -0x20000 * status.gyro.z;
     gyroY = 0x20000 * status.gyro.x;
@@ -174,9 +174,6 @@ static void read_wpad_chan(WPADChan chan)
         lastKpad[chan] = status;
     }
 
-    int stickNotSet = stickX == 0 && stickY == 0;
-    int rStickNotSet = rStickX == 0 && rStickY == 0;
-
     if (status.extensionType == WPAD_EXT_NUNCHUK || status.extensionType == WPAD_EXT_MPLUS_NUNCHUK)
     {
         // Probably won't be very fun...
@@ -189,11 +186,8 @@ static void read_wpad_chan(WPADChan chan)
                 buttonsPressed |= (1 << i);
         }
 
-        if (stickNotSet)
-        {
-            stickX = status.nunchuck.stick.x * 0x7ff0;
-            stickY = -status.nunchuck.stick.y * 0x7ff0;
-        }
+        stickX += status.nunchuck.stick.x * 0x7ff0;
+        stickY -= status.nunchuck.stick.y * 0x7ff0;
         // no rStick...
     }
     else if (status.extensionType == WPAD_EXT_CLASSIC || status.extensionType == WPAD_EXT_MPLUS_CLASSIC)
@@ -206,16 +200,11 @@ static void read_wpad_chan(WPADChan chan)
                 buttonsPressed |= (1 << i);
         }
 
-        if (stickNotSet)
-        {
-            stickX = status.classic.leftStick.x * 0x7ff0;
-            stickY = -status.classic.leftStick.y * 0x7ff0;
-        }
-        if (rStickNotSet)
-        {
-            rStickX = status.classic.rightStick.x * 0x7ff0;
-            rStickY = -status.classic.rightStick.y * 0x7ff0;
-        }
+        stickX += status.classic.leftStick.x * 0x7ff0;
+        stickY -= status.classic.leftStick.y * 0x7ff0;
+
+        rStickX += status.classic.rightStick.x * 0x7ff0;
+        rStickY -= status.classic.rightStick.y * 0x7ff0;
     }
     else if (status.extensionType == WPAD_EXT_PRO_CONTROLLER)
     {
@@ -227,16 +216,11 @@ static void read_wpad_chan(WPADChan chan)
                 buttonsPressed |= (1 << i);
         }
 
-        if (stickNotSet)
-        {
-            stickX = status.pro.leftStick.x * 0x7ff0;
-            stickY = -status.pro.leftStick.y * 0x7ff0;
-        }
-        if (rStickNotSet)
-        {
-            rStickX = status.pro.rightStick.x * 0x7ff0;
-            rStickY = -status.pro.rightStick.y * 0x7ff0;
-        }
+        stickX += status.pro.leftStick.x * 0x7ff0;
+        stickY -= status.pro.leftStick.y * 0x7ff0;
+
+        rStickX += status.pro.rightStick.x * 0x7ff0;
+        rStickY -= status.pro.rightStick.y * 0x7ff0;
     }
 }
 
@@ -266,9 +250,11 @@ void WiiU_PollJoystick()
     {
         rStickX += gyroX;
         rStickY += gyroY;
-        rStickX = CLAMP(rStickX, -0x7ff0, 0x7ff0);
-        rStickY = CLAMP(rStickY, -0x7ff0, 0x7ff0);
     }
+    stickX = CLAMP(stickX, -0x7ff0, 0x7ff0);
+    stickY = CLAMP(stickY, -0x7ff0, 0x7ff0);
+    rStickX = CLAMP(rStickX, -0x7ff0, 0x7ff0);
+    rStickY = CLAMP(rStickY, -0x7ff0, 0x7ff0);
 }
 
 int WiiU_JoystickGetButton(int button)

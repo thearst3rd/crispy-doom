@@ -29,7 +29,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "wiiu-config.h"
+#include "config.h"
+
 #include "wiiu_launcher.h"
 #include "wiiu_controller.h"
 

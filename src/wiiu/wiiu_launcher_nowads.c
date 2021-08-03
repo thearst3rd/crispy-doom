@@ -27,7 +27,8 @@
 #include <malloc.h>
 #include <dirent.h>
 
-#include "wiiu-config.h"
+#include "config.h"
+
 #include "wiiu_launcher.h"
 #include "wiiu_controller.h"
 

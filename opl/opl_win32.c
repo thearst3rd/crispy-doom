@@ -15,11 +15,7 @@
 //     OPL Win32 native interface.
 //
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
 
 #ifdef _WIN32
 

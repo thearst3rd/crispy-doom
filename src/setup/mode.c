@@ -17,12 +17,7 @@
 
 #include "doomtype.h"
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
-
 #include "textscreen.h"
 
 #include "doomtype.h"

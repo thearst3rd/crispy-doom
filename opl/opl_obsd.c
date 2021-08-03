@@ -15,11 +15,7 @@
 //     OPL OpenBSD interface (also NetBSD)
 //
 
-#ifdef __WIIU__
-#include "wiiu-config.h"
-#else
 #include "config.h"
-#endif // __WIIU__
 
 // OpenBSD has a i386_iopl on i386 and amd64_iopl on x86_64,
 // even though they do the same thing.  Take care of this

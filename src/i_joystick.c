@@ -29,6 +29,9 @@
 #include "d_event.h"
 #include "i_joystick.h"
 #include "i_system.h"
+#ifdef __WIIU__
+#include "i_timer.h"
+#endif // __WIIU__
 
 #include "m_config.h"
 #include "m_misc.h"
@@ -147,14 +150,14 @@ static boolean IsValidAxis(int axis)
     if (IS_HAT_AXIS(axis))
     {
 #ifdef __WIIU__
-        return HAT_AXIS_HAT(axis) < 0; // same as comment below
+        return 0; // Don't implement hats on Wii U, use a button axis instead
 #else
         return HAT_AXIS_HAT(axis) < SDL_JoystickNumHats(joystick);
 #endif // __WIIU__
     }
 
 #ifdef __WIIU__
-    num_axes = 0; // TODO: check if this really should be 0. Looks like it, based on the wiiu SDL2 code
+    num_axes = 4;
 #else
     num_axes = SDL_JoystickNumAxes(joystick);
 #endif // __WIIU__
@@ -369,29 +372,27 @@ static int GetAxisState(int axis, int invert)
     {
 #ifdef __WIIU__
         if (WiiU_JoystickGetButton(BUTTON_AXIS_NEG(axis)))
-        {
-            result -= 32767;
-        }
-        if (WiiU_JoystickGetButton(BUTTON_AXIS_POS(axis)))
-        {
-            result += 32767;
-        }
 #else
         if (SDL_JoystickGetButton(joystick, BUTTON_AXIS_NEG(axis)))
+#endif // __WIIU__
         {
             result -= 32767;
         }
+#ifdef __WIIU__
+        if (WiiU_JoystickGetButton(BUTTON_AXIS_POS(axis)))
+#else
         if (SDL_JoystickGetButton(joystick, BUTTON_AXIS_POS(axis)))
+#endif // __WIIU__
         {
             result += 32767;
         }
-#endif __WIIU__
     }
     else if (IS_HAT_AXIS(axis))
     {
+#ifdef __WIIU__
+        // Hats are not implemented. Use button axis instead
+#else
         int direction = HAT_AXIS_DIRECTION(axis);
-        // WiiU TODO: maybe implement
-#ifndef __WIIU__
         int hatval = SDL_JoystickGetHat(joystick, HAT_AXIS_HAT(axis));
 
         if (direction == HAT_AXIS_HORIZONTAL)
@@ -416,7 +417,7 @@ static int GetAxisState(int axis, int invert)
                 result += 32767;
             }
         }
-#endif // !__WIIU__
+#endif // __WIIU__
     }
     else
     {

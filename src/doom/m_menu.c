@@ -2211,7 +2211,7 @@ static int G_GotoNextLevel(void)
 }
 
 #ifdef BETTER_JOYWAIT
-int pressJoywait()
+void pressJoywait()
 {
     joywait = I_GetTime();
     joywaitDiff = 0;
