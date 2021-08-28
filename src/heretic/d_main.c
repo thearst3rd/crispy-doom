@@ -47,6 +47,10 @@
 #include "v_video.h"
 #include "v_trans.h" // [crispy] dp_translation
 
+#ifdef __WIIU__
+#include <whb/proc.h>
+#endif // __WIIU__
+
 #define CT_KEY_GREEN    'g'
 #define CT_KEY_YELLOW   'y'
 #define CT_KEY_RED      'r'
@@ -833,6 +837,7 @@ void D_BindVariables(void)
 
 static void D_Endoom(void)
 {
+#ifndef __WIIU__
     byte *endoom_data;
 
     // Disable ENDOOM?
@@ -845,6 +850,7 @@ static void D_Endoom(void)
     endoom_data = W_CacheLumpName(DEH_String("ENDTEXT"), PU_STATIC);
 
     I_Endoom(endoom_data);
+#endif // !__WIIU__
 }
 
 //---------------------------------------------------------------------------

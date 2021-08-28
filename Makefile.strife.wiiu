@@ -17,11 +17,11 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	$(notdir $(CURDIR))
-BUILD		:=	build
-SOURCES		:=	src src/doom opl src/wiiu
+TARGET		:=	crispy-strife
+BUILD		:=	build-strife
+SOURCES		:=	src src/strife opl src/wiiu textscreen
 DATA		:=	wiiu-data
-INCLUDES	:=	src src/doom opl src/wiiu
+INCLUDES	:=	src src/strife opl src/wiiu textscreen
 
 #-------------------------------------------------------------------------------
 # options for code generation
@@ -98,7 +98,7 @@ all: $(BUILD)
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.wiiu
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.strife.wiiu
 
 #-------------------------------------------------------------------------------
 clean:
