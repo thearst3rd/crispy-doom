@@ -1,15 +1,15 @@
-# Crispy Doom Wii U Port
+# Crispy Doom U
 ![Screenshot of game in Wii U Gamepad](wiiu/CrispyWiiUScreenshot.png)
 
-This is a Wii U port of [Crispy Doom](https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom). It is possible thanks to the amazing efforts of the Crispy/Chocolate Doom authors, devkitPro, and the team that ported SDL2 to the Wii U. Without these people, this port would be a lot harder to make :)
+Crispy Doom U is a Wii U port of [Crispy Doom](https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom). It is possible thanks to the amazing efforts of the Crispy/Chocolate Doom authors, devkitPro, and the team that ported SDL2 to the Wii U. Without these people and more, this port would have been a lot harder to make, or not happened at all!
 
 ## Download
-Download the Wii U port of Crispy Doom on the [Releases](https://github.com/thearst3rd/crispy-doom/releases) page.
+Download Crispy Doom U on the [Releases](https://github.com/thearst3rd/crispy-doom-u/releases) page.
 
-To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
+To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom-u` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom-u/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
 ## Features
-* Up to date with Crispy Doom 5.10.1 (up to commit [c072715](https://github.com/fabiangreffrath/crispy-doom/commit/c072715483a55161ef586819cf68ad89198a3aa4))
+* Up to date with Crispy Doom 5.10.3 (up to commit [99ca747](https://github.com/fabiangreffrath/crispy-doom/commit/99ca74732d617e98893bb6d9294330889e57efef))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
 * Simple launcher that lets you pick an IWAD and optionally PWADs

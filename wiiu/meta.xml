@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-	<name>Crispy Doom</name>
+	<name>Crispy Doom U</name>
 	<coder>thearst3rd</coder>
-	<version>0.3 (5.10.1)</version>
-	<url>https://github.com/thearst3rd/crispy-doom/tree/wiiu-port</url>
-	<release_date>20210731000000</release_date>
+	<version>0.3.1 (5.10.3)</version>
+	<url>https://github.com/thearst3rd/crispy-doom-u/tree/wiiu-port</url>
+	<release_date>20210831000000</release_date>
 	<short_description>Play Doom on the Wii U</short_description>
-	<long_description>Crispy Doom is a limit-removing enhanced-resolution Doom source port based on Chocolate Doom. It was ported to the Wii U by thearst3rd. For more information, visit:
+	<long_description>Crispy Doom U is a Wii U port of Crispy Doom, which is a limit-removing enhanced-resolution Doom source port based on Chocolate Doom. For more information, visit:
 
 https://www.chocolate-doom.org/wiki/index.php/Crispy_Doom
-https://github.com/thearst3rd/crispy-doom/tree/wiiu-port
+https://github.com/thearst3rd/crispy-doom-u/tree/wiiu-port
 
-Put your limit-removing WADs in sd:/wiiu/apps/crispy-doom/wads
+Put your Doom WADs in sd:/wiiu/apps/crispy-doom-u/wads
 
 Thanks for playing!</long_description>
 </app>

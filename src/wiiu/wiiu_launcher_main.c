@@ -184,7 +184,7 @@ void launcherMainUpdate()
 
 void launcherMainDraw(OSScreenID screenID)
 {
-    OSScreenPutFontEx(screenID, 0, 0, "Crispy Doom");
+    OSScreenPutFontEx(screenID, 0, 0, "Crispy Doom U");
 
     if (selectedWadsCount == 0)
     {

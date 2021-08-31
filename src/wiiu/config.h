@@ -96,17 +96,20 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "Crispy Doom"
 
+/* Version number of package */
+#define VERSION "5.10.3"
+
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Crispy Doom 5.10.1"
+#define PACKAGE_STRING PACKAGE_NAME " " VERSION
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "crispy-doom"
+#define PACKAGE_TARNAME PACKAGE
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "5.10.1"
+#define PACKAGE_VERSION VERSION
 
 /* Change this when you create your awesome forked version */
 #define PROGRAM_PREFIX "crispy-"
@@ -116,8 +119,5 @@
    backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
 
-/* Version number of package */
-#define VERSION "5.10.1"
-
 // TODO: Be able to change this rather than being a macro
-#define HOMEBREW_APP_PATH "wiiu/apps/crispy-doom"
+#define HOMEBREW_APP_PATH "wiiu/apps/crispy-doom-u"

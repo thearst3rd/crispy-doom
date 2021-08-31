@@ -246,11 +246,15 @@ void WiiU_PollJoystick()
     read_vpad();
     read_wpad();
 
+    // TODO: Properly implement gyro and make it mappable
+    /*
     if (buttons & (1 << 8))
     {
         rStickX += gyroX;
         rStickY += gyroY;
     }
+    */
+
     stickX = CLAMP(stickX, -0x7ff0, 0x7ff0);
     stickY = CLAMP(stickY, -0x7ff0, 0x7ff0);
     rStickX = CLAMP(rStickX, -0x7ff0, 0x7ff0);
