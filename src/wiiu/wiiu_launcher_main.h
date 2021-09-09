@@ -20,6 +20,9 @@
 #include <vpad/input.h>
 #include <coreinit/screen.h>
 
+#define WADS_STARTING_Y 5
+#define NUM_WADS_VISIBLE 12
+
 void launcherMainInit();
 void launcherMainUpdate();
 void launcherMainDraw(OSScreenID screenID);

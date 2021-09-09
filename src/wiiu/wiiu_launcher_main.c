@@ -195,9 +195,26 @@ void launcherMainDraw(OSScreenID screenID)
         OSScreenPutFontEx(screenID, 0, 2, "Press + to start playing");
         OSScreenPutFontEx(screenID, 0, 3, "Optionally, press A to select/deselect additional PWADs");
     }
-    for (int i = 0; i < foundWadsCount; i++)
+
+    // Handle scrolling if there are too many WADs to show on screen
+    int startIndex = menuHoverIndex - (NUM_WADS_VISIBLE / 2);
+    if (startIndex + NUM_WADS_VISIBLE > foundWadsCount)
+        startIndex = foundWadsCount - NUM_WADS_VISIBLE;
+    if (startIndex < 0)
+        startIndex = 0;
+    int endIndex = startIndex + NUM_WADS_VISIBLE;
+    if (endIndex >= foundWadsCount)
+        endIndex = foundWadsCount;
+
+    // Draw scrollbars if needed
+    if (startIndex != 0)
+        OSScreenPutFontEx(screenID, 12, WADS_STARTING_Y - 1, "^ ^ ^ ^ ^ ^ ^");
+    if (endIndex != foundWadsCount)
+        OSScreenPutFontEx(screenID, 12, WADS_STARTING_Y + NUM_WADS_VISIBLE, "v v v v v v v");
+
+    for (int i = startIndex; i < endIndex; i++)
     {
-        int y = i + 5;
+        int y = WADS_STARTING_Y + i - startIndex;
         OSScreenPutFontEx(screenID, 9, y, foundWads[i]);
         if (menuHoverIndex == i)
             OSScreenPutFontEx(screenID, 6, y, ">>");
