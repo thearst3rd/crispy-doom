@@ -2,9 +2,9 @@
 <app version="1">
 	<name>Crispy Doom U</name>
 	<coder>thearst3rd</coder>
-	<version>0.3.1 (5.10.3)</version>
+	<version>0.3.2 (5.10.3)</version>
 	<url>https://github.com/thearst3rd/crispy-doom-u/tree/wiiu-port</url>
-	<release_date>20210831000000</release_date>
+	<release_date>20210908000000</release_date>
 	<short_description>Play Doom on the Wii U</short_description>
 	<long_description>Crispy Doom U is a Wii U port of Crispy Doom, which is a limit-removing enhanced-resolution Doom source port based on Chocolate Doom. For more information, visit:
 

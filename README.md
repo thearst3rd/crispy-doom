@@ -9,7 +9,7 @@ Download Crispy Doom U on the [Releases](https://github.com/thearst3rd/crispy-do
 To install, extract the release's contents into `sd:/wiiu/apps/crispy-doom-u` (this is hard coded for now) and put your limit removing WADs in `sd:/wiiu/apps/crispy-doom-u/wads`. If you do not have any Doom WADs, check out the free [shareware version of Doom](https://www.doomworld.com/classicdoom/info/shareware.php), or check out the amazing [Freedoom project](https://freedoom.github.io/)!
 
 ## Features
-* Up to date with Crispy Doom 5.10.3 (up to commit [99ca747](https://github.com/fabiangreffrath/crispy-doom/commit/99ca74732d617e98893bb6d9294330889e57efef))
+* Up to date with Crispy Doom 5.10.3 (up to commit [3cde09b](https://github.com/fabiangreffrath/crispy-doom/commit/3cde09bf10006a2c57513a6009f27ae7372f5426))
 * Very high feature parity with the PC version, full Crispy menu intact (other than things not relevant to a Wii U release)
 * Smooth analog control support - both moving and turning make use of the analog values of the analog sticks
 * Simple launcher that lets you pick an IWAD and optionally PWADs
@@ -68,7 +68,7 @@ Get setup with [devkitPro](https://devkitpro.org/wiki/Getting_Started), and make
 Download necessary dependancies:
 
 ```bash
-(dkp-)pacman -S wiiu-sdl{,_mixer}
+(dkp-)pacman -S wiiu-sdl2{,_mixer} ppc-libvorbisidec
 ```
 
 Build the executable:
