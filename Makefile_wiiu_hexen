@@ -17,11 +17,11 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	crispy-doom-u
-BUILD		:=	build-doom
-SOURCES		:=	src src/doom opl src/wiiu
+TARGET		:=	crispy-hexen
+BUILD		:=	build-hexen
+SOURCES		:=	src src/hexen opl src/wiiu textscreen
 DATA		:=	wiiu-data
-INCLUDES	:=	src src/doom opl src/wiiu
+INCLUDES	:=	src src/hexen opl src/wiiu textscreen
 
 #-------------------------------------------------------------------------------
 # options for code generation
@@ -30,7 +30,7 @@ CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 			$(MACHDEP)
 
 CFLAGS	+=	$(INCLUDE) -D__WIIU__ -D__WUT__ \
-			-DBETTER_ANALOG -DBETTER_JOYWAIT
+			-DBETTER_ANALOG -DBETTER_JOYWAIT -DWIIU_CRISPY_HEXEN
 
 CXXFLAGS	:= $(CFLAGS)
 
@@ -98,7 +98,7 @@ all: $(BUILD)
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.doom.wiiu
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile_wiiu_hexen
 
 #-------------------------------------------------------------------------------
 clean:

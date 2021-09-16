@@ -48,7 +48,7 @@ void launcherNoWadsUpdate()
 
 void launcherNoWadsDraw(OSScreenID screenID)
 {
-    OSScreenPutFontEx(screenID, 0, 0, "Crispy Doom U");
+    OSScreenPutFontEx(screenID, 0, 0, PACKAGE_NAME);
 
     OSScreenPutFontEx(screenID, 5, 2, "No WAD files found!");
     OSScreenPutFontEx(screenID, 5, 3, "Put your WADs in: sd:/" HOMEBREW_APP_PATH "/wads");

@@ -87,14 +87,48 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* Name of package */
-#define PACKAGE "crispy-doom"
-
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "fabian@greffrath.com"
 
+#ifdef WIIU_CRISPY_DOOM
+
+/* Name of package */
+#define PACKAGE "crispy-doom-u"
+
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Crispy Doom"
+#define PACKAGE_NAME "Crispy Doom U"
+
+#endif // WIIU_CRISPY_DOOM
+
+#ifdef WIIU_CRISPY_HERETIC
+
+/* Name of package */
+#define PACKAGE "crispy-heretic-u"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "Crispy Heretic U"
+
+#endif // WIIU_CRISPY_HERETIC
+
+#ifdef WIIU_CRISPY_HEXEN
+
+/* Name of package */
+#define PACKAGE "crispy-hexen-u"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "Crispy Hexen U"
+
+#endif // WIIU_CRISPY_HEXEN
+
+#ifdef WIIU_CRISPY_STRIFE
+
+/* Name of package */
+#define PACKAGE "crispy-strife-u"
+
+/* Define to the full name of this package. */
+#define PACKAGE_NAME "Crispy Strife U"
+
+#endif // WIIU_CRISPY_STRIFE
 
 /* Version number of package */
 #define VERSION "5.10.3"
@@ -120,4 +154,4 @@
 #define STDC_HEADERS 1
 
 // TODO: Be able to change this rather than being a macro
-#define HOMEBREW_APP_PATH "wiiu/apps/crispy-doom-u"
+#define HOMEBREW_APP_PATH "wiiu/apps/" PACKAGE
