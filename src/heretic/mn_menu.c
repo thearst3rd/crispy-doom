@@ -323,7 +323,9 @@ static MenuItem_t CrispnessItems[] = {
     {ITT_LRFUNC, "HIGH RESOLUTION RENDERING:", CrispyHires, 0, MENU_NONE},
     {ITT_LRFUNC, "SMOOTH PIXEL SCALING:", CrispySmoothing, 0, MENU_NONE},
     {ITT_LRFUNC, "UNCAPPED FRAMERATE:", CrispyUncapped, 0, MENU_NONE},
+#ifndef __WIIU__
     {ITT_LRFUNC, "ENABLE VSYNC:", CrispyVsync, 0, MENU_NONE},
+#endif // !__WIIU__
     {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
     {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
     {ITT_LRFUNC, "SHOW LEVEL STATS:", CrispyAutomapStats, 0, MENU_NONE},
@@ -2056,8 +2058,10 @@ static void DrawCrispnessMenu(void)
     // Uncapped framerate
     MN_DrTextA(crispy->uncapped ? "ON" : "OFF", 217, 60);
 
+#ifndef __WIIU__
     // Vsync
     MN_DrTextA(crispy->vsync ? "ON" : "OFF", 167, 70);
+#endif // !__WIIU__
 
     // Show level stats
     MN_DrTextA(crispy->automapstats == WIDGETS_OFF ? "NEVER" :

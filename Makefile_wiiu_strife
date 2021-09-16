@@ -17,7 +17,7 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	crispy-strife
+TARGET		:=	crispy-strife-u
 BUILD		:=	build-strife
 SOURCES		:=	src src/strife opl src/wiiu textscreen
 DATA		:=	wiiu-data

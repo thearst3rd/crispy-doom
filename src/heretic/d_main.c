@@ -358,7 +358,11 @@ void D_DoomLoop(void)
 
     main_loop_started = true;
 
+#ifdef __WIIU__
+    while (WHBProcIsRunning())
+#else
     while (1)
+#endif // __WIIU__
     {
         // Frame syncronous IO operations
         I_StartFrame();
@@ -380,6 +384,10 @@ void D_DoomLoop(void)
             crispy->post_rendering_hook = NULL;
         }
     }
+
+#ifdef __WIIU__
+    I_Quit();
+#endif // __WIIU__
 }
 
 /*
@@ -1005,6 +1013,9 @@ void D_DoomMain(void)
     }
 #endif
 
+#ifdef __WIIU__
+    M_SetConfigDir(HOMEBREW_APP_PATH "/config/");
+#else
     if (cdrom)
     {
         M_SetConfigDir(DEH_String("c:\\heretic.cd"));
@@ -1013,6 +1024,7 @@ void D_DoomMain(void)
     {
         M_SetConfigDir(NULL);
     }
+#endif // __WIIU__
 
     // Load defaults before initing other systems
     DEH_printf("M_LoadDefaults: Load system defaults.\n");
@@ -1051,6 +1063,8 @@ void D_DoomMain(void)
 
     crispy->pistolstart = M_ParmExists("-wandstart");
 
+    // TODO: Research why this doesn't work on Wii U
+#ifndef __WIIU__
     //!
     // @category mod
     //
@@ -1064,6 +1078,7 @@ void D_DoomMain(void)
         W_AutoLoadWADs(autoload_dir);
         free(autoload_dir);
     }
+#endif // !__WIIU__
 
     // Load dehacked patches specified on the command line.
     DEH_ParseCommandLine();

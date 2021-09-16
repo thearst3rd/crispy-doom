@@ -17,7 +17,7 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	crispy-hexen
+TARGET		:=	crispy-hexen-u
 BUILD		:=	build-hexen
 SOURCES		:=	src src/hexen opl src/wiiu textscreen
 DATA		:=	wiiu-data

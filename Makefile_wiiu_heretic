@@ -17,7 +17,7 @@ include $(DEVKITPRO)/wut/share/wut_rules
 # DATA is a list of directories containing data files
 # INCLUDES is a list of directories containing header files
 #-------------------------------------------------------------------------------
-TARGET		:=	crispy-heretic
+TARGET		:=	crispy-heretic-u
 BUILD		:=	build-heretic
 SOURCES		:=	src src/heretic opl src/wiiu textscreen
 DATA		:=	wiiu-data
