@@ -160,6 +160,19 @@ static int *weapon_keys[] =
     &key_weapon7
 };
 
+#ifdef __WIIU__
+static int *weapon_joybs[] = {
+    &joybweapon1,
+    &joybweapon2,
+    &joybweapon3,
+    &joybweapon4,
+    &joybweapon5,
+    &joybweapon6,
+    &joybweapon7,
+//    &joybweapon8    // not needed?
+};
+#endif // __WIIU__
+
 // Set to -1 or +1 to switch to the previous or next weapon.
 
 static int next_weapon = 0;
@@ -590,6 +603,19 @@ void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
                 break; 
             }
         }
+#ifdef __WIIU__
+        for (i=0; i<arrlen(weapon_joybs); i++)
+        {
+            int joyb = *weapon_joybs[i];
+
+            if (joybuttons[joyb])
+            {
+                cmd->buttons |= BT_CHANGE;
+                cmd->buttons |= i<<BT_WEAPONSHIFT;
+                break;
+            }
+        }
+#endif // __WIIU__
     }
 
     next_weapon = 0;

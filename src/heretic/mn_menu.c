@@ -25,6 +25,7 @@
 #include "i_input.h"
 #include "i_system.h"
 #include "i_swap.h"
+#include "i_video.h"
 #include "m_controls.h"
 #include "m_misc.h"
 #include "p_local.h"
@@ -1293,6 +1294,31 @@ static boolean CrispySecretMessage(int option)
     return true;
 }
 
+#ifdef BETTER_JOYWAIT
+void pressJoywait()
+{
+    joywait = I_GetTime();
+    joywaitDiff = 0;
+}
+
+int shouldDoJoywaitAction(unsigned int initialOff, unsigned int repeatInterval)
+{
+    if (joywaitDiff == 0)
+        return 1;
+
+    if (joywaitDiff < initialOff)
+        return 0;
+
+    return (joywaitDiff - initialOff) % repeatInterval == 0;
+}
+#endif // BETTER_JOYWAIT
+
+#ifdef BETTER_ANALOG
+#define ANALOG_MENU_THRESHOLD 20000 // About 2/3s through the stick
+#else
+#define ANALOG_MENU_THRESHOLD 0
+#endif // BETTER_ANALOG
+
 //---------------------------------------------------------------------------
 //
 // FUNC MN_Responder
@@ -1311,6 +1337,10 @@ boolean MN_Responder(event_t * event)
 
     // In testcontrols mode, none of the function keys should do anything
     // - the only key is escape to quit.
+
+#ifdef __WIIU__
+    key = -1;
+#endif // __WIIU__
 
     if (testcontrols)
     {
@@ -1349,6 +1379,38 @@ boolean MN_Responder(event_t * event)
     // is bound for joybmenu.
     if (event->type == ev_joystick)
     {
+#ifdef __WIIU__
+        if (MenuActive)
+        {
+            // Simulate key presses from joystick inputs
+            if (event->data3 < -ANALOG_MENU_THRESHOLD)
+            {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data3 >= -ANALOG_MENU_THRESHOLD)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(20, 5))
+                    key = key_menu_up;
+#else
+                key = key_menu_up;
+                joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
+            }
+            else if (event->data3 > ANALOG_MENU_THRESHOLD)
+            {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data3 <= ANALOG_MENU_THRESHOLD)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(20, 5))
+                    key = key_menu_down;
+#else
+                key = key_menu_down;
+                joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
+            }
+            // TODO: Implement the rest of the menu controls (as per doom/m_menu.c or as fit)
+        }
+        else
+#endif // __WIIU__
         if (joybmenu >= 0 && (event->data1 & (1 << joybmenu)) != 0)
         {
             MN_ActivateMenu();
@@ -1356,12 +1418,19 @@ boolean MN_Responder(event_t * event)
         }
     }
 
+#ifdef __WIIU__
+    if (key == -1)
+    {
+        return false;
+    }
+#else
     if (event->type != ev_keydown)
     {
         return false;
     }
 
     key = event->data1;
+#endif // __WIIU__
     charTyped = event->data2;
 
     if (InfoType)
