@@ -80,6 +80,10 @@
 
 #include "d_main.h"
 
+#ifdef __WIIU__
+#include <whb/proc.h>
+#endif // __WIIU__
+
 //
 // D-DoomLoop()
 // Not a globally visible function,
@@ -1100,6 +1104,7 @@ void PrintGameVersion(void)
 
 static void D_Endoom(void)
 {
+#ifndef __WIIU__
     byte *endoom;
 
     // Don't show ENDOOM if we have it disabled, or we're running
@@ -1116,6 +1121,7 @@ static void D_Endoom(void)
     endoom = W_CacheLumpName(DEH_String("ENDSTRF"), PU_STATIC);
 
     I_Endoom(endoom);
+#endif // !__WIIU__
 }
 
 //

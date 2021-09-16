@@ -74,11 +74,12 @@ Download necessary dependancies:
 Build the executable:
 
 ```bash
-make -f Makefile.wiiu
+make -f Makefile.doom.wiiu
 ```
 
 NOTE: This repository is fully capable of building the original PC version as well. If you plan on doing so, I recommend `clean`ing the repository in between building the two different versions because the build system can get confused.
 
+NOTE2: Makefiles for Heretic/Hexen/Strife exist and while these compile they do not run yet on the Wii U. 
 ### The rest of the readme is the original Crispy Doom readme. Thanks for playing!
 
 # Crispy Doom
