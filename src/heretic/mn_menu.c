@@ -25,6 +25,7 @@
 #include "i_input.h"
 #include "i_system.h"
 #include "i_swap.h"
+#include "i_timer.h"
 #include "i_video.h"
 #include "m_controls.h"
 #include "m_misc.h"
@@ -326,6 +327,8 @@ static MenuItem_t CrispnessItems[] = {
     {ITT_LRFUNC, "UNCAPPED FRAMERATE:", CrispyUncapped, 0, MENU_NONE},
 #ifndef __WIIU__
     {ITT_LRFUNC, "ENABLE VSYNC:", CrispyVsync, 0, MENU_NONE},
+#else
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
 #endif // !__WIIU__
     {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
     {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
@@ -1406,6 +1409,54 @@ boolean MN_Responder(event_t * event)
                 key = key_menu_down;
                 joywait = I_GetTime() + 5;
 #endif // BETTER_JOYWAIT
+            }
+            // Use strafe axis instead of turn left axis
+            if (event->data4 < -ANALOG_MENU_THRESHOLD)
+            {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data4 >= -ANALOG_MENU_THRESHOLD)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(12, 3))
+                    key = key_menu_left;
+#else
+                key = key_menu_left;
+                joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
+            }
+            else if (event->data4 > ANALOG_MENU_THRESHOLD)
+            {
+#ifdef BETTER_JOYWAIT
+                if (prevJoystick.data4 <= ANALOG_MENU_THRESHOLD)
+                    pressJoywait();
+                if (shouldDoJoywaitAction(12, 3))
+                    key = key_menu_right;
+#else
+                key = key_menu_right;
+                joywait = I_GetTime() + 5;
+#endif // BETTER_JOYWAIT
+            }
+
+#define JOY_BUTTON_MAPPED(x) ((x) >= 0)
+#ifdef BETTER_JOYWAIT
+#define JOY_BUTTON_PRESSED(x) (JOY_BUTTON_MAPPED(x) && (event->data1 & (1 << (x))) != 0 \
+        && (prevJoystick.data1 & (1 << (x))) == 0)
+#else
+#define JOY_BUTTON_PRESSED(x) (JOY_BUTTON_MAPPED(x) && (event->data1 & (1 << (x))) != 0)
+#endif // BETTER_JOYWAIT
+
+            if (JOY_BUTTON_PRESSED(joybaccept))
+            {
+                if (askforquit)
+                    key = key_menu_confirm;
+                else
+                    key = key_menu_forward;
+            }
+            if (JOY_BUTTON_PRESSED(joybcancel))
+            {
+                if (askforquit)
+                    key = key_menu_abort;
+                else
+                    key = key_menu_back;
             }
             // TODO: Implement the rest of the menu controls (as per doom/m_menu.c or as fit)
         }
