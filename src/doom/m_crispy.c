@@ -17,7 +17,9 @@
 //	[crispy] Crispness menu
 //
 
+#include "crispy.h"
 #include "doomstat.h"
+#include "m_menu.h" // [crispy] M_SetDefaultDifficulty()
 #include "p_local.h" // [crispy] thinkercap
 #include "s_sound.h"
 #include "r_defs.h" // [crispy] laserpatch
@@ -113,6 +115,23 @@ multiitem_t multiitem_secretmessage[NUM_SECRETMESSAGE] =
     {SECRETMESSAGE_COUNT, "count"},
 };
 
+multiitem_t multiitem_difficulties[NUM_SKILLS] =
+{
+    {SKILL_HMP, "HMP"},
+    {SKILL_UV, "UV"},
+    {SKILL_NIGHTMARE, "NIGHTMARE"},
+    {SKILL_ITYTD, "ITYTD"},
+    {SKILL_HNTR, "HNTR"},
+};
+
+multiitem_t multiitem_statsformat[NUM_STATSFORMATS] =
+{
+    {STATSFORMAT_RATIO, "ratio"},
+    {STATSFORMAT_REMAINING, "remaining"},
+    {STATSFORMAT_PERCENT, "percent"},
+    {STATSFORMAT_BOOLEAN, "boolean"},
+};
+
 multiitem_t multiitem_translucency[NUM_TRANSLUCENCY] =
 {
     {TRANSLUCENCY_OFF, "off"},
@@ -133,11 +152,12 @@ multiitem_t multiitem_widgets[NUM_WIDGETS] =
     {WIDGETS_OFF, "never"},
     {WIDGETS_AUTOMAP, "in Automap"},
     {WIDGETS_ALWAYS, "always"},
+    {WIDGETS_STBAR, "status bar"},
 };
 
 multiitem_t multiitem_widescreen[NUM_RATIOS] =
 {
-    {RATIO_4_3, "4:3"},
+    {RATIO_ORIG, "Original"},
     {RATIO_MATCH_SCREEN, "Match screen"},
     {RATIO_16_10, "16:10"},
     {RATIO_16_9, "16:9"},
@@ -380,7 +400,7 @@ void M_CrispyToggleJumping(int choice)
 void M_CrispyToggleLeveltime(int choice)
 {
     choice = 0;
-    crispy->leveltime = (crispy->leveltime + 1) % NUM_WIDGETS;
+    crispy->leveltime = (crispy->leveltime + 1) % (NUM_WIDGETS - 1);
 }
 
 void M_CrispyToggleMouseLook(int choice)
@@ -395,6 +415,13 @@ void M_CrispyToggleNeghealth(int choice)
 {
     choice = 0;
     crispy->neghealth = !crispy->neghealth;
+}
+
+void M_CrispyToggleDefaultSkill(int choice)
+{
+    choice = 0;
+    crispy->defaultskill = (crispy->defaultskill + 1) % NUM_SKILLS;
+    M_SetDefaultDifficulty();
 }
 
 void M_CrispyToggleOverunder(int choice)
@@ -422,21 +449,7 @@ void M_CrispyTogglePitch(int choice)
 void M_CrispyTogglePlayerCoords(int choice)
 {
     choice = 0;
-    crispy->playercoords = (crispy->playercoords + 1) % (NUM_WIDGETS - 1); // [crispy] disable "always" setting
-}
-
-void M_CrispyToggleRecoil(int choice)
-{
-    if (!crispy->singleplayer)
-    {
-	return;
-    }
-
-    choice = 0;
-    crispy->recoil = !crispy->recoil;
-
-    // [crispy] update the "critical" struct
-    CheckCrispySingleplayer(!demorecording && !demoplayback && !netgame);
+    crispy->playercoords = (crispy->playercoords + 1) % (NUM_WIDGETS - 2); // [crispy] disable "always" setting
 }
 
 void M_CrispyToggleSecretmessage(int choice)
@@ -500,6 +513,12 @@ void M_CrispyToggleSoundMono(int choice)
     S_UpdateStereoSeparation();
 }
 
+void M_CrispyToggleStatsFormat(int choice)
+{
+    choice = 0;
+    crispy->statsformat = (crispy->statsformat + 1) % NUM_STATSFORMATS;
+}
+
 void M_CrispyToggleTranslucency(int choice)
 {
     choice = 0;
@@ -530,12 +549,6 @@ void M_CrispyToggleVsync(int choice)
     }
 
     crispy->post_rendering_hook = M_CrispyToggleVsyncHook;
-}
-
-void M_CrispyToggleWeaponSquat(int choice)
-{
-    choice = 0;
-    crispy->weaponsquat = !crispy->weaponsquat;
 }
 
 static void M_CrispyToggleWidescreenHook (void)

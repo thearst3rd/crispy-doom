@@ -82,7 +82,7 @@ NOTE: This repository is fully capable of building the original PC version as we
 ### The rest of the readme is the original Crispy Doom readme. Thanks for playing!
 
 # Crispy Doom
-[![Crispy Doom Icon](https://www.chocolate-doom.org/wiki/images/b/be/Crispy-doom.png)](https://github.com/fabiangreffrath/crispy-doom)
+[![Crispy Doom Icon](https://github.com/fabiangreffrath/crispy-doom/blob/master/data/doom.png)](https://github.com/fabiangreffrath/crispy-doom)
 
 [![Top Language](https://img.shields.io/github/languages/top/fabiangreffrath/crispy-doom.svg)](https://github.com/fabiangreffrath/crispy-doom)
 [![Code Size](https://img.shields.io/github/languages/code-size/fabiangreffrath/crispy-doom.svg)](https://github.com/fabiangreffrath/crispy-doom)
@@ -177,6 +177,14 @@ Many additional less user-visible features have been implemented, e.g. fixed eng
  * `-fliplevels` loads mirrored versions of the maps (this was the default on April 1st up to version 5.0).
  * `-flipweapons` flips the player's weapons (new in 5.3).
  * `-levelstat` prints a levelstat.txt file with statistics for each completed level (new in 5.9.0).
+ * `-pistolstart` reset health, armor and inventory at start of each level in Doom (new in 5.9.2)
+ * `-wandstart` reset health, armor and inventory at start of each level in Heretic (new in 5.9.2)
+ * `-doubleammo` doubles ammo pickup rate in Doom and Strife (new in 5.11).
+ * `-moreammo` increases ammo pickup rate by 50% in Heretic (new in 5.11).
+ * `-moremana` increases mana pickup rate by 50% in Hexen (new in 5.11).
+ * `-fast` enables fast monsters in Heretic and Hexen (new in 5.11).
+ * `-autohealth` enables automatic use of Quartz flasks and Mystic urns in Heretic and Hexen (new in 5.11).
+ * `-keysloc` enables display of keys on the automap in Heretic (new in 5.11).
 
 ### New cheat codes
 
@@ -196,16 +204,22 @@ Many additional less user-visible features have been implemented, e.g. fixed eng
 
 ## Download
 
-Binaries for Windows XP / Vista / 7 / 8.1 / 10 (32-bit binaries compatible with both x86 and x64 editions) are available here:
-https://github.com/fabiangreffrath/crispy-doom/releases/download/crispy-doom-5.9.2/crispy-doom-5.9.2-win32.zip
+Source code and Windows binaries (compatible with both x86 and x64 editions) for the latest release can be found on the [Release](https://github.com/fabiangreffrath/crispy-doom/releases/latest) page.
+
+The most recent list of changes can be found in the [Changelog](https://github.com/fabiangreffrath/crispy-doom/blob/master/CHANGELOG.md).
+
+A complete history of changes and releases can be found in the [Wiki](https://github.com/fabiangreffrath/crispy-doom/wiki/Changelog) or on the [Releases](https://github.com/fabiangreffrath/crispy-doom/releases) page.
+
 
 To install on Ubuntu ("Eoan Ermine" 19.10 and later)/Debian ("Buster" 10 and later) based systems:
 ```bash
 sudo apt-get install crispy-doom
 ```
 
+
 Daily builds of Crispy Doom can be found here:
 http://latest.chocolate-doom.org/
+
 
 Crispy Doom can play nearly all variants of Doom. If you don't own any, you may download the [Shareware version of Doom](http://cdn.debian.net/debian/pool/non-free/d/doom-wad-shareware/doom-wad-shareware_1.9.fixed.orig.tar.gz), extract it and copy the DOOM1.WAD file into your Crispy Doom directory. Alternatively, you may want to play Crispy Doom with [Freedoom](https://www.chocolate-doom.org/wiki/index.php/Freedoom) and a MegaWAD.
 
@@ -239,127 +253,6 @@ to install the prerequisites and then
 ```
 
 After successful compilation the resulting binaries can be found in the `src/` directory.
-
-## News
-
-### Crispy Doom 5.10.3
-
-Crispy Doom 5.10.3 is released on Aug 17, 2021. It is a bug-fix release fixing a regression in savegame restoring introduced by the A11Y features from the 5.10.2 release.
-
-**New Features and Improvements**
-
- * The translucency map is now always recalculated and no more loaded from a file or lump.
- * Autoload directories are now also supported for "sideloaded" PWADs - i.e. nerve.wad, masterlevels.wad and sigil.wad (thanks @Raddatoons).
-
-**Bug Fixes**
-
- * Rendered sector lightlevels are now saved in savegames if they are different from the logical lightlevels, fixing a regression intruduced with A11Y support (thanks Alaux).
- * The green color translation range has been fine-tuned so that light-blue isn't preferred over green anymore (thanks maxmanium).
- * The CMake build system has been updated for A11Y (thanks @vanfanel).
-
-Crispy Doom 5.10.3 is based on Chocolate Doom 3.0.1 and has merged all changes to the Chocolate Doom master branch up to commit [`3524a67d`](https://github.com/chocolate-doom/chocolate-doom/commit/3524a67dd3c7d48a172c83d3ae170a7176fb3cfa).
-
-### Crispy Doom 5.10.2
-
-Crispy Doom 5.10.2 is released on Aug 10, 2021. It is a minor release introducing basic accessibility features and accumulated fixes since the previous release.
-
-**New Features and Improvements**
-
- * Smooth automap rotation and srolling have been implemented (by @JNechaevsky).
- * Autoload directories for PWADs are now supported (thanks @OpenRift412 for the suggestion and @rfomin for the prior implementation in Woof!).
- * Basic accessibility features have been added and can be toggled in the Accessibility menu of the setup tool:
-   * Flickering Sector Lighting (disables sectors changing their light levels)
-   * Weapon Flash Lighting (disables weapon flashes changing the ambient light levels)
-   * Weapon Flash Sprite (disables rendering of weapon flashes sprites)
-   * Palette Changes (disables palette changes upon damage, item pickup, or when wearing the radiation suit)
-   * Invulnerability Colormap (disables colormap changes during invulnerability)
-
-**Bug Fixes**
-
- * In NRFTL the TITLEPIC is only replaced with the INTERPIC if the former is from the IWAD (thanks @OpenRift412).
- * Overlaid automap remainings are now cleared from the demo loop (by @JNechaevsky).
- * Adjusting of the BLOCKMAP boundaries to match the Vanilla algorithm has been reverted. Although this was done in the Vanilla algorithm, it doesn't match what's done in the algorithms used by MBF and Boom - and thus PrBoom+ which uses the latter. This fixes sync for one demo reported by galileo31dos01 on 5L1C.wad MAP01.
- * The Compatibility menu has been removed from the setup tool, it is obsolete for all games now.
- * The translucency table is now always calculated at gamma level 0, fixing potentially incorrect entries (by @JNechaevsky).
- * The episode menu is now rendered with the HUD font if the graphics are both from an IWAD and if the patch width for "Hell on Earth" is longer than "No Rest for the Living" (thanks thanks @hackneyed-one).
- * Automap rotation variables are now properly initialized, preventing line shaking (by @JNechaevsky).
-
-**Crispy Heretic**
-
- * The `-demoext` parameter (even though enabled by default) only applies to demos loaded on the command line.
-
-**Crispy Hexen**
-
- * Hexen: Restore pointers to `mobj_t` with garbage identity as `NULL` pointers (by @Dasperal).
-
-Crispy Doom 5.10.2 is based on Chocolate Doom 3.0.1 and has merged all changes to the Chocolate Doom master branch up to commit [`3524a67d`](https://github.com/chocolate-doom/chocolate-doom/commit/3524a67dd3c7d48a172c83d3ae170a7176fb3cfa).
-
-### Crispy Doom 5.10.1
-
-Crispy Doom 5.10.1 is released on Mar 24, 2021. It is a minor release containing the accumulated fixes of the past weeks.
-
-**New Features and Improvements**
-
- * Some colored text has been reverted back to the pristine Vanilla experience. As a rule of thumb, UI that has been inherited from Vanilla does doesn't get any colorization anymore (thanks @OpenRift412).
- * Screenwidth values are now rounded *down* to the nearest multiple of 4 in hires mode, and *up* in lores mode. This makes sure we end up with a screenwidth of 852 px for a 16:9 ratio in hires mode, which is exact twice the width of the widescreen assets, and with a screenwidth of 428 px in lores mode, which is the next integer multiple of 4 (thanks @buvk).
- * A CMake toggle has been added for the truecolor mode (by @zx64).
-
-**Bug Fixes**
-
- * The weapon sprite coordinates now remain unchanged if neither variable bobbing nor weapon sprite centering is enabled. Coincidently, this will bring back the sloppy bobbing of the chainsaw weapon sprite during its idle frames.
- * Interpolation of the Archvile's fire sprite is now suppressed to mitigate it being spawned at the wrong location.
- * Status bar positioning, drawing of fullscreen patches and the bunny scroll screen have been fixed on big-endian systems.
- * The window height is now prevented from shrinking when changing widescreen modes.
- * The smooth automap lines features has been fixed for truecolor mode (by @zx64).
-
-**Crispy Heretic**
-
- * Weapon pickup messages are now shown in cooperative multiplayer mode (by @xttl).
- * All Crispy Doom specific cheats have been ported over and adapted accordingly (by @xttl).
- * An Automap overlay mode has been added.
- * There are now separate mouse sensitivities for turn, strafe and y-axis.
- * Heretic now has a "demowarp" feature, i.e. support for using both `-playdemo` and `-warp` on the command line (thanks @thom-wye).
-
-Crispy Doom 5.10.1 is based on Chocolate Doom 3.0.1 and has merged all changes to the Chocolate Doom master branch up to commit [`5003ab52`](https://github.com/chocolate-doom/chocolate-doom/commit/5003ab5283ff27c951c97b064c26cdde2bb0f427).
-
-### Crispy Doom 5.10.0
-
-Crispy Doom 5.10.0 is released on Jan 12, 2021. Its major new feature is the addition of support for the widescreen assets found e.g. in the Unity version of Doom.
-
-**New Features and Improvements**
-
- * Proper support for widescreen assets has been added (by @SmileTheory, thanks @ghost and @chungy).
- * The bezel bottom edge to the left and right of the status bar in widescreen mode is now preserved (thanks braders1986 and @SmileTheory).
- * Special treatment is now applied to the No Rest for the Living and The Masterlevels expansions - even during network games, demo recording and playback. This includes level transitions to the secret maps and back, finale text screens, par times, etc. (thanks Coincident and Keyboard_Doomer for input from the DSDA community).
- * Menu scrolling with the mouse wheel has been improved to be more responsive (by @JNechaevsky).
- * All textures are now always composed, whether they are multi-patched or not. Furthermore, two separate composites are created, one for opaque and one for translucent mid-textures on 2S walls. Additionally, textures may now be arbitrarily tall.
- * Freedoom Phase 2 and FreeDM are now explicitly named in the Doom 2 Episode menu.
- * The status bar is now redrawn in the Main, Episode and Skill menus, where it could get overridden by custom graphics (thanks @JNechaevsky).
-
-**Bug Fixes**
-
- * A crash has been fixed when the -record and -pistolstart parameters were used simultaneously (thanks Spie812).
- * An optimization inherited from MBF has been fixed which led to sprites not being rendered on the lowest possible floor (thanks @retro65).
- * Only non-sky flats are now checked for the swirling effect.
- * Crushed non-bleeding monsters are not removed off the map anymore, their sprites are replaced with the invisible SPR_TNT1 instead (thanks ZeroMaster010 and sorry for the desyncing demo).
- * Sigil is not auto-loaded anymore with the Freedoom Phase 1 IWAD, since Sigil's own texture definitions may clash with the ones from Freedoom (thanks @Some1NamedNate).
- * A brightmap definition for an animated flat sequence in HacX has been fixed.
- * Some fixes to the "--enable-truecolor" configure option have been implemented (i.e. the --disable-truecolor option, the rendering of the status bar bezel, fuzzy column drawing and the translucency factor - thanks xttl).
- * Window height adjustment when changing window size has been brought back at the cost of the window shrinking when repeatedly changing the widescreen option.
- * Parts of the status bar being visible during the initial wipe in widescreen mode has been fixed (thanks xttl).
-
-**Crispy Heretic**
-
- * The level restart key now restarts the current demo recording from the map it was started, but under a new name (thanks @thom-wye).
- * Demo file names may now have arbitrary length (inherited from Chocolate Doom, also applied to the Hexen sources).
- * The demo file size limit has been removed (also applied to the Hexen and Strife sources).
- * The top border not always being drawn correctly in hires mode for all reduced screen sizes has been fixed (thanks @xttl).
-
-**Known Issues**
-
- * Users who insist on the pure Vanilla experience that was formerly applied to the No Rest for the Living and The Masterlevels expansions or who need it to properly play back demos recorded with a previous release will have to rename their PWAD files and explicitly load them on the command line.
-
-Crispy Doom 5.10.0 is based on Chocolate Doom 3.0.1 and has merged all changes to the Chocolate Doom master branch up to commit [`b26157ac`](https://github.com/chocolate-doom/chocolate-doom/commit/b26157aca5b12049b35d8dfcf969c51967a369f6).
 
 ## More documentation
 
@@ -403,4 +296,4 @@ Secret Rabbit Code (libsamplerate) is © 2002-2011 Erik de Castro Lopo and is re
 Libpng is © 1998-2014 Glenn Randers-Pehrson, © 1996-1997 Andreas Dilger, © 1995-1996 Guy Eric Schalnat, Group 42, Inc. and is released under the [libpng license](http://www.libpng.org/pub/png/src/libpng-LICENSE.txt).
 Zlib is © 1995-2013 Jean-loup Gailly and Mark Adler and is released under the [zlib license](http://www.zlib.net/zlib_license.html).
 
-The Crispy Doom icon (as shown at the top of this page) is composed of the [Chocolate Doom icon](https://www.chocolate-doom.org/wiki/images/7/77/Chocolate-logo.png) and a [photo](https://en.wikipedia.org/wiki/File:Potato-Chips.jpg) of potato crisps (Utz-brand, grandma's kettle-cooked style) by [Evan-Amos](https://commons.wikimedia.org/wiki/User:Evan-Amos) who kindly released it into the [public domain](https://en.wikipedia.org/wiki/Public_domain). The current high-resolution version of this icon has been contributed by JNechaevsky (formerly by Zodomaniac).
+The Crispy Doom icon (as shown at the top of this page) has been contributed by [Philip](https://github.com/kiwaph).

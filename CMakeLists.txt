@@ -1,7 +1,7 @@
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 cmake_minimum_required(VERSION 3.7.2)
-project("Crispy Doom" VERSION 5.10.3 LANGUAGES C)
+project("Crispy Doom" VERSION 5.12.0 LANGUAGES C)
 
 # Autotools variables
 set(top_srcdir ${CMAKE_CURRENT_SOURCE_DIR})
@@ -15,7 +15,7 @@ set(PACKAGE_STRING "${PROJECT_NAME} ${PROJECT_VERSION}")
 set(PACKAGE_BUGREPORT "https://github.com/fabiangreffrath/crispy-doom/issues")
 
 string(REGEX REPLACE " Doom$" "" PACKAGE_SHORTNAME "${PACKAGE_NAME}")
-set(PACKAGE_COPYRIGHT "Copyright (C) 1993-2021")
+set(PACKAGE_COPYRIGHT "Copyright (C) 1993-2022")
 set(PACKAGE_LICENSE "GNU General Public License, version 2")
 
 # Any settings that should apply to all targets in this directory and all
@@ -28,9 +28,21 @@ else()
                         "-Wredundant-decls")
 endif()
 
+option(ENABLE_SDL2_NET "Enable SDL2_net" On)
+option(ENABLE_SDL2_MIXER "Enable SDL2_mixer" On)
+
 find_package(SDL2 2.0.7)
-find_package(SDL2_mixer 2.0.2)
-find_package(SDL2_net 2.0.0)
+if(ENABLE_SDL2_MIXER)
+    find_package(SDL2_mixer 2.0.2)
+else()
+    add_compile_definitions(DISABLE_SDL2MIXER=1)
+endif()
+
+if(ENABLE_SDL2_NET)
+    find_package(SDL2_net 2.0.0)
+else()
+    add_compile_definitions(DISABLE_SDL2NET=1)
+endif()
 
 option(CRISPY_TRUECOLOR "True color rendering" OFF)
 
@@ -65,10 +77,13 @@ set(PROGRAM_PREFIX "${PROGRAM_SPREFIX}-")
 
 configure_file(cmake/config.h.cin config.h)
 
-configure_file(src/resource.rc.in src/resource.rc)
+configure_file(src/doom-res.rc.in src/doom-res.rc)
+configure_file(src/heretic-res.rc.in src/heretic-res.rc)
+configure_file(src/hexen-res.rc.in src/hexen-res.rc)
 configure_file(src/setup-res.rc.in src/setup-res.rc)
 configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
+configure_file(src/strife-res.rc.in src/strife-res.rc)
 
-foreach(SUBDIR textscreen midiproc opl pcsound src)
+foreach(SUBDIR textscreen opl pcsound src)
     add_subdirectory("${SUBDIR}")
 endforeach()

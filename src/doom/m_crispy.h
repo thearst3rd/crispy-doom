@@ -39,9 +39,11 @@ extern multiitem_t multiitem_freelook[NUM_FREELOOKS];
 extern multiitem_t multiitem_jump[NUM_JUMPS];
 extern multiitem_t multiitem_sndchannels[4];
 extern multiitem_t multiitem_secretmessage[NUM_SECRETMESSAGE];
+extern multiitem_t multiitem_statsformat[NUM_STATSFORMATS];
 extern multiitem_t multiitem_translucency[NUM_TRANSLUCENCY];
 extern multiitem_t multiitem_widgets[NUM_WIDGETS];
 extern multiitem_t multiitem_widescreen[NUM_RATIOS];
+extern multiitem_t multiitem_difficulties[NUM_SKILLS];
 
 extern void M_CrispyToggleAutomapstats(int choice);
 extern void M_CrispyToggleBlockmapfix(int choice);
@@ -68,10 +70,10 @@ extern void M_CrispyToggleJumping(int choice);
 extern void M_CrispyToggleLeveltime(int choice);
 extern void M_CrispyToggleMouseLook(int choice);
 extern void M_CrispyToggleNeghealth(int choice);
+extern void M_CrispyToggleDefaultSkill(int choice);
 extern void M_CrispyToggleOverunder(int choice);
 extern void M_CrispyTogglePitch(int choice);
 extern void M_CrispyTogglePlayerCoords(int choice);
-extern void M_CrispyToggleRecoil(int choice);
 extern void M_CrispyToggleSecretmessage(int choice);
 extern void M_CrispyToggleSmoothLighting(int choice);
 extern void M_CrispyToggleSmoothMap(int choice);
@@ -79,10 +81,10 @@ extern void M_CrispyToggleSmoothScaling(int choice);
 extern void M_CrispyToggleSndChannels(int choice);
 extern void M_CrispyToggleSoundfixes(int choice);
 extern void M_CrispyToggleSoundMono(int choice);
+extern void M_CrispyToggleStatsFormat(int choice);
 extern void M_CrispyToggleTranslucency(int choice);
 extern void M_CrispyToggleUncapped(int choice);
 extern void M_CrispyToggleVsync(int choice);
-extern void M_CrispyToggleWeaponSquat(int choice);
 extern void M_CrispyToggleWidescreen(int choice);
 
 #endif

@@ -116,7 +116,6 @@ static void RestoreSSThinker(ssthinker_t * sst);
 static void RestorePlatRaise(plat_t * plat);
 static void RestoreMoveCeiling(ceiling_t * ceiling);
 static void AssertSegment(gameArchiveSegment_t segType);
-static void ClearSaveSlot(int slot);
 static void CopySaveSlot(int sourceSlot, int destSlot);
 static void CopyFile(char *sourceName, char *destName);
 static boolean ExistingFile(char *name);
@@ -143,6 +142,8 @@ static void SV_WritePtr(void *ptr);
 char *SavePath = DEFAULT_SAVEPATH;
 
 int vanilla_savegame_limit = 1;
+
+int savepage; // [crispy] support 8 pages of savegames
 
 // PRIVATE DATA DEFINITIONS ------------------------------------------------
 
@@ -1928,8 +1929,14 @@ void SV_SaveGame(int slot, const char *description)
     char versionText[HXS_VERSION_TEXT_LENGTH];
     unsigned int i;
 
+    // [crispy] get expanded save slot number
+    if (slot != BASE_SLOT && slot != REBORN_SLOT)
+    {
+        slot += savepage * 10;
+    }
+
     // Open the output file
-    M_snprintf(fileName, sizeof(fileName), "%shex6.hxs", SavePath);
+    M_snprintf(fileName, sizeof(fileName), "%shex%d.hxs", SavePath, BASE_SLOT);
     SV_OpenWrite(fileName);
 
     // Write game save description
@@ -1970,7 +1977,7 @@ void SV_SaveGame(int slot, const char *description)
     SV_SaveMap(true);           // true = save player info
 
     // Clear all save files at destination slot
-    ClearSaveSlot(slot);
+    SV_ClearSaveSlot(slot);
 
     // Copy base slot to destination slot
     CopySaveSlot(BASE_SLOT, slot);
@@ -1989,7 +1996,8 @@ void SV_SaveMap(boolean savePlayers)
     SavingPlayers = savePlayers;
 
     // Open the output file
-    M_snprintf(fileName, sizeof(fileName), "%shex6%02d.hxs", SavePath, gamemap);
+    M_snprintf(fileName, sizeof(fileName), "%shex%d%02d.hxs",
+                SavePath, BASE_SLOT, gamemap);
     SV_OpenWrite(fileName);
 
     // Place a header marker
@@ -2030,15 +2038,21 @@ void SV_LoadGame(int slot)
     player_t playerBackup[MAXPLAYERS];
     mobj_t *mobj;
 
+    // [crispy] get expanded save slot number
+    if (slot != BASE_SLOT && slot != REBORN_SLOT)
+    {
+        slot += savepage * 10;
+    }
+
     // Copy all needed save files to the base slot
     if (slot != BASE_SLOT)
     {
-        ClearSaveSlot(BASE_SLOT);
+        SV_ClearSaveSlot(BASE_SLOT);
         CopySaveSlot(slot, BASE_SLOT);
     }
 
     // Create the name
-    M_snprintf(fileName, sizeof(fileName), "%shex6.hxs", SavePath);
+    M_snprintf(fileName, sizeof(fileName), "%shex%d.hxs", SavePath, BASE_SLOT);
 
     // Load the file
     SV_OpenRead(fileName);
@@ -2119,7 +2133,7 @@ void SV_LoadGame(int slot)
 
 void SV_UpdateRebornSlot(void)
 {
-    ClearSaveSlot(REBORN_SLOT);
+    SV_ClearSaveSlot(REBORN_SLOT);
     CopySaveSlot(BASE_SLOT, REBORN_SLOT);
 }
 
@@ -2131,7 +2145,7 @@ void SV_UpdateRebornSlot(void)
 
 void SV_ClearRebornSlot(void)
 {
-    ClearSaveSlot(REBORN_SLOT);
+    SV_ClearSaveSlot(REBORN_SLOT);
 }
 
 //==========================================================================
@@ -2165,7 +2179,7 @@ void SV_MapTeleport(int map, int position)
         }
         else
         {                       // Entering new cluster - clear base slot
-            ClearSaveSlot(BASE_SLOT);
+            SV_ClearSaveSlot(BASE_SLOT);
         }
     }
 
@@ -2186,7 +2200,8 @@ void SV_MapTeleport(int map, int position)
     TargetPlayerAddrs = NULL;
 
     gamemap = map;
-    M_snprintf(fileName, sizeof(fileName), "%shex6%02d.hxs", SavePath, gamemap);
+    M_snprintf(fileName, sizeof(fileName),
+                "%shex%d%02d.hxs", SavePath, BASE_SLOT, gamemap);
     if (!deathmatch && ExistingFile(fileName))
     {                           // Unarchive map
         SV_LoadMap();
@@ -2357,7 +2372,8 @@ void SV_LoadMap(void)
     RemoveAllThinkers();
 
     // Create the name
-    M_snprintf(fileName, sizeof(fileName), "%shex6%02d.hxs", SavePath, gamemap);
+    M_snprintf(fileName, sizeof(fileName),
+                "%shex%d%02d.hxs", SavePath, BASE_SLOT, gamemap);
 
     // Load the file
     SV_OpenRead(fileName);
@@ -2390,7 +2406,7 @@ void SV_LoadMap(void)
 
 void SV_InitBaseSlot(void)
 {
-    ClearSaveSlot(BASE_SLOT);
+    SV_ClearSaveSlot(BASE_SLOT);
 }
 
 //==========================================================================
@@ -3190,25 +3206,31 @@ static void AssertSegment(gameArchiveSegment_t segType)
 
 //==========================================================================
 //
-// ClearSaveSlot
+// SV_ClearSaveSlot
 //
 // Deletes all save game files associated with a slot number.
 //
 //==========================================================================
 
-static void ClearSaveSlot(int slot)
+void SV_ClearSaveSlot(int slot)
 {
     int i;
     char fileName[100];
+
+    // [crispy] get expanded save slot number
+    if (slot != BASE_SLOT && slot != REBORN_SLOT)
+    {
+        slot += savepage * 10;
+    }
 
     for (i = 0; i < MAX_MAPS; i++)
     {
         M_snprintf(fileName, sizeof(fileName),
                    "%shex%d%02d.hxs", SavePath, slot, i);
-        remove(fileName);
+        M_remove(fileName);
     }
     M_snprintf(fileName, sizeof(fileName), "%shex%d.hxs", SavePath, slot);
-    remove(fileName);
+    M_remove(fileName);
 }
 
 //==========================================================================
@@ -3268,7 +3290,7 @@ static void CopyFile(char *source_name, char *dest_name)
     FILE *read_handle, *write_handle;
     int buf_count, read_count, write_count;
 
-    read_handle = fopen(source_name, "rb");
+    read_handle = M_fopen(source_name, "rb");
     if (read_handle == NULL)
     {
         I_Error ("Couldn't read file %s", source_name);
@@ -3287,7 +3309,7 @@ static void CopyFile(char *source_name, char *dest_name)
         Z_Free(buffer);
     }
 
-    write_handle = fopen(dest_name, "wb");
+    write_handle = M_fopen(dest_name, "wb");
     if (write_handle == NULL)
     {
         I_Error ("Couldn't read file %s", dest_name);
@@ -3333,7 +3355,7 @@ static boolean ExistingFile(char *name)
 {
     FILE *fp;
 
-    if ((fp = fopen(name, "rb")) != NULL)
+    if ((fp = M_fopen(name, "rb")) != NULL)
     {
         fclose(fp);
         return true;
@@ -3352,7 +3374,7 @@ static boolean ExistingFile(char *name)
 
 static void SV_OpenRead(char *fileName)
 {
-    SavingFP = fopen(fileName, "rb");
+    SavingFP = M_fopen(fileName, "rb");
 
     // Should never happen, only if hex6.hxs cannot ever be created.
     if (SavingFP == NULL)
@@ -3363,7 +3385,7 @@ static void SV_OpenRead(char *fileName)
 
 static void SV_OpenWrite(char *fileName)
 {
-    SavingFP = fopen(fileName, "wb");
+    SavingFP = M_fopen(fileName, "wb");
 }
 
 //==========================================================================

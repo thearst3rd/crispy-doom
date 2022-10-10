@@ -41,6 +41,9 @@
 #include "p_local.h"
 #include "v_video.h"
 #include "w_main.h"
+#include "am_map.h"
+
+#include "hexen_icon.c"
 
 // MACROS ------------------------------------------------------------------
 
@@ -86,7 +89,6 @@ static void WarpCheck(void);
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
 
-extern boolean automapactive;
 extern boolean MenuActive;
 extern boolean askforquit;
 
@@ -172,6 +174,8 @@ void D_BindVariables(void)
 
     M_BindIntVariable("graphical_startup",      &graphical_startup);
     M_BindIntVariable("mouse_sensitivity",      &mouseSensitivity);
+    M_BindIntVariable("mouse_sensitivity_x2",   &mouseSensitivity_x2);
+    M_BindIntVariable("mouse_sensitivity_y",    &mouseSensitivity_y);
     M_BindIntVariable("sfx_volume",             &snd_MaxVolume);
     M_BindIntVariable("music_volume",           &snd_MusicVolume);
     M_BindIntVariable("messageson",             &messageson);
@@ -192,6 +196,19 @@ void D_BindVariables(void)
         M_snprintf(buf, sizeof(buf), "chatmacro%i", i);
         M_BindStringVariable(buf, &chat_macros[i]);
     }
+
+    // [crispy] bind "crispness" config variables
+    M_BindIntVariable("crispy_automapoverlay",  &crispy->automapoverlay);
+    M_BindIntVariable("crispy_automaprotate",   &crispy->automaprotate);
+    M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
+    M_BindIntVariable("crispy_freelook",        &crispy->freelook_hh);
+    M_BindIntVariable("crispy_hires",           &crispy->hires);
+    M_BindIntVariable("crispy_mouselook",       &crispy->mouselook);
+    M_BindIntVariable("crispy_smoothscaling",   &crispy->smoothscaling);
+    M_BindIntVariable("crispy_vsync",           &crispy->vsync);
+    M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
+    M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
+    M_BindIntVariable("crispy_brightmaps",      &crispy->brightmaps);
 }
 
 // Set the default directory where hub savegames are saved.
@@ -355,6 +372,8 @@ void D_SetGameDescription(void)
     }
 }
 
+static const char *const loadparms[] = {"-file", "-merge", NULL}; // [crispy]
+
 //==========================================================================
 //
 // H2_Main
@@ -370,7 +389,6 @@ void D_DoomMain(void)
     I_AtExit(D_HexenQuitMessage, false);
     startepisode = 1;
     autostart = false;
-    startskill = sk_medium;
     startmap = 1;
     gamemode = commercial;
 
@@ -415,6 +433,9 @@ void D_DoomMain(void)
 
     I_AtExit(M_SaveDefaults, false);
 
+    // [crispy] set defaultskill after loading config
+    startskill = (crispy->defaultskill + SKILL_HMP) % NUM_SKILLS;
+
     // Now that the savedir is loaded, make sure it exists
     CreateSavePath();
 
@@ -440,6 +461,35 @@ void D_DoomMain(void)
     AdjustForMacIWAD();
 
     //!
+    // @category game
+    // @category mod
+    //
+    // Mana pickups give 50% more mana. This option is not allowed when recording a
+    // demo, playing back a demo or when starting a network game.
+    //
+
+    crispy->moreammo = M_ParmExists("-moremana");
+
+    //!
+    // @category game
+    // @category mod
+    //
+    // Fast monsters. This option is not allowed when recording a demo,
+    // playing back a demo or when starting a network game.
+    //
+
+    crispy->fast = M_ParmExists("-fast");
+
+    //!
+    // @category game
+    // @category mod
+    //
+    // Automatic use of Quartz flasks and Mystic urns.
+    //
+
+    crispy->autohealth = M_ParmExists("-autohealth");
+
+    //!
     // @category mod
     //
     // Disable auto-loading of .wad files.
@@ -448,9 +498,12 @@ void D_DoomMain(void)
     {
         char *autoload_dir;
         autoload_dir = M_GetAutoloadDir("hexen.wad", true);
-        // TODO? DEH_AutoLoadPatches(autoload_dir);
-        W_AutoLoadWADs(autoload_dir);
-        free(autoload_dir);
+        if (autoload_dir != NULL)
+        {
+            // TODO? DEH_AutoLoadPatches(autoload_dir);
+            W_AutoLoadWADs(autoload_dir);
+            free(autoload_dir);
+        }
     }
 
     HandleArgs();
@@ -687,6 +740,31 @@ static void HandleArgs(void)
         autostart = true;
     }
 
+    // [crispy] add wad files from autoload PWAD directories
+
+    if (!M_ParmExists("-noautoload"))
+    {
+        int i;
+
+        for (i = 0; loadparms[i]; i++)
+        {
+            int p;
+            p = M_CheckParmWithArgs(loadparms[i], 1);
+            if (p)
+            {
+                while (++p != myargc && myargv[p][0] != '-')
+                {
+                    char *autoload_dir;
+                    if ((autoload_dir = M_GetAutoloadDir(M_BaseName(myargv[p]), false)))
+                    {
+                        W_AutoLoadWADs(autoload_dir);
+                        free(autoload_dir);
+                    }
+                }
+            }
+        }
+    }
+
     //!
     // @arg <demo>
     // @category demo
@@ -816,15 +894,43 @@ static void WarpCheck(void)
 
 void H2_GameLoop(void)
 {
+    // [crispy] update the "singleplayer" variable
+    CheckCrispySingleplayer(!demorecording && gameaction != ga_playdemo && !netgame);
+
+    if (!crispy->singleplayer)
+    {
+        int i;
+
+        const struct {
+            boolean feature;
+            const char *option;
+        } custom_options[] = {
+            {crispy->moreammo,   "-moremana"},
+            {crispy->fast,       "-fast"},
+            {crispy->autohealth, "-autohealth"},
+        };
+
+        for (i = 0; i < arrlen(custom_options); i++)
+        {
+            if (custom_options[i].feature)
+            {
+                I_Error("The %s option is not supported\n"
+                        "for demos and network play.",
+                        custom_options[i].option);
+            }
+        }
+    }
+
     if (M_CheckParm("-debugfile"))
     {
         char filename[20];
         M_snprintf(filename, sizeof(filename), "debug%i.txt", consoleplayer);
-        debugfile = fopen(filename, "w");
+        debugfile = M_fopen(filename, "w");
     }
     I_SetWindowTitle(gamedescription);
     I_GraphicsCheckCommandLine();
     I_SetGrabMouseCallback(D_GrabMouseCallback);
+    I_RegisterWindowIcon(hexen_icon_data, hexen_icon_w, hexen_icon_h);
     I_InitGraphics();
 
     while (1)
@@ -840,6 +946,15 @@ void H2_GameLoop(void)
         S_UpdateSounds(players[displayplayer].mo);
 
         DrawAndBlit();
+
+        // [crispy] post-rendering function pointer to apply config changes
+        // that affect rendering and that are better applied after the current
+        // frame has finished rendering
+        if (crispy->post_rendering_hook)
+        {
+            crispy->post_rendering_hook();
+            crispy->post_rendering_hook = NULL;
+        }
     }
 }
 
@@ -898,13 +1013,20 @@ static void DrawAndBlit(void)
             {
                 break;
             }
-            if (automapactive)
+            if (automapactive && !crispy->automapoverlay)
             {
+                // [crispy] update automap while playing
+                R_RenderPlayerView(&players[displayplayer]);
                 AM_Drawer();
             }
             else
             {
                 R_RenderPlayerView(&players[displayplayer]);
+            }
+            if (automapactive && crispy->automapoverlay)
+            {
+                AM_Drawer();
+                BorderNeedRefresh = true;
             }
             CT_Drawer();
             UpdateState |= I_FULLVIEW;
@@ -1001,7 +1123,8 @@ void H2_PageTicker(void)
 
 static void PageDrawer(void)
 {
-    V_DrawRawScreen(W_CacheLumpName(pagename, PU_CACHE));
+    V_DrawFullscreenRawOrPatch(W_GetNumForName(pagename)); // [crispy]
+
     if (demosequence == 1)
     {
         V_DrawPatch(4, 160, W_CacheLumpName("ADVISOR", PU_CACHE));

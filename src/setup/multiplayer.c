@@ -175,7 +175,8 @@ static void AddWADs(execute_context_t *exec)
         {
             if (!have_wads)
             {
-                AddCmdLineParameter(exec, "-file");
+                AddCmdLineParameter(exec, "-merge");
+                have_wads = 1;
             }
 
             AddCmdLineParameter(exec, "\"%s\"", wads[i]);

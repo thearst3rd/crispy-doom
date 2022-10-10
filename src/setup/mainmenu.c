@@ -58,6 +58,7 @@ static void SensibleDefaults(void)
     key_down = 's';
     key_strafeleft = 'a';
     key_straferight = 'd';
+    key_demospeed = KEYP_PLUS;  // [crispy]
     key_jump = '/';
     key_lookup = KEY_PGUP;
     key_lookdown = KEY_PGDN;
@@ -280,7 +281,6 @@ static void InitConfig(void)
 
 static void SetIcon(void)
 {
-    extern SDL_Window *TXT_SDLWindow;
     SDL_Surface *surface;
 
     surface = SDL_CreateRGBSurfaceFrom((void *) setup_icon_data, setup_icon_w,
@@ -331,14 +331,6 @@ static void InitTextscreen(void)
     SetWindowTitle();
 }
 
-// Restart the textscreen library.  Used when the video_driver variable
-// is changed.
-
-void RestartTextscreen(void)
-{
-    TXT_Shutdown();
-    InitTextscreen();
-}
 
 // 
 // Initialize and run the textscreen GUI.

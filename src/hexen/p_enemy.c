@@ -26,7 +26,6 @@
 // Types
 // Private Data
 // External Data
-extern fixed_t FloatBobOffsets[64];
 
 
 //----------------------------------------------------------------------------
@@ -229,9 +228,6 @@ fixed_t xspeed[8] =
 fixed_t yspeed[8] =
     { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };
 
-#define MAXSPECIALCROSS         8
-extern line_t *spechit[MAXSPECIALCROSS];
-extern int numspechit;
 
 boolean P_Move(mobj_t * actor)
 {
@@ -687,7 +683,7 @@ void A_Chase(mobj_t * actor)
         actor->threshold--;
     }
 
-    if (gameskill == sk_nightmare)
+    if (gameskill == sk_nightmare || critical->fast)
     {                           // Monsters move faster in nightmare mode
         actor->tics -= actor->tics / 2;
         if (actor->tics < 3)
@@ -729,7 +725,7 @@ void A_Chase(mobj_t * actor)
     if (actor->flags & MF_JUSTATTACKED)
     {
         actor->flags &= ~MF_JUSTATTACKED;
-        if (gameskill != sk_nightmare)
+        if (gameskill != sk_nightmare && !critical->fast)
             P_NewChaseDir(actor);
         return;
     }
@@ -752,7 +748,7 @@ void A_Chase(mobj_t * actor)
 //
     if (actor->info->missilestate)
     {
-        if (gameskill < sk_nightmare && actor->movecount)
+        if (gameskill < sk_nightmare && actor->movecount && !critical->fast)
             goto nomissile;
         if (!P_CheckMissileRange(actor))
             goto nomissile;
@@ -2019,7 +2015,7 @@ void A_SerpentChase(mobj_t * actor)
         actor->threshold--;
     }
 
-    if (gameskill == sk_nightmare)
+    if (gameskill == sk_nightmare || critical->fast)
     {                           // Monsters move faster in nightmare mode
         actor->tics -= actor->tics / 2;
         if (actor->tics < 3)
@@ -2061,7 +2057,7 @@ void A_SerpentChase(mobj_t * actor)
     if (actor->flags & MF_JUSTATTACKED)
     {
         actor->flags &= ~MF_JUSTATTACKED;
-        if (gameskill != sk_nightmare)
+        if (gameskill != sk_nightmare && !critical->fast)
             P_NewChaseDir(actor);
         return;
     }
@@ -2220,7 +2216,7 @@ void A_SerpentWalk(mobj_t * actor)
         actor->threshold--;
     }
 
-    if (gameskill == sk_nightmare)
+    if (gameskill == sk_nightmare || critical->fast)
     {                           // Monsters move faster in nightmare mode
         actor->tics -= actor->tics / 2;
         if (actor->tics < 3)
@@ -2262,7 +2258,7 @@ void A_SerpentWalk(mobj_t * actor)
     if (actor->flags & MF_JUSTATTACKED)
     {
         actor->flags &= ~MF_JUSTATTACKED;
-        if (gameskill != sk_nightmare)
+        if (gameskill != sk_nightmare && !critical->fast)
             P_NewChaseDir(actor);
         return;
     }
@@ -4605,7 +4601,7 @@ void A_FastChase(mobj_t * actor)
         actor->threshold--;
     }
 
-    if (gameskill == sk_nightmare)
+    if (gameskill == sk_nightmare || critical->fast)
     {                           // Monsters move faster in nightmare mode
         actor->tics -= actor->tics / 2;
         if (actor->tics < 3)
@@ -4647,7 +4643,7 @@ void A_FastChase(mobj_t * actor)
     if (actor->flags & MF_JUSTATTACKED)
     {
         actor->flags &= ~MF_JUSTATTACKED;
-        if (gameskill != sk_nightmare)
+        if (gameskill != sk_nightmare && !critical->fast)
             P_NewChaseDir(actor);
         return;
     }
@@ -4686,7 +4682,7 @@ void A_FastChase(mobj_t * actor)
 //
     if (actor->info->missilestate)
     {
-        if (gameskill < sk_nightmare && actor->movecount)
+        if (gameskill < sk_nightmare && actor->movecount && !critical->fast)
             goto nomissile;
         if (!P_CheckMissileRange(actor))
             goto nomissile;
@@ -4720,8 +4716,6 @@ void A_FastChase(mobj_t * actor)
 
 void A_FighterAttack(mobj_t * actor)
 {
-    extern void A_FSwordAttack2(mobj_t * actor);
-
     if (!actor->target)
         return;
     A_FSwordAttack2(actor);
@@ -4730,8 +4724,6 @@ void A_FighterAttack(mobj_t * actor)
 
 void A_ClericAttack(mobj_t * actor)
 {
-    extern void A_CHolyAttack3(mobj_t * actor);
-
     if (!actor->target)
         return;
     A_CHolyAttack3(actor);
@@ -4741,8 +4733,6 @@ void A_ClericAttack(mobj_t * actor)
 
 void A_MageAttack(mobj_t * actor)
 {
-    extern void A_MStaffAttack2(mobj_t * actor);
-
     if (!actor->target)
         return;
     A_MStaffAttack2(actor);

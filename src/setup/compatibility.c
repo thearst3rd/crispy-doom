@@ -63,6 +63,7 @@ void BindCompatibilityVariables(void)
         M_BindIntVariable("crispy_crosshairhealth", &crispy->crosshairhealth);
         M_BindIntVariable("crispy_crosshairtarget", &crispy->crosshairtarget);
         M_BindIntVariable("crispy_crosshairtype",   &crispy->crosshairtype);
+        M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
         M_BindIntVariable("crispy_demobar",         &crispy->demobar);
         M_BindIntVariable("crispy_demotimer",       &crispy->demotimer);
         M_BindIntVariable("crispy_demotimerdir",    &crispy->demotimerdir);
@@ -78,7 +79,6 @@ void BindCompatibilityVariables(void)
         M_BindIntVariable("crispy_overunder",       &crispy->overunder);
         M_BindIntVariable("crispy_pitch",           &crispy->pitch);
         M_BindIntVariable("crispy_playercoords",    &crispy->playercoords);
-        M_BindIntVariable("crispy_recoil",          &crispy->recoil);
         M_BindIntVariable("crispy_secretmessage",   &crispy->secretmessage);
         M_BindIntVariable("crispy_smoothlight",     &crispy->smoothlight);
         M_BindIntVariable("crispy_smoothmap",       &crispy->smoothmap);
@@ -86,13 +86,13 @@ void BindCompatibilityVariables(void)
         M_BindIntVariable("crispy_soundfix",        &crispy->soundfix);
         M_BindIntVariable("crispy_soundfull",       &crispy->soundfull);
         M_BindIntVariable("crispy_soundmono",       &crispy->soundmono);
+        M_BindIntVariable("crispy_statsformat",     &crispy->statsformat);
         M_BindIntVariable("crispy_translucency",    &crispy->translucency);
 #ifdef CRISPY_TRUECOLOR
         M_BindIntVariable("crispy_truecolor",       &crispy->truecolor);
 #endif
         M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
         M_BindIntVariable("crispy_vsync",           &crispy->vsync);
-        M_BindIntVariable("crispy_weaponsquat",     &crispy->weaponsquat);
         M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
     }
     else if (gamemission == heretic)
@@ -100,13 +100,30 @@ void BindCompatibilityVariables(void)
         M_BindIntVariable("vanilla_savegame_limit", &vanilla_savegame_limit);
         M_BindIntVariable("vanilla_demo_limit",     &vanilla_demo_limit);
         M_BindIntVariable("crispy_automapstats",    &crispy->automapstats);
+        M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
+        M_BindIntVariable("crispy_freelook",        &crispy->freelook_hh);
         M_BindIntVariable("crispy_hires",           &crispy->hires);
+        M_BindIntVariable("crispy_brightmaps",      &crispy->brightmaps);
         M_BindIntVariable("crispy_leveltime",       &crispy->leveltime);
         M_BindIntVariable("crispy_playercoords",    &crispy->playercoords);
         M_BindIntVariable("crispy_secretmessage",   &crispy->secretmessage);
         M_BindIntVariable("crispy_smoothscaling",   &crispy->smoothscaling);
         M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
         M_BindIntVariable("crispy_vsync",           &crispy->vsync);
+        M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
+    }
+    else if (gamemission == hexen)
+    {
+        M_BindIntVariable("vanilla_savegame_limit", &vanilla_savegame_limit);
+        M_BindIntVariable("vanilla_demo_limit",     &vanilla_demo_limit);
+        M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
+        M_BindIntVariable("crispy_freelook",        &crispy->freelook_hh);
+        M_BindIntVariable("crispy_hires",           &crispy->hires);
+        M_BindIntVariable("crispy_smoothscaling",   &crispy->smoothscaling);
+        M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
+        M_BindIntVariable("crispy_vsync",           &crispy->vsync);
+        M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
+        M_BindIntVariable("crispy_brightmaps",      &crispy->brightmaps);
     }
     else
     {

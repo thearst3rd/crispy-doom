@@ -65,6 +65,7 @@
 #include "a11y.h" // [crispy] A11Y
 
 #include "hu_stuff.h"
+#include "v_snow.h"
 #include "wi_stuff.h"
 #include "st_stuff.h"
 #include "am_map.h"
@@ -82,6 +83,8 @@
 
 
 #include "d_main.h"
+
+#include "doom_icon.c"
 
 //
 // D-DoomLoop()
@@ -312,6 +315,16 @@ boolean D_Display (void)
 	inhelpscreensstate = true;
     }
 
+    // [crispy] Snow
+    if (crispy->snowflakes)
+    {
+	V_SnowDraw();
+
+	// [crispy] force redraw of status bar and border
+	viewactivestate = false;
+	inhelpscreensstate = true;
+    }
+
     // [crispy] draw neither pause pic nor menu when taking a clean screenshot
     if (crispy->cleanscreenshot)
     {
@@ -415,6 +428,7 @@ void D_BindVariables(void)
 //  M_BindIntVariable("vanilla_savegame_limit", &vanilla_savegame_limit);
 //  M_BindIntVariable("vanilla_demo_limit",     &vanilla_demo_limit);
     M_BindIntVariable("a11y_sector_lighting",   &a11y_sector_lighting);
+    M_BindIntVariable("a11y_extra_lighting",    &a11y_extra_lighting);
     M_BindIntVariable("a11y_weapon_flash",      &a11y_weapon_flash);
     M_BindIntVariable("a11y_weapon_pspr",       &a11y_weapon_pspr);
     M_BindIntVariable("a11y_palette_changes",   &a11y_palette_changes);
@@ -448,6 +462,7 @@ void D_BindVariables(void)
     M_BindIntVariable("crispy_crosshairhealth", &crispy->crosshairhealth);
     M_BindIntVariable("crispy_crosshairtarget", &crispy->crosshairtarget);
     M_BindIntVariable("crispy_crosshairtype",   &crispy->crosshairtype);
+    M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
     M_BindIntVariable("crispy_demobar",         &crispy->demobar);
     M_BindIntVariable("crispy_demotimer",       &crispy->demotimer);
     M_BindIntVariable("crispy_demotimerdir",    &crispy->demotimerdir);
@@ -463,7 +478,6 @@ void D_BindVariables(void)
     M_BindIntVariable("crispy_overunder",       &crispy->overunder);
     M_BindIntVariable("crispy_pitch",           &crispy->pitch);
     M_BindIntVariable("crispy_playercoords",    &crispy->playercoords);
-    M_BindIntVariable("crispy_recoil",          &crispy->recoil);
     M_BindIntVariable("crispy_secretmessage",   &crispy->secretmessage);
     M_BindIntVariable("crispy_smoothlight",     &crispy->smoothlight);
     M_BindIntVariable("crispy_smoothmap",       &crispy->smoothmap);
@@ -471,13 +485,13 @@ void D_BindVariables(void)
     M_BindIntVariable("crispy_soundfix",        &crispy->soundfix);
     M_BindIntVariable("crispy_soundfull",       &crispy->soundfull);
     M_BindIntVariable("crispy_soundmono",       &crispy->soundmono);
+    M_BindIntVariable("crispy_statsformat",     &crispy->statsformat);
     M_BindIntVariable("crispy_translucency",    &crispy->translucency);
 #ifdef CRISPY_TRUECOLOR
     M_BindIntVariable("crispy_truecolor",       &crispy->truecolor);
 #endif
     M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
     M_BindIntVariable("crispy_vsync",           &crispy->vsync);
-    M_BindIntVariable("crispy_weaponsquat",     &crispy->weaponsquat);
     M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
 }
 
@@ -537,7 +551,7 @@ void D_RunFrame()
 
     TryRunTics (); // will run at least one tic
 
-    S_UpdateSounds (players[consoleplayer].mo);// move positional sounds
+    S_UpdateSounds (players[displayplayer].mo);// move positional sounds
 
     // Update display, next frame, with current state if no profiling is on
     if (screenvisible && !nodrawers)
@@ -587,6 +601,7 @@ void D_DoomLoop (void)
     I_SetWindowTitle(gamedescription);
     I_GraphicsCheckCommandLine();
     I_SetGrabMouseCallback(D_GrabMouseCallback);
+    I_RegisterWindowIcon(doom_icon_data, doom_icon_w, doom_icon_h);
     I_InitGraphics();
     EnableLoadingDisk();
 
@@ -1326,6 +1341,14 @@ static void D_Endoom(void)
 #endif // !__WIIU__
 }
 
+boolean IsFrenchIWAD(void)
+{
+    return (gamemission == doom2 && W_CheckNumForName("M_RDTHIS") < 0
+          && W_CheckNumForName("M_EPISOD") < 0 && W_CheckNumForName("M_EPI1") < 0
+          && W_CheckNumForName("M_EPI2") < 0 && W_CheckNumForName("M_EPI3") < 0
+          && W_CheckNumForName("WIOSTF") < 0 && W_CheckNumForName("WIOBJ") >= 0);
+}
+
 // Load dehacked patches needed for certain IWADs.
 static void LoadIwadDeh(void)
 {
@@ -1390,6 +1413,42 @@ static void LoadIwadDeh(void)
     {
         DEH_LoadLumpByName("DEHACKED", true, true);
     }
+
+    if (IsFrenchIWAD())
+    {
+        char *french_deh = NULL;
+        char *dirname;
+
+        // Look for french.deh in the same directory as the IWAD file.
+        dirname = M_DirName(iwadfile);
+        french_deh = M_StringJoin(dirname, DIR_SEPARATOR_S, "french.deh", NULL);
+        printf("French version\n");
+        free(dirname);
+
+        // If the dehacked patch isn't found, try searching the WAD
+        // search path instead.  We might find it...
+        if (!M_FileExists(french_deh))
+        {
+            free(french_deh);
+            french_deh = D_FindWADByName("french.deh");
+        }
+
+        // Still not found?
+        if (french_deh == NULL)
+        {
+            I_Error("Unable to find French Doom II dehacked file\n"
+                    "(french.deh).  The dehacked file is required in order to\n"
+                    "emulate French doom2.exe correctly.  It can be found in\n"
+                    "your nearest /idgames repository mirror at:\n\n"
+                    "   utils/exe_edit/patches/french.zip");
+        }
+
+        if (!DEH_LoadFile(french_deh))
+        {
+            I_Error("Failed to load french.deh needed for emulating French\n"
+                    "doom2.exe.");
+        }
+    }
 }
 
 static void G_CheckDemoStatusAtExit (void)
@@ -1406,7 +1465,7 @@ void D_DoomMain (void)
 {
     int p;
     char file[256];
-    char demolumpname[9];
+    char demolumpname[9] = {0};
     int numiwadlumps;
 
     // [crispy] unconditionally initialize DEH tables
@@ -1740,6 +1799,16 @@ void D_DoomMain (void)
     // TODO: Research why this doesn't work on Wii U
 #ifndef __WIIU__
     //!
+    // @category game
+    // @category mod
+    //
+    // Double ammo pickup rate. This option is not allowed when recording a
+    // demo, playing back a demo or when starting a network game.
+    //
+
+    crispy->moreammo = M_ParmExists("-doubleammo");
+
+    //!
     // @category mod
     //
     // Disable auto-loading of .wad and .deh files.
@@ -1750,19 +1819,25 @@ void D_DoomMain (void)
 
         // common auto-loaded files for all Doom flavors
 
-        if (gamemission < pack_chex)
+        if (gamemission < pack_chex && gamevariant != freedoom)
         {
             autoload_dir = M_GetAutoloadDir("doom-all", true);
-            DEH_AutoLoadPatches(autoload_dir);
-            W_AutoLoadWADs(autoload_dir);
-            free(autoload_dir);
+            if (autoload_dir != NULL)
+            {
+                DEH_AutoLoadPatches(autoload_dir);
+                W_AutoLoadWADs(autoload_dir);
+                free(autoload_dir);
+            }
         }
 
         // auto-loaded files per IWAD
         autoload_dir = M_GetAutoloadDir(D_SaveGameIWADName(gamemission, gamevariant), true);
-        DEH_AutoLoadPatches(autoload_dir);
-        W_AutoLoadWADs(autoload_dir);
-        free(autoload_dir);
+        if (autoload_dir != NULL)
+        {
+            DEH_AutoLoadPatches(autoload_dir);
+            W_AutoLoadWADs(autoload_dir);
+            free(autoload_dir);
+        }
     }
 #endif // !__WIIU__
 
@@ -1869,9 +1944,11 @@ void D_DoomMain (void)
                 while (++p != myargc && myargv[p][0] != '-')
                 {
                     char *autoload_dir;
-                    autoload_dir = M_GetAutoloadDir(M_BaseName(myargv[p]), false);
-                    W_AutoLoadWADs(autoload_dir);
-                    free(autoload_dir);
+                    if ((autoload_dir = M_GetAutoloadDir(M_BaseName(myargv[p]), false)))
+                    {
+                        W_AutoLoadWADs(autoload_dir);
+                        free(autoload_dir);
+                    }
                 }
             }
         }
@@ -1953,11 +2030,12 @@ void D_DoomMain (void)
     W_GenerateHashTable();
 
     // [crispy] allow overriding of special-casing
-    if (!M_ParmExists("-noautoload") && gamemode != shareware)
+    if (!M_ParmExists("-nosideload") && gamemode != shareware && !demolumpname[0])
     {
 	if (gamemode == retail &&
 	    gameversion == exe_ultimate &&
-	    gamevariant != freedoom)
+	    gamevariant != freedoom &&
+	    strncasecmp(M_BaseName(iwadfile), "rekkr", 5))
 	{
 		D_LoadSigilWad();
 	}
@@ -2012,9 +2090,11 @@ void D_DoomMain (void)
                 while (++p != myargc && myargv[p][0] != '-')
                 {
                     char *autoload_dir;
-                    autoload_dir = M_GetAutoloadDir(M_BaseName(myargv[p]), false);
-                    DEH_AutoLoadPatches(autoload_dir);
-                    free(autoload_dir);
+                    if ((autoload_dir = M_GetAutoloadDir(M_BaseName(myargv[p]), false)))
+                    {
+                        DEH_AutoLoadPatches(autoload_dir);
+                        free(autoload_dir);
+                    }
                 }
             }
         }
@@ -2116,7 +2196,12 @@ void D_DoomMain (void)
     D_ConnectNetGame();
 
     // get skill / episode / map from parms
-    startskill = sk_medium;
+
+    // HMP (or skill #2) being the default, had to be placed at index 0 when drawn in the menu,
+    // so all difficulties 'real' positions had to be scaled by -2, hence +2 being added
+    // below in order to get the correct skill.
+    startskill = (crispy->defaultskill + SKILL_HMP) % NUM_SKILLS;
+
     startepisode = 1;
     startmap = 1;
     autostart = false;
@@ -2368,4 +2453,3 @@ void D_DoomMain (void)
 
     D_DoomLoop ();  // never returns
 }
-

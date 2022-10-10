@@ -58,6 +58,10 @@ GRTAGS
 GTAGS
 /HTML/
 
+# VSCode settings
+
+/.vscode/
+
 # Wii U specific
 *.elf
 *.rpx

@@ -18,6 +18,7 @@
 
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -28,8 +29,6 @@
 #endif
 #include <windows.h>
 #endif
-
-#include "icon.c"
 
 #include "crispy.h"
 
@@ -227,6 +226,11 @@ int usegamma = 0;
 // Joystick/gamepad hysteresis
 unsigned int joywait = 0;
 
+// Icon RGB data and dimensions
+static const unsigned int *icon_data;
+static int icon_w;
+static int icon_h;
+
 #ifdef BETTER_JOYWAIT
 unsigned int joywaitDiff = 0;
 event_t prevJoystick = {0};
@@ -331,6 +335,24 @@ static void AdjustWindowSize(void)
 {
     if (aspect_ratio_correct || integer_scaling)
     {
+        static int old_v_w, old_v_h;
+
+        if (old_v_w > 0 && old_v_h > 0)
+        {
+          int rendered_height;
+
+          // rendered height does not necessarily match window height
+          if (window_height * old_v_w > window_width * old_v_h)
+            rendered_height = (window_width * old_v_h + old_v_w - 1) / old_v_w;
+          else
+            rendered_height = window_height;
+
+          window_width = rendered_height * SCREENWIDTH / actualheight;
+        }
+
+        old_v_w = SCREENWIDTH;
+        old_v_h = actualheight;
+#if 0
         if (window_width * actualheight <= window_height * SCREENWIDTH)
         {
             // We round up window_height if the ratio is not exact; this leaves
@@ -341,6 +363,7 @@ static void AdjustWindowSize(void)
         {
             window_width = window_height * SCREENWIDTH / actualheight;
         }
+#endif
     }
 }
 
@@ -450,8 +473,6 @@ static void I_ToggleFullScreen(void)
 
 void I_GetEvent(void)
 {
-    extern void I_HandleKeyboardEvent(SDL_Event *sdlevent);
-    extern void I_HandleMouseEvent(SDL_Event *sdlevent);
     SDL_Event sdlevent;
 
     SDL_PumpEvents();
@@ -772,15 +793,11 @@ void I_FinishUpdate (void)
             flags = SDL_GetWindowFlags(screen);
             if ((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == 0)
             {
-                int old_height;
                 SDL_GetWindowSize(screen, &window_width, &window_height);
-                old_height = window_height;
 
                 // Adjust the window by resizing again so that the window
                 // is the right aspect ratio.
                 AdjustWindowSize();
-                if (window_height < old_height)
-                    window_height = old_height;
                 SDL_SetWindowSize(screen, window_width, window_height);
             }
             CreateUpscaledTexture(false);
@@ -913,7 +930,7 @@ void I_FinishUpdate (void)
     // [AM] Figure out how far into the current tic we're in as a fixed_t.
     if (crispy->uncapped)
     {
-	fractionaltic = I_GetTimeMS() * TICRATE % 1000 * FRACUNIT / 1000;
+	fractionaltic = I_GetFracRealTime();
     }
 
     // Restore background and undo the disk indicator, if it was drawn.
@@ -1073,6 +1090,13 @@ void I_InitWindowTitle(void)
     buf = M_StringJoin(window_title, " - ", PACKAGE_STRING, NULL);
     SDL_SetWindowTitle(screen, buf);
     free(buf);
+}
+
+void I_RegisterWindowIcon(const unsigned int *icon, int width, int height)
+{
+    icon_data = icon;
+    icon_w = width;
+    icon_h = height;
 }
 
 // Set the application icon
@@ -1567,6 +1591,18 @@ static void SetVideoMode(void)
                                 SDL_TEXTUREACCESS_STREAMING,
                                 SCREENWIDTH, SCREENHEIGHT);
 
+    // Workaround for SDL 2.0.14+ alt-tab bug (taken from Doom Retro via Prboom-plus and Woof)
+#if defined(_WIN32)
+    {
+        SDL_version ver;
+        SDL_GetVersion(&ver);
+        if (ver.major == 2 && ver.minor == 0 && (ver.patch == 14 || ver.patch == 16))
+        {
+           SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "1", SDL_HINT_OVERRIDE);
+        }
+    }
+#endif
+
     // Initially create the upscaled texture for rendering to screen
 
     CreateUpscaledTexture(true);
@@ -1597,7 +1633,7 @@ void I_GetScreenDimensions (void)
 	}
 
 	// [crispy] widescreen rendering makes no sense without aspect ratio correction
-	if (crispy->widescreen && aspect_ratio_correct)
+	if (crispy->widescreen && aspect_ratio_correct == 1)
 	{
 		switch(crispy->widescreen)
 		{

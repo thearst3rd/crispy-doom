@@ -300,7 +300,7 @@ typedef enum
     NUMPSPRITES
 } psprnum_t;
 
-typedef struct
+typedef struct pspdef_s
 {
     state_t *state;             // a NULL state means not active
     int tics;
@@ -438,7 +438,7 @@ typedef struct player_s
     fixed_t bob;                // bounded/scaled total momentum
 
     int flyheight;
-    int lookdir;
+    int lookdir, oldlookdir;
     boolean centering;
     int health;                 // only used between levels, mo->health
     // is used during levels
@@ -706,6 +706,11 @@ uint32_t SV_ReadLong(void);
 
 extern char *savegamedir;
 
+// [crispy] support up to 8 pages of savegames
+extern int savepage;
+#define SAVES_PER_PAGE 6
+#define SAVEPAGE_MAX 7
+
 void G_RecordDemo(skill_t skill, int numplayers, int episode, int map,
                   const char *name);
 // only called by startup code
@@ -746,6 +751,7 @@ void P_ArchiveThinkers(void);
 void P_UnArchiveThinkers(void);
 void P_ArchiveSpecials(void);
 void P_UnArchiveSpecials(void);
+void P_RestoreTargets(void);
 // load / save game routines
 
 

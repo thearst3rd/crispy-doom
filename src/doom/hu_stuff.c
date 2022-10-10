@@ -437,7 +437,7 @@ void HU_Init(void)
     {
 	cr_stat = crstr[CR_GREEN];
 	cr_stat2 = crstr[CR_GOLD];
-	kills = "F ";
+	kills = "F\t";
     }
     else
     {
@@ -450,7 +450,7 @@ void HU_Init(void)
 		cr_stat = crstr[CR_RED];
 	}
 	cr_stat2 = crstr[CR_GREEN];
-	kills = "K ";
+	kills = "K\t";
     }
 
     // [crispy] initialize the crosshair types
@@ -594,7 +594,7 @@ void HU_Start(void)
     if (headsupactive)
 	HU_Stop();
 
-    plr = &players[consoleplayer];
+    plr = &players[displayplayer];
     message_on = false;
     message_dontfuckwithme = false;
     message_nottobefuckedwith = false;
@@ -716,10 +716,10 @@ void HU_Start(void)
 
     // [crispy] explicitely display (episode and) map if the
     // map is from a PWAD or if the map title string has been dehacked
-    if (DEH_HasStringReplacement(s) ||
-        (!W_IsIWADLump(maplumpinfo) &&
-        !(crispy->havenerve && gamemission == pack_nerve) &&
-        !(crispy->havemaster && gamemission == pack_master)))
+    if (!W_IsIWADLump(maplumpinfo) &&
+        (DEH_HasStringReplacement(s) ||
+        (!(crispy->havenerve && gamemission == pack_nerve) &&
+        !(crispy->havemaster && gamemission == pack_master))))
     {
 	char *m;
 
@@ -855,7 +855,12 @@ void HU_Drawer(void)
 	HUlib_drawTextLine(&w_title, false);
     }
 
-    if (crispy->automapstats == WIDGETS_ALWAYS || (automapactive && crispy->automapstats == WIDGETS_AUTOMAP))
+    if (crispy->automapstats == WIDGETS_STBAR && (!automapactive || w_title.y != HU_TITLEY))
+    {
+	HUlib_drawTextLine(&w_kills, false);
+    }
+    else
+    if ((crispy->automapstats & WIDGETS_ALWAYS) || (automapactive && crispy->automapstats == WIDGETS_AUTOMAP))
     {
 	// [crispy] move obtrusive line out of player view
 	if (automapactive && (!crispy->automapoverlay || screenblocks < CRISPY_HUD - 1))
@@ -925,6 +930,44 @@ void HU_Erase(void)
     HUlib_eraseTextLine(&w_fps);
 
 }
+
+static void Crispy_Statsline_Ratio (char *str, int str_size, const char *prefix, int count, int total, int extra)
+{
+	if (extra)
+	    M_snprintf(str, str_size, "%s%s%s%d/%d+%d ", cr_stat, prefix, crstr[CR_GRAY],
+	               count, total, extra);
+	else
+	    M_snprintf(str, str_size, "%s%s%s%d/%d ", cr_stat, prefix, crstr[CR_GRAY],
+	               count, total);
+}
+
+static void Crispy_Statsline_Remaining (char *str, int str_size, const char *prefix, int count, int total, int extra)
+{
+	M_snprintf(str, str_size, "%s%s%s%d ", cr_stat, prefix, crstr[CR_GRAY],
+		   MAX(0, total - count));
+}
+
+static void Crispy_Statsline_Percent (char *str, int str_size, const char *prefix, int count, int total, int extra)
+{
+	M_snprintf(str, str_size, "%s%s%s%d%% ", cr_stat, prefix, crstr[CR_GRAY],
+		   count * 100 / (total ? total : 1));
+}
+
+static void Crispy_Statsline_Boolean (char *str, int str_size, const char *prefix, int count, int total, int extra)
+{
+	M_snprintf(str, str_size, "%s%s%s%s ", cr_stat, prefix, crstr[CR_GRAY],
+		   count >= total ? "Yes" : "No");
+}
+
+typedef void (*crispy_statsline_func_t)(char *str, int str_size, const char *prefix, int count, int total, int extra);
+
+static const crispy_statsline_func_t crispy_statslines[NUM_STATSFORMATS] =
+{
+	Crispy_Statsline_Ratio,
+	Crispy_Statsline_Remaining,
+	Crispy_Statsline_Percent,
+	Crispy_Statsline_Boolean,
+};
 
 void HU_Ticker(void)
 {
@@ -1015,6 +1058,20 @@ void HU_Ticker(void)
 		players[i].cmd.chatchar = 0;
 	    }
 	}
+    // [crispy] shift widgets one line down so chat typing line may appear
+    if (crispy->automapstats != WIDGETS_STBAR)
+    {
+        const int chat_line = chat_on ? 8 : 0;
+
+        w_kills.y = HU_MSGY + 1 * 8 + chat_line;
+        w_items.y = HU_MSGY + 2 * 8 + chat_line;
+        w_scrts.y = HU_MSGY + 3 * 8 + chat_line;
+        // [crispy] do not shift level time widget if no stats widget is used
+        w_ltime.y = HU_MSGY + 4 * 8 + (crispy->automapstats ? chat_line : 0);
+        w_coordx.y = HU_MSGY + 1 * 8 + chat_line;
+        w_coordy.y = HU_MSGY + 2 * 8 + chat_line;
+        w_coorda.y = HU_MSGY + 3 * 8 + chat_line;
+    }
     }
 
     if (automapactive)
@@ -1026,29 +1083,49 @@ void HU_Ticker(void)
 	    w_title.y = HU_TITLEY;
     }
 
-    if (crispy->automapstats == WIDGETS_ALWAYS || (automapactive && crispy->automapstats == WIDGETS_AUTOMAP))
+    if (crispy->automapstats == WIDGETS_STBAR && (!automapactive || w_title.y != HU_TITLEY))
     {
-	// [crispy] count spawned monsters
-	if (extrakills)
-	    M_snprintf(str, sizeof(str), "%s%s%s%d/%d+%d", cr_stat, kills, crstr[CR_GRAY],
-	            plr->killcount, totalkills, extrakills);
-	else
-	    M_snprintf(str, sizeof(str), "%s%s%s%d/%d", cr_stat, kills, crstr[CR_GRAY],
-	            plr->killcount, totalkills);
+	crispy_statsline_func_t crispy_statsline = crispy_statslines[crispy->statsformat];
+
+	w_kills.y = HU_TITLEY;
+
+	crispy_statsline(str, sizeof(str), "K ", plr->killcount, totalkills, extrakills);
 	HUlib_clearTextLine(&w_kills);
 	s = str;
 	while (*s)
 	    HUlib_addCharToTextLine(&w_kills, *(s++));
 
-	M_snprintf(str, sizeof(str), "%sI %s%d/%d", cr_stat, crstr[CR_GRAY],
-	        plr->itemcount, totalitems);
+	crispy_statsline(str, sizeof(str), "I ", plr->itemcount, totalitems, 0);
+	s = str;
+	while (*s)
+	    HUlib_addCharToTextLine(&w_kills, *(s++));
+
+	crispy_statsline(str, sizeof(str), "S ", plr->secretcount, totalsecret, 0);
+	s = str;
+	while (*s)
+	    HUlib_addCharToTextLine(&w_kills, *(s++));
+    }
+    else
+    if ((crispy->automapstats & WIDGETS_ALWAYS) || (automapactive && crispy->automapstats == WIDGETS_AUTOMAP))
+    {
+	crispy_statsline_func_t crispy_statsline = crispy_statslines[crispy->statsformat];
+
+	if (crispy->automapstats == WIDGETS_STBAR)
+	w_kills.y = HU_MSGY + 1 * 8;
+
+	crispy_statsline(str, sizeof(str), kills, plr->killcount, totalkills, extrakills);
+	HUlib_clearTextLine(&w_kills);
+	s = str;
+	while (*s)
+	    HUlib_addCharToTextLine(&w_kills, *(s++));
+
+	crispy_statsline(str, sizeof(str), "I\t", plr->itemcount, totalitems, 0);
 	HUlib_clearTextLine(&w_items);
 	s = str;
 	while (*s)
 	    HUlib_addCharToTextLine(&w_items, *(s++));
 
-	M_snprintf(str, sizeof(str), "%sS %s%d/%d", cr_stat, crstr[CR_GRAY],
-	        plr->secretcount, totalsecret);
+	crispy_statsline(str, sizeof(str), "S\t", plr->secretcount, totalsecret, 0);
 	HUlib_clearTextLine(&w_scrts);
 	s = str;
 	while (*s)
@@ -1079,7 +1156,7 @@ void HU_Ticker(void)
 
 	plr->btuse_tics--;
 
-	M_snprintf(str, sizeof(str), "%sU %02i:%05.02f", crstr[CR_GRAY], mins, secs);
+	M_snprintf(str, sizeof(str), "%sU\t%02i:%05.02f", crstr[CR_GRAY], mins, secs);
 	HUlib_clearTextLine(&w_ltime);
 	s = str;
 	while (*s)
@@ -1088,21 +1165,21 @@ void HU_Ticker(void)
 
     if (crispy->playercoords == WIDGETS_ALWAYS || (automapactive && crispy->playercoords == WIDGETS_AUTOMAP))
     {
-	M_snprintf(str, sizeof(str), "%sX %s%-5d", cr_stat2, crstr[CR_GRAY],
+	M_snprintf(str, sizeof(str), "%sX\t%s%-5d", cr_stat2, crstr[CR_GRAY],
 	        (plr->mo->x)>>FRACBITS);
 	HUlib_clearTextLine(&w_coordx);
 	s = str;
 	while (*s)
 	    HUlib_addCharToTextLine(&w_coordx, *(s++));
 
-	M_snprintf(str, sizeof(str), "%sY %s%-5d", cr_stat2, crstr[CR_GRAY],
+	M_snprintf(str, sizeof(str), "%sY\t%s%-5d", cr_stat2, crstr[CR_GRAY],
 	        (plr->mo->y)>>FRACBITS);
 	HUlib_clearTextLine(&w_coordy);
 	s = str;
 	while (*s)
 	    HUlib_addCharToTextLine(&w_coordy, *(s++));
 
-	M_snprintf(str, sizeof(str), "%sA %s%-5d", cr_stat2, crstr[CR_GRAY],
+	M_snprintf(str, sizeof(str), "%sA\t%s%-5d", cr_stat2, crstr[CR_GRAY],
 	        (plr->mo->angle)/ANG1);
 	HUlib_clearTextLine(&w_coorda);
 	s = str;

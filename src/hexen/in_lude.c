@@ -24,6 +24,8 @@
 #include "p_local.h"
 #include "v_video.h"
 #include "i_swap.h"
+#include "am_map.h"
+
 
 // MACROS ------------------------------------------------------------------
 
@@ -93,7 +95,6 @@ static char *HubText;
 //
 //========================================================================
 
-extern void AM_Stop(void);
 
 void IN_Start(void)
 {
@@ -167,7 +168,6 @@ static void InitStats(void)
     int j;
     int oldCluster;
     signed int slaughterfrags;
-    int posnum;
     int slaughtercount;
     int playercount;
     const char *msgLumpName;
@@ -205,7 +205,6 @@ static void InitStats(void)
         gametype = DEATHMATCH;
         slaughterboy = 0;
         slaughterfrags = -9999;
-        posnum = 0;
         playercount = 0;
         slaughtercount = 0;
         for (i = 0; i < maxplayers; i++)
@@ -221,7 +220,6 @@ static void InitStats(void)
                         totalFrags[i] += players[i].frags[j];
                     }
                 }
-                posnum++;
             }
             if (totalFrags[i] > slaughterfrags)
             {
@@ -403,7 +401,7 @@ void IN_Drawer(void)
         return;
     }
     UpdateState |= I_FULLSCRN;
-    V_CopyScaledBuffer(I_VideoBuffer, (byte *) patchINTERPIC, ORIGWIDTH * ORIGHEIGHT);
+    V_DrawFullscreenRawOrPatch(W_GetNumForName("INTERPIC")); // [crispy]
 
     if (gametype == SINGLE)
     {

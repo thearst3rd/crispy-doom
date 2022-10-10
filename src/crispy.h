@@ -50,6 +50,7 @@ typedef struct
 	int crosshairhealth;
 	int crosshairtarget;
 	int crosshairtype;
+	int defaultskill;
 	int demotimer;
 	int demotimerdir;
 	int demobar;
@@ -57,6 +58,7 @@ typedef struct
 	int flipcorpses;
 	int freeaim;
 	int freelook;
+	int freelook_hh;
 	int hires;
 	int jump;
 	int leveltime;
@@ -65,7 +67,6 @@ typedef struct
 	int overunder;
 	int pitch;
 	int playercoords;
-	int recoil;
 	int secretmessage;
 	int smoothlight;
 	int smoothmap;
@@ -73,17 +74,18 @@ typedef struct
 	int soundfix;
 	int soundfull;
 	int soundmono;
+	int statsformat;
 	int translucency;
 #ifdef CRISPY_TRUECOLOR
 	int truecolor;
 #endif
 	int uncapped;
 	int vsync;
-	int weaponsquat;
 	int widescreen;
 
 	// [crispy] in-game switches and variables
 	int screenshotmsg;
+	int snowflakes;
 	int cleanscreenshot;
 	int demowarp;
 	int fps;
@@ -95,12 +97,19 @@ typedef struct
 	boolean havee1m10;
 	boolean havemap33;
 	boolean havessg;
-	boolean pistolstart;
 	boolean singleplayer;
 	boolean stretchsky;
 
+	// [crispy] custom difficulty parameters
+	boolean autohealth;
+	boolean fast;
+	boolean keysloc;
+	boolean moreammo;
+	boolean pistolstart;
+
 	char *havenerve;
 	char *havemaster;
+	char *havesigil;
 
 	const char *sdlversion;
 	const char *platform;
@@ -191,6 +200,13 @@ enum
 
 enum
 {
+    FREELOOK_HH_LOCK,
+    FREELOOK_HH_SPRING,
+    NUM_FREELOOKS_HH
+};
+
+enum
+{
     JUMP_OFF,
     JUMP_LOW,
     JUMP_HIGH,
@@ -219,12 +235,32 @@ enum
     WIDGETS_OFF,
     WIDGETS_AUTOMAP,
     WIDGETS_ALWAYS,
+    WIDGETS_STBAR,
     NUM_WIDGETS
 };
 
 enum
 {
-    RATIO_4_3,
+    STATSFORMAT_RATIO,
+    STATSFORMAT_REMAINING,
+    STATSFORMAT_PERCENT,
+    STATSFORMAT_BOOLEAN,
+    NUM_STATSFORMATS
+};
+
+enum
+{
+    SKILL_ITYTD,
+    SKILL_HNTR,
+    SKILL_HMP,
+    SKILL_UV,
+    SKILL_NIGHTMARE,
+    NUM_SKILLS
+};
+
+enum
+{
+    RATIO_ORIG,
     RATIO_MATCH_SCREEN,
     RATIO_16_10,
     RATIO_16_9,

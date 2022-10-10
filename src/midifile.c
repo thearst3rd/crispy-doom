@@ -23,6 +23,7 @@
 #include "doomtype.h"
 #include "i_swap.h"
 #include "i_system.h"
+#include "m_misc.h"
 #include "midifile.h"
 
 #define HEADER_CHUNK_ID "MThd"
@@ -611,7 +612,7 @@ midi_file_t *MIDI_LoadFile(char *filename)
     }
     else
 #endif // __WIIU__
-    stream = fopen(filename, "rb");
+    stream = M_fopen(filename, "rb");
 
     if (stream == NULL)
     {
@@ -648,6 +649,21 @@ midi_file_t *MIDI_LoadFile(char *filename)
 unsigned int MIDI_NumTracks(midi_file_t *file)
 {
     return file->num_tracks;
+}
+
+// Get the number of events in a MIDI file.
+
+unsigned int MIDI_NumEvents(midi_file_t *file)
+{
+    int i;
+    unsigned int num_events = 0;
+
+    for (i = 0; i < file->num_tracks; ++i)
+    {
+        num_events += file->tracks[i].num_events;
+    }
+
+    return num_events;
 }
 
 // Start iterating over the events in a track.
@@ -834,4 +850,3 @@ int main(int argc, char *argv[])
 }
 
 #endif
-

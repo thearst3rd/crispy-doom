@@ -30,6 +30,10 @@
 #include "r_local.h"
 #include "s_sound.h"
 #include "v_video.h"
+#include "am_map.h"
+
+#include "v_trans.h" // [crispy] dp_translation
+#include "crispy.h"
 
 // MACROS ------------------------------------------------------------------
 
@@ -62,6 +66,8 @@ typedef enum
     MENU_FILES,
     MENU_LOAD,
     MENU_SAVE,
+    MENU_MOUSE,
+    MENU_CRISPNESS,
     MENU_NONE
 } MenuType_t;
 
@@ -86,6 +92,10 @@ typedef struct
 } Menu_t;
 
 // EXTERNAL FUNCTION PROTOTYPES --------------------------------------------
+extern void I_ReInitGraphics(int reinit); // [crispy]
+extern void R_ExecuteSetViewSize(void); // [crispy]
+extern void AM_LevelInit(boolean reinit); // [crispy]
+extern void AM_initVariables(void); // [crispy]
 
 // PUBLIC FUNCTION PROTOTYPES ----------------------------------------------
 
@@ -97,10 +107,22 @@ static void SCQuitGame(int option);
 static void SCClass(int option);
 static void SCSkill(int option);
 static void SCMouseSensi(int option);
+static void SCMouseSensiX2(int option);
+static void SCMouseSensiY(int option);
+static void SCMouseInvertY(int option);
 static void SCSfxVolume(int option);
 static void SCMusicVolume(int option);
 static void SCScreenSize(int option);
 static boolean SCNetCheck(int option);
+static void CrispyHires(int option);
+static void CrispyToggleWidescreen(int option);
+static void CrispySmoothing(int option);
+static void CrispyUncapped(int option);
+static void CrispyVsync(int option);
+static void CrispyBrightmaps(int option);
+static void CrispyFreelook(int option);
+static void CrispyMouselook(int option);
+static void CrispyDefaultskill(int option);
 static void SCNetCheck2(int option);
 static void SCLoadGame(int option);
 static void SCSaveGame(int option);
@@ -118,6 +140,8 @@ static void MN_DrawInfo(void);
 static void DrawLoadMenu(void);
 static void DrawSaveMenu(void);
 static void DrawSlider(Menu_t * menu, int item, int width, int slot);
+static void DrawMouseMenu(void);
+static void DrawCrispnessMenu(void);
 void MN_LoadSlotText(void);
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
@@ -209,9 +233,9 @@ static MenuItem_t LoadItems[] = {
 };
 
 static Menu_t LoadMenu = {
-    70, 30,
+    70, 27,
     DrawLoadMenu,
-    6, LoadItems,
+    SAVES_PER_PAGE, LoadItems,
     0,
     MENU_FILES
 };
@@ -226,9 +250,9 @@ static MenuItem_t SaveItems[] = {
 };
 
 static Menu_t SaveMenu = {
-    70, 30,
+    70, 27,
     DrawSaveMenu,
-    6, SaveItems,
+    SAVES_PER_PAGE, SaveItems,
     0,
     MENU_FILES
 };
@@ -252,9 +276,9 @@ static Menu_t SkillMenu = {
 static MenuItem_t OptionsItems[] = {
     {ITT_EFUNC, "END GAME", SCEndGame, 0, MENU_NONE},
     {ITT_EFUNC, "MESSAGES : ", SCMessages, 0, MENU_NONE},
-    {ITT_LRFUNC, "MOUSE SENSITIVITY", SCMouseSensi, 0, MENU_NONE},
-    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
-    {ITT_SETMENU, "MORE...", NULL, 0, MENU_OPTIONS2}
+    {ITT_SETMENU, "MOUSE SENSITIVITY...", NULL, 0, MENU_MOUSE},
+    {ITT_SETMENU, "MORE...", NULL, 0, MENU_OPTIONS2},
+    {ITT_SETMENU, "CRISPNESS...", NULL, 0, MENU_CRISPNESS}
 };
 
 static Menu_t OptionsMenu = {
@@ -265,6 +289,23 @@ static Menu_t OptionsMenu = {
     MENU_MAIN
 };
 
+static MenuItem_t MouseItems[] = {
+    {ITT_LRFUNC, "HORIZONTAL : TURN", SCMouseSensi, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_LRFUNC, "HORIZONTAL : STRAFE", SCMouseSensiX2, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_LRFUNC, "VERTICAL", SCMouseSensiY, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_LRFUNC, "INVERT Y AXIS :", SCMouseInvertY, 0, MENU_NONE},
+};
+
+static Menu_t MouseMenu = {
+    90, 15,
+    DrawMouseMenu,
+    7, MouseItems,
+    0,
+    MENU_OPTIONS
+};
 static MenuItem_t Options2Items[] = {
     {ITT_LRFUNC, "SCREEN SIZE", SCScreenSize, 0, MENU_NONE},
     {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
@@ -282,6 +323,30 @@ static Menu_t Options2Menu = {
     MENU_OPTIONS
 };
 
+static MenuItem_t CrispnessItems[] = {
+    {ITT_LRFUNC, "HIGH RESOLUTION RENDERING:", CrispyHires, 0, MENU_NONE},
+    {ITT_LRFUNC, "ASPECT RATIO:", CrispyToggleWidescreen, 0, MENU_NONE},
+    {ITT_LRFUNC, "SMOOTH PIXEL SCALING:", CrispySmoothing, 0, MENU_NONE},
+    {ITT_LRFUNC, "UNCAPPED FRAMERATE:", CrispyUncapped, 0, MENU_NONE},
+    {ITT_LRFUNC, "ENABLE VSYNC:", CrispyVsync, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_LRFUNC, "BRIGHTMAPS:", CrispyBrightmaps, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_EMPTY, NULL, NULL, 0, MENU_NONE},
+    {ITT_LRFUNC, "FREELOOK MODE:", CrispyFreelook, 0, MENU_NONE},
+    {ITT_LRFUNC, "PERMANENT MOUSELOOK:", CrispyMouselook, 0, MENU_NONE},
+    {ITT_LRFUNC, "DEFAULT DIFFICULTY:", CrispyDefaultskill, 0, MENU_NONE},
+};
+
+static Menu_t CrispnessMenu = {
+    68, 40,
+    DrawCrispnessMenu,
+    13, CrispnessItems,
+    0,
+    MENU_OPTIONS
+};
+
 static Menu_t *Menus[] = {
     &MainMenu,
     &ClassMenu,
@@ -290,7 +355,9 @@ static Menu_t *Menus[] = {
     &Options2Menu,
     &FilesMenu,
     &LoadMenu,
-    &SaveMenu
+    &SaveMenu,
+    &MouseMenu,
+    &CrispnessMenu
 };
 
 // [crispy] intermediate gamma levels
@@ -320,6 +387,8 @@ void MN_Init(void)
     MenuActive = false;
 //      messageson = true;              // Set by defaults in .CFG
     MauloBaseLump = W_GetNumForName("FBULA0");  // ("M_SKL00");
+    // [crispy] apply default difficulty
+    SkillMenu.oldItPos = (crispy->defaultskill + SKILL_HMP) % NUM_SKILLS;
 }
 
 //---------------------------------------------------------------------------
@@ -503,7 +572,8 @@ const char *QuitEndMsg[] = {
     "ARE YOU SURE YOU WANT TO END THE GAME?",
     "DO YOU WANT TO QUICKSAVE THE GAME NAMED",
     "DO YOU WANT TO QUICKLOAD THE GAME NAMED",
-    "ARE YOU SURE YOU WANT TO SUICIDE?"
+    "ARE YOU SURE YOU WANT TO SUICIDE?",
+    "DO YOU WANT TO DELETE THE GAME NAMED",
 };
 
 void MN_Drawer(void)
@@ -534,6 +604,13 @@ void MN_Drawer(void)
                 MN_DrTextA("?", 160 +
                            MN_TextAWidth(SlotText[quicksave - 1]) / 2, 90);
             }
+            if (typeofask == 6)
+            {
+                MN_DrTextA(SlotText[CurrentItPos], 160 -
+                           MN_TextAWidth(SlotText[CurrentItPos]) / 2, 90);
+                MN_DrTextA("?", 160 +
+                           MN_TextAWidth(SlotText[CurrentItPos]) / 2, 90);
+            }
             UpdateState |= I_FULLSCRN;
         }
         return;
@@ -561,15 +638,42 @@ void MN_Drawer(void)
         {
             if (item->type != ITT_EMPTY && item->text)
             {
-                MN_DrTextB(item->text, x, y);
+                if (CurrentMenu == &CrispnessMenu)
+                {
+                    // [crispy] use smaller font
+                    MN_DrTextA(item->text, x, y);
+                }
+                else
+                {
+                    MN_DrTextB(item->text, x, y);
+                }
             }
-            y += ITEM_HEIGHT;
+            if (CurrentMenu == &CrispnessMenu)
+            {
+                // [crispy] use 10px vertical spacing for small font
+                y += ITEM_HEIGHT/2;
+            }
+            else
+            {
+                y += ITEM_HEIGHT;
+            }
             item++;
         }
-        y = CurrentMenu->y + (CurrentItPos * ITEM_HEIGHT) + SELECTOR_YOFFSET;
-        selName = MenuTime & 16 ? "M_SLCTR1" : "M_SLCTR2";
-        V_DrawPatch(x + SELECTOR_XOFFSET, y,
-                    W_CacheLumpName(selName, PU_CACHE));
+        if (CurrentMenu == &CrispnessMenu)
+        {
+            // [crispy] use small blue gem instead of big red arrow
+            y = CurrentMenu->y + (CurrentItPos * ITEM_HEIGHT/2) + SELECTOR_YOFFSET;
+            selName = MenuTime & 8 ? "INVGEMR1" : "INVGEMR2";
+            V_DrawPatch(x + (SELECTOR_XOFFSET/2), y,
+                        W_CacheLumpName(selName, PU_CACHE));
+        }
+        else
+        {
+            y = CurrentMenu->y + (CurrentItPos * ITEM_HEIGHT) + SELECTOR_YOFFSET;
+            selName = MenuTime & 16 ? "M_SLCTR1" : "M_SLCTR2";
+            V_DrawPatch(x + SELECTOR_XOFFSET, y,
+                        W_CacheLumpName(selName, PU_CACHE));
+        }
     }
 }
 
@@ -644,6 +748,30 @@ static void DrawFilesMenu(void)
     P_ClearMessage(&players[consoleplayer]);
 }
 
+// [crispy] support additional pages of savegames
+static void DrawSaveLoadBottomLine(const Menu_t *menu)
+{
+    char pagestr[16];
+    static short width;
+    const int y = menu->y + ITEM_HEIGHT * SAVES_PER_PAGE;
+
+    if (!width)
+    {
+        const patch_t *const p = W_CacheLumpName("M_FSLOT", PU_CACHE);
+        width = SHORT(p->width);
+    }
+    dp_translation = cr[CR_GOLD];
+    if (savepage > 0)
+        MN_DrTextA("- PGUP", menu->x + 1, y);
+    if (savepage < SAVEPAGE_MAX)
+        MN_DrTextA("PGDN +", menu->x + width - MN_TextAWidth("PGDN +"), y);
+
+    M_snprintf(pagestr, sizeof(pagestr), "PAGE %d/%d", savepage + 1, SAVEPAGE_MAX + 1);
+    MN_DrTextA(pagestr, ORIGWIDTH / 2 - MN_TextAWidth(pagestr) / 2, y);
+
+    dp_translation = NULL;
+}
+
 //---------------------------------------------------------------------------
 //
 // PROC DrawLoadMenu
@@ -652,12 +780,13 @@ static void DrawFilesMenu(void)
 
 static void DrawLoadMenu(void)
 {
-    MN_DrTextB("LOAD GAME", 160 - MN_TextBWidth("LOAD GAME") / 2, 10);
+    MN_DrTextB("LOAD GAME", 160 - MN_TextBWidth("LOAD GAME") / 2, 7);
     if (!slottextloaded)
     {
         MN_LoadSlotText();
     }
     DrawFileSlots(&LoadMenu);
+    DrawSaveLoadBottomLine(&LoadMenu);
 }
 
 //---------------------------------------------------------------------------
@@ -668,12 +797,13 @@ static void DrawLoadMenu(void)
 
 static void DrawSaveMenu(void)
 {
-    MN_DrTextB("SAVE GAME", 160 - MN_TextBWidth("SAVE GAME") / 2, 10);
+    MN_DrTextB("SAVE GAME", 160 - MN_TextBWidth("SAVE GAME") / 2, 7);
     if (!slottextloaded)
     {
         MN_LoadSlotText();
     }
     DrawFileSlots(&SaveMenu);
+    DrawSaveLoadBottomLine(&SaveMenu);
 }
 
 static boolean ReadDescriptionForSlot(int slot, char *description)
@@ -683,9 +813,11 @@ static boolean ReadDescriptionForSlot(int slot, char *description)
     char name[100];
     char versionText[HXS_VERSION_TEXT_LENGTH];
 
+    slot += savepage * 10; // [crispy]
+
     M_snprintf(name, sizeof(name), "%shex%d.hxs", SavePath, slot);
 
-    fp = fopen(name, "rb");
+    fp = M_fopen(name, "rb");
 
     if (fp == NULL)
     {
@@ -745,7 +877,7 @@ static void DrawFileSlots(Menu_t * menu)
 
     x = menu->x;
     y = menu->y;
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < SAVES_PER_PAGE; i++)
     {
         V_DrawPatch(x, y, W_CacheLumpName("M_FSLOT", PU_CACHE));
         if (SlotStatus[i])
@@ -772,7 +904,6 @@ static void DrawOptionsMenu(void)
     {
         MN_DrTextB("OFF", 196, 50);
     }
-    DrawSlider(&OptionsMenu, 3, 10, mouseSensitivity);
 }
 
 //---------------------------------------------------------------------------
@@ -920,11 +1051,32 @@ static void SCLoadGame(int option)
     }
 }
 
+// [crispy]
+static void SCDeleteGame(int option)
+{
+    if (!SlotStatus[option])
+    {
+        return;
+    }
+
+    SV_ClearSaveSlot(option);
+    MN_LoadSlotText();
+    BorderNeedRefresh = true;
+}
+
 //---------------------------------------------------------------------------
 //
 // PROC SCSaveGame
 //
 //---------------------------------------------------------------------------
+
+static const char *const class_str[NUMCLASSES] =
+{
+    "FIGHTR",
+    "CLERIC",
+    "MAGE",
+    "PIG",
+};
 
 static void SCSaveGame(int option)
 {
@@ -943,6 +1095,13 @@ static void SCSaveGame(int option)
 
         M_StringCopy(oldSlotText, SlotText[option], sizeof(oldSlotText));
         ptr = SlotText[option];
+        // [crispy] generate a default save slot name when saving to an empty slot
+        if (!oldSlotText[0] || (strlen(oldSlotText) >= 3 && !strncmp(oldSlotText, "HUB", 3)))
+        {
+          M_snprintf(ptr, sizeof(oldSlotText), "HUB %d.%d, %s",
+                     P_GetMapCluster(gamemap), gamemap,
+                     class_str[PlayerClass[consoleplayer]]);
+        }
         while (*ptr)
         {
             ptr++;
@@ -1046,7 +1205,7 @@ static void SCMouseSensi(int option)
 {
     if (option == RIGHT_DIR)
     {
-        if (mouseSensitivity < 9)
+        if (mouseSensitivity < 255)
         {
             mouseSensitivity++;
         }
@@ -1055,6 +1214,59 @@ static void SCMouseSensi(int option)
     {
         mouseSensitivity--;
     }
+}
+
+//---------------------------------------------------------------------------
+//
+// PROC SCMouseSensiX2
+//
+//---------------------------------------------------------------------------
+
+static void SCMouseSensiX2(int option)
+{
+    if (option == RIGHT_DIR)
+    {
+        if (mouseSensitivity_x2 < 255)
+        {
+            mouseSensitivity_x2++;
+        }
+    }
+    else if (mouseSensitivity_x2)
+    {
+        mouseSensitivity_x2--;
+    }
+}
+
+//---------------------------------------------------------------------------
+//
+// PROC SCMouseSensiY
+//
+//---------------------------------------------------------------------------
+
+static void SCMouseSensiY(int option)
+{
+    if (option == RIGHT_DIR)
+    {
+        if (mouseSensitivity_y < 255)
+        {
+            mouseSensitivity_y++;
+        }
+    }
+    else if (mouseSensitivity_y)
+    {
+        mouseSensitivity_y--;
+    }
+}
+
+//---------------------------------------------------------------------------
+//
+// PROC SCMouseInvertY
+//
+//---------------------------------------------------------------------------
+
+static void SCMouseInvertY(int option)
+{
+    mouse_y_invert = !mouse_y_invert;
 }
 
 //---------------------------------------------------------------------------
@@ -1141,6 +1353,115 @@ static void SCInfo(int option)
 
 //---------------------------------------------------------------------------
 //
+// Crispness menu: toggable features
+//
+//---------------------------------------------------------------------------
+
+static void CrispyHiresHook(void)
+{
+    crispy->hires = !crispy->hires;
+    // [crispy] re-initialize framebuffers, textures and renderer
+    I_ReInitGraphics(REINIT_FRAMEBUFFERS | REINIT_TEXTURES | REINIT_ASPECTRATIO);
+    // [crispy] re-calculate framebuffer coordinates
+    R_ExecuteSetViewSize();
+    // [crispy] scale the sky for new resolution
+    R_InitSkyMap();
+    // [crispy] re-calculate automap coordinates
+    AM_LevelInit(true);
+    if (automapactive) {
+        AM_initVariables();
+    }
+    // [crispy] refresh the status bar
+    SB_state = -1;
+}
+
+static void CrispyHires(int option)
+{
+    crispy->post_rendering_hook = CrispyHiresHook;
+}
+
+static void CrispyToggleWidescreenHook (void)
+{
+    crispy->widescreen = (crispy->widescreen + 1) % NUM_RATIOS;
+
+    // [crispy] no need to re-init when switching from wide to compact
+    {
+	// [crispy] re-initialize framebuffers, textures and renderer
+	I_ReInitGraphics(REINIT_FRAMEBUFFERS | REINIT_TEXTURES | REINIT_ASPECTRATIO);
+	// [crispy] re-calculate framebuffer coordinates
+	R_ExecuteSetViewSize();
+	// [crispy] re-calculate automap coordinates
+        AM_LevelInit(true);
+        if (automapactive) {
+            AM_initVariables();
+        }
+    }
+}
+static void CrispyToggleWidescreen(int option)
+{
+    crispy->post_rendering_hook = CrispyToggleWidescreenHook;
+}
+
+static void CrispySmoothing(int option)
+{
+    crispy->smoothscaling = !crispy->smoothscaling;
+}
+
+static void CrispyUncapped(int option)
+{
+    crispy->uncapped = !crispy->uncapped;
+}
+
+static void CrispyVsyncHook(void)
+{
+    crispy->vsync = !crispy->vsync;
+    I_ReInitGraphics(REINIT_RENDERER | REINIT_TEXTURES | REINIT_ASPECTRATIO);
+}
+
+static void CrispyVsync(int option)
+{
+    crispy->post_rendering_hook = CrispyVsyncHook;
+}
+
+static void CrispyBrightmaps(int option)
+{
+    crispy->brightmaps = (crispy->brightmaps + 1) % NUM_BRIGHTMAPS;
+}
+
+static void CrispyFreelook(int option)
+{
+    crispy->freelook_hh = (crispy->freelook_hh + 1) % NUM_FREELOOKS_HH;
+}
+
+static void CrispyMouselook(int option)
+{
+    crispy->mouselook = !crispy->mouselook;
+}
+
+static void CrispyDefaultskill(int option)
+{
+    if (option == RIGHT_DIR)
+    {
+        crispy->defaultskill = (crispy->defaultskill + 1) % NUM_SKILLS;
+    }
+    else
+    {
+        crispy->defaultskill = (crispy->defaultskill + NUM_SKILLS - 1) % NUM_SKILLS;
+    }
+
+    SkillMenu.oldItPos = (crispy->defaultskill + SKILL_HMP) % NUM_SKILLS;
+}
+
+static void CrispyReturnToMenu()
+{
+	Menu_t *cur = CurrentMenu;
+	MN_ActivateMenu();
+	CurrentMenu = cur;
+	CurrentItPos = CurrentMenu->oldItPos;
+}
+
+//---------------------------------------------------------------------------
+//
 // FUNC MN_Responder
 //
 //---------------------------------------------------------------------------
@@ -1151,7 +1472,6 @@ boolean MN_Responder(event_t * event)
     int charTyped;
     int i;
     MenuItem_t *item;
-    extern boolean automapactive;
     extern void H2_StartTitle(void);
     extern void G_CheckDemoStatus(void);
     char *textBuffer;
@@ -1285,6 +1605,11 @@ boolean MN_Responder(event_t * event)
                 case 5:
                     BorderNeedRefresh = true;
                     mn_SuicideConsole = true;
+                    break;
+                case 6:
+                    SCDeleteGame(CurrentItPos);
+                    BorderNeedRefresh = true;
+                    CrispyReturnToMenu();
                     break;
                 default:
                     break;
@@ -1635,6 +1960,52 @@ boolean MN_Responder(event_t * event)
             }
             return (true);
         }
+        // [crispy] delete a savegame
+        else if (key == key_menu_del)
+        {
+            if (CurrentMenu == &LoadMenu || CurrentMenu == &SaveMenu)
+            {
+                if (SlotStatus[CurrentItPos])
+                {
+                    MenuActive = false;
+                    askforquit = true;
+                    if (!netgame && !demoplayback)
+                    {
+                        paused = true;
+                    }
+                    typeofask = 6;
+                    S_StartSound(NULL, SFX_CHAT);
+                }
+            }
+            return (true);
+        }
+        // [crispy] next/prev savegame page
+        else if (key == KEY_PGUP)
+        {
+            if (CurrentMenu == &LoadMenu || CurrentMenu == &SaveMenu)
+            {
+                if (savepage > 0)
+                {
+                    savepage--;
+                    quicksave = -1;
+                    MN_LoadSlotText();
+                }
+                return true;
+            }
+        }
+        else if (key == KEY_PGDN)
+        {
+            if (CurrentMenu == &LoadMenu || CurrentMenu == &SaveMenu)
+            {
+                if (savepage < SAVEPAGE_MAX)
+                {
+                    savepage++;
+                    quicksave = -1;
+                    MN_LoadSlotText();
+                }
+                return true;
+            }
+        }
         else if (charTyped != 0)
         {
             for (i = 0; i < CurrentMenu->itemCount; i++)
@@ -1779,10 +2150,33 @@ void MN_DeactivateMenu(void)
 
 void MN_DrawInfo(void)
 {
+    lumpindex_t lumpindex; // [crispy]
+
     I_SetPalette(W_CacheLumpName("PLAYPAL", PU_CACHE));
-    V_CopyScaledBuffer(I_VideoBuffer,
-           (byte *) W_CacheLumpNum(W_GetNumForName("TITLE") + InfoType,
-                                   PU_CACHE), ORIGWIDTH * ORIGHEIGHT);
+
+    // [crispy] Refactor to allow for use of V_DrawFullscreenRawOrPatch
+
+    switch (InfoType)
+    {
+        case 1:
+            lumpindex = W_GetNumForName("HELP1");
+            break;
+
+        case 2:
+            lumpindex = W_GetNumForName("HELP2");
+            break;
+
+        case 3:
+            lumpindex = W_GetNumForName("CREDIT");
+            break;
+
+        default:
+            lumpindex = W_GetNumForName("TITLE");
+            break;
+    }
+
+    V_DrawFullscreenRawOrPatch(lumpindex);
+
 //      V_DrawPatch(0, 0, W_CacheLumpNum(W_GetNumForName("TITLE")+InfoType,
 //              PU_CACHE));
 }
@@ -1813,6 +2207,7 @@ static void DrawSlider(Menu_t * menu, int item, int width, int slot)
     int y;
     int x2;
     int count;
+    char num[4];
 
     x = menu->x + 24;
     y = menu->y + 2 + (item * ITEM_HEIGHT);
@@ -1823,6 +2218,126 @@ static void DrawSlider(Menu_t * menu, int item, int width, int slot)
                                            : "M_SLDMD2", PU_CACHE));
     }
     V_DrawPatch(x2, y, W_CacheLumpName("M_SLDRT", PU_CACHE));
+
+    // [crispy] print the value
+    M_snprintf(num, 4, "%3d", slot);
+    MN_DrTextA(num, x2 + 32, y + 3);
+
+    // [crispy] do not crash anymore if the value is out of bounds
+    if (slot >= width)
+    {
+        slot = width - 1;
+    }
+
     V_DrawPatch(x + 4 + slot * 8, y + 7,
                 W_CacheLumpName("M_SLDKB", PU_CACHE));
+}
+
+//---------------------------------------------------------------------------
+//
+// PROC DrawMouseMenu
+//
+//---------------------------------------------------------------------------
+
+static void DrawMouseMenu(void)
+{
+
+    DrawSlider(&MouseMenu, 1, 16, mouseSensitivity);
+    DrawSlider(&MouseMenu, 3, 16, mouseSensitivity_x2);
+    DrawSlider(&MouseMenu, 5, 16, mouseSensitivity_y);
+
+    // Invert mouse y
+    MN_DrTextB(mouse_y_invert ? "ON" : "OFF", 226, 135);
+}
+
+//---------------------------------------------------------------------------
+//
+// PROC DrawCrispnessMenu
+//
+//---------------------------------------------------------------------------
+
+static void M_DrawCrispnessBackground(void)
+{
+    byte *src, *dest;
+    int x, y;
+
+    src = W_CacheLumpName("F_022", PU_CACHE);
+    dest = I_VideoBuffer;
+
+    for (y = 0; y < SCREENHEIGHT; y++)
+    {
+        for (x = 0; x < SCREENWIDTH / 64; x++)
+        {
+            memcpy(dest, src + ((y & 63) << 6), 64);
+            dest += 64;
+        }
+        if (SCREENWIDTH & 63)
+        {
+            memcpy(dest, src + ((y & 63) << 6), SCREENWIDTH & 63);
+            dest += (SCREENWIDTH & 63);
+        }
+    }
+
+    SB_state = -1;
+}
+
+static void DrawCrispnessMenu(void)
+{
+    static const char *title;
+    int skill;
+
+    // Background
+    M_DrawCrispnessBackground();
+
+    // Title
+    title = "CRISPNESS";
+    MN_DrTextB(title, 160 - MN_TextBWidth(title) / 2, 6);
+
+    // Subheaders
+    dp_translation = cr[CR_GREEN];
+    MN_DrTextA("RENDERING", 63, 30);
+    MN_DrTextA("VISUAL", 63, 100);
+    MN_DrTextA("TACTICAL", 63, 130);
+    dp_translation = cr[CR_GOLD];
+
+    // Hires rendering
+    MN_DrTextA(crispy->hires ? "ON" : "OFF", 254, 40);
+
+    // Widescreen
+    MN_DrTextA((crispy->widescreen == RATIO_ORIG || aspect_ratio_correct != 1) ? "ORIGINAL" :
+               crispy->widescreen == RATIO_MATCH_SCREEN ? "MATCH SCREEN" :
+               crispy->widescreen == RATIO_16_10 ? "16:10" :
+               crispy->widescreen == RATIO_16_9 ? "16:9" :
+                                                  "21:9", 164, 50);
+
+    // Smooth pixel scaling
+    MN_DrTextA(crispy->smoothscaling ? "ON" : "OFF", 216, 60);
+
+    // Uncapped framerate
+    MN_DrTextA(crispy->uncapped ? "ON" : "OFF", 217, 70);
+
+    // Vsync
+    MN_DrTextA(crispy->vsync ? "ON" : "OFF", 167, 80);
+
+    // Brightmaps
+    MN_DrTextA(crispy->brightmaps == BRIGHTMAPS_OFF ? "NONE" :
+               crispy->brightmaps == BRIGHTMAPS_TEXTURES ? "WALLS" :
+               crispy->brightmaps == BRIGHTMAPS_SPRITES ? "ITEMS" :
+                                                         "BOTH", 150, 110);
+
+    // Freelook
+    MN_DrTextA(crispy->freelook_hh == FREELOOK_HH_LOCK ? "LOCK" : "SPRING", 175, 140);
+
+    // Mouselook
+    MN_DrTextA(crispy->mouselook ? "ON" : "OFF", 220, 150);
+
+    // Default difficulty
+    skill = (crispy->defaultskill + SKILL_HMP) % NUM_SKILLS;
+    MN_DrTextA(skill == SKILL_ITYTD ? "VERY EASY" :
+               skill == SKILL_HNTR ? "EASY" :
+               skill == SKILL_HMP ? "MEDIUM" :
+               skill == SKILL_UV ? "HARD" :
+                                    "VERY HARD" , 200, 160);
+
+    dp_translation = NULL;
 }

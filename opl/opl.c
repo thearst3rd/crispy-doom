@@ -28,16 +28,6 @@
 
 //#define OPL_DEBUG_TRACE
 
-#if (defined(__i386__) || defined(__x86_64__)) && defined(HAVE_IOPERM)
-extern opl_driver_t opl_linux_driver;
-#endif
-#if defined(HAVE_LIBI386) || defined(HAVE_LIBAMD64)
-extern opl_driver_t opl_openbsd_driver;
-#endif
-#ifdef _WIN32
-extern opl_driver_t opl_win32_driver;
-#endif
-extern opl_driver_t opl_sdl_driver;
 
 static opl_driver_t *drivers[] =
 {
@@ -50,7 +40,9 @@ static opl_driver_t *drivers[] =
 #ifdef _WIN32
     &opl_win32_driver,
 #endif
+#ifndef DISABLE_SDL2MIXER
     &opl_sdl_driver,
+#endif // DISABLE_SDL2MIXER
     NULL
 };
 
@@ -110,7 +102,7 @@ static opl_init_result_t AutoSelectDriver(unsigned int port_base)
     int i;
     opl_init_result_t result;
 
-    for (i=0; drivers[i] != NULL; ++i)
+    for (i = 0; drivers[i] != NULL; ++i)
     {
         result = InitDriver(drivers[i], port_base);
         if (result != OPL_INIT_NONE)
