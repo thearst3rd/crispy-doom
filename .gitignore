@@ -65,4 +65,5 @@ GTAGS
 # Wii U specific
 *.elf
 *.rpx
+*.wuhb
 build/
