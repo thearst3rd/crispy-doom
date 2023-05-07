@@ -118,7 +118,7 @@ void launcherRun()
 
     if (!tvBuffer || !drcBuffer)
     {
-        OSScreenShutdown();
+        GX2Init(NULL);
         if (tvBuffer)
             free(tvBuffer);
         if (drcBuffer) // shouldn't happen?
@@ -167,7 +167,7 @@ void launcherRun()
         free(tvBuffer);
     if (drcBuffer)
         free(drcBuffer);
-    OSScreenShutdown();
+    GX2Init(NULL);
 
     if (launcherRunning >= 0)
     {
