@@ -89,6 +89,18 @@
 //       into a buffer,
 //       or into the frame buffer?
 
+// [crispy] Crispy HUD
+#define ST_WIDESCREENDELTA      (screenblocks == 13 ? WIDESCREENDELTA : 0)
+#define ST_HEALTHX2             (15 - ST_WIDESCREENDELTA)
+#define ST_HEALTHY2             194
+#define ST_ARMORX               (45 - ST_WIDESCREENDELTA)
+#define ST_ARMORY               194
+#define ST_INVX                 (280 + ST_WIDESCREENDELTA)
+#define ST_INVY                 194
+#define ST_AMMOX2               (310 + ST_WIDESCREENDELTA)
+#define ST_AMMOY2               194
+#define ST_SLOTWIDTH            35
+
 // AMMO number pos.
 // haleyjd 20100901: [STRIFE] Adjusted.
 #define ST_AMMOWIDTH            3
@@ -137,7 +149,9 @@ static const int st_wforammo[NUMAMMO] = { 3,  3,  2,  3,   3,   2,   3   };
 // * Removed more faces, keyboxes, st_randomnumber
 
 // graphics are drawn to a backing screen and blitted to the real screen
-//byte                   *st_backing_screen;  - [STRIFE]: Unused.
+// [STRIFE] Unused.
+// [crispy] For status bar background in widescreen mode and widgets.
+pixel_t                 *st_backing_screen;
 
 // main player in game
 static player_t*        plyr; 
@@ -153,6 +167,10 @@ static st_stateenum_t   st_gamestate;
 
 // whether left-side main status bar is active
 static boolean          st_statusbaron;
+
+// [crispy] Crispy HUD
+static boolean          st_crispyhud;
+int                     st_invtics;
 
 // villsa [STRIFE]
 static boolean          st_dosizedisplay = false;
@@ -252,6 +270,7 @@ cheatseq_t cheat_stealth    = CHEAT("gripper", 0);      // [STRIFE]: new cheat g
 cheatseq_t cheat_midas      = CHEAT("donnytrump", 0);   // [STRIFE]: new cheat
 cheatseq_t cheat_lego       = CHEAT("lego", 0);         // [STRIFE]: new cheat
 cheatseq_t cheat_dev        = CHEAT("dots", 0);         // [STRIFE]: new cheat
+cheatseq_t cheat_showfps    = CHEAT("showfps", 0);      // [crispy] showfps widget
 
 // haleyjd 20110224: enumeration for access to powerup cheats
 enum
@@ -298,6 +317,7 @@ boolean ST_Responder(event_t* ev)
     // haleyjd 09/27/10: made static to ST_Responder
     static boolean st_keystate = false;
     int i;
+    boolean eat = false; // [crispy] Handle cheats when using inventory keys
 
     // Filter automap on/off.
     if(ev->type == ev_keyup)
@@ -347,7 +367,8 @@ boolean ST_Responder(event_t* ev)
              if(!st_popupdisplaytics)
              {
                  st_displaypopup = false;
-                 if(st_dosizedisplay)
+                 // [crispy] resize only when using original fullscreen HUD
+                 if(st_dosizedisplay && screenblocks == 10)
                      M_SizeDisplay(true);
 
                  st_dosizedisplay = false;
@@ -395,7 +416,7 @@ boolean ST_Responder(event_t* ev)
                     st_showkeys = false;
                     st_displaypopup = false;
                     st_keypage = -1;
-                    return true;
+                    eat = true; // [crispy]
                 }
             }
 
@@ -434,7 +455,8 @@ boolean ST_Responder(event_t* ev)
         if(st_showkeys || st_showobjective || st_showinvpop)
         {
             st_displaypopup = true;
-            if(viewheight == SCREENHEIGHT)
+            // [crispy] resize only when using original fullscreen HUD
+            if(screenblocks == 11)
             {
                 M_SizeDisplay(false);
                 st_dosizedisplay = true;
@@ -446,18 +468,21 @@ boolean ST_Responder(event_t* ev)
     {
         if(plyr->inventorycursor > 0)
             plyr->inventorycursor--;
-        return true;
+        st_invtics = 5 * 35; // [crispy] Crispy HUD
+        eat = true; // [crispy]
     }
     else if(ev->data1 == key_invright)
     {
         if(plyr->inventorycursor < plyr->numinventory - 1)
             plyr->inventorycursor++;
-        return true;
+        st_invtics = 5 * 35; // [crispy] Crispy HUD
+        eat = true; // [crispy]
     }
     else if(ev->data1 == key_invhome)
     {
         plyr->inventorycursor = 0;
-        return true;
+        st_invtics = 5 * 35; // [crispy] Crispy HUD
+        eat = true; // [crispy]
     }
     else if(ev->data1 == key_invend)
     {
@@ -465,7 +490,8 @@ boolean ST_Responder(event_t* ev)
             plyr->inventorycursor = plyr->numinventory - 1;
         else 
             plyr->inventorycursor = 0;
-        return true;
+        st_invtics = 5 * 35; // [crispy] Crispy HUD
+        eat = true; // [crispy]
     }
 
     //
@@ -497,10 +523,19 @@ boolean ST_Responder(event_t* ev)
         else
             plyr->message = DEH_String("devparm OFF");
     }
+    // [crispy] showfps widget
+    else if (cht_CheckCheat(&cheat_showfps, ev->data2))
+    {
+        plyr->powers[pw_showfps] ^= 1;
+        if (plyr->powers[pw_showfps])
+            plyr->message = DEH_String(STSTR_SHOWFPSON);
+        else
+            plyr->message = DEH_String(STSTR_SHOWFPSOFF);
+    }
 
     // [STRIFE] Cheats below are not allowed in netgames or demos
     if(netgame || !usergame)
-        return false;
+        return eat; // [crispy]
 
     if (cht_CheckCheat(&cheat_god, ev->data2))
     {
@@ -649,7 +684,7 @@ boolean ST_Responder(event_t* ev)
     {
         // 'behold' power-up menu
         plyr->message = DEH_String(STSTR_BEHOLD);
-        return false;
+        return eat; // [crispy]
     }
 
     if (cht_CheckCheat(&cheat_mypos, ev->data2))
@@ -683,12 +718,12 @@ boolean ST_Responder(event_t* ev)
         {
             if ((isdemoversion && (map < 32 || map > 34)) ||
                 (isregistered  && (map <= 0 || map > 34)))
-                return false;
+                return eat; // [crispy]
         }
         else
         {
             if (map <= 0 || map > 40)
-                return false;
+                return eat; // [crispy]
         }
 
         // So be it.
@@ -709,7 +744,7 @@ boolean ST_Responder(event_t* ev)
         {
             plyr->message = DEH_String("Spawning to spot");
             G_RiftCheat(spot);
-            return false;
+            return eat; // [crispy]
         }
     }
 
@@ -718,7 +753,7 @@ boolean ST_Responder(event_t* ev)
     {
         stonecold ^= 1;
         plyr->message = DEH_String("Kill 'em.  Kill 'em All");
-        return false;
+        return eat; // [crispy]
     }
 
     // villsa [STRIFE]
@@ -754,7 +789,7 @@ boolean ST_Responder(event_t* ev)
         plyr->pendingweapon = wp_sigil;
     }
 
-    return false;
+    return eat; // [crispy]
 }
 
 
@@ -805,6 +840,10 @@ void ST_Ticker (void)
 
     w_ready.data = plyr->readyweapon;
 
+    // [crispy] Crispy HUD
+    if (st_invtics && !(menuactive || menupause || menuindialog || paused))
+        st_invtics--;
+
     // STRIFE-TODO: Gobbledeegunk.
     /*
     v2 = dword_88490-- == 1; // no clue yet...
@@ -822,7 +861,8 @@ void ST_Ticker (void)
             st_showkeys = false;
             st_keypage = -1;
 
-            if(st_dosizedisplay)
+            // [crispy] resize only when using original fullscreen HUD
+            if(st_dosizedisplay && screenblocks == 10)
                 M_SizeDisplay(true);  // mondo hack?
 
             st_dosizedisplay = false;
@@ -963,7 +1003,7 @@ void ST_drawNumFontY2(int x, int y, int num)
 void ST_drawLine(int x, int y, int len, int color)
 {
     byte putcolor = (byte)(color);
-    byte *drawpos = I_VideoBuffer + (y << crispy->hires) * SCREENWIDTH + (x << crispy->hires);
+    byte *drawpos = I_VideoBuffer + (y << crispy->hires) * SCREENWIDTH + ((x + WIDESCREENDELTA) << crispy->hires);
     int i = 0;
 
     while(i < (len << crispy->hires))
@@ -973,6 +1013,43 @@ void ST_drawLine(int x, int y, int len, int color)
         *drawpos++ = putcolor;
         ++i;
     }
+}
+
+// [crispy] Create background texture which appears at each side of the status
+// bar in widescreen rendering modes. The chosen textures match those which
+// surround the non-fullscreen game window.
+static void RefreshBackground(void)
+{
+    int x, y;
+    byte *src;
+    pixel_t *dest;
+
+    V_UseBuffer(st_backing_screen);
+    src = W_CacheLumpName(back_flat, PU_CACHE);
+    dest = st_backing_screen;
+
+    for (y = SCREENHEIGHT-(ST_HEIGHT<<crispy->hires); y < SCREENHEIGHT; y++)
+    {
+        for (x = 0; x < SCREENWIDTH; x++)
+        {
+            *dest++ = colormaps[src[((y&63)<<6) + (x&63)]];
+        }
+    }
+
+    // [crispy] preserve bezel bottom edge
+    if (scaledviewwidth == SCREENWIDTH)
+    {
+        patch_t *const patch = W_CacheLumpName(DEH_String("brdr_b"), PU_CACHE);
+
+        for (x = 0; x < WIDESCREENDELTA; x += 8)
+        {
+            V_DrawPatch(x - WIDESCREENDELTA, 0, patch);
+            V_DrawPatch(ORIGWIDTH + WIDESCREENDELTA - x - 8, 0, patch);
+        }
+    }
+
+    V_RestoreBuffer();
+    V_CopyRect(0, 0, st_backing_screen, SCREENWIDTH >> crispy->hires, ST_HEIGHT, 0, ST_Y);
 }
 
 //
@@ -1002,8 +1079,20 @@ void ST_doRefresh(void)
         st_lasthealth    = plyr->health;
         st_firsttime     = false;
 
+        // [crispy] Status bar background in widescreen mode.
+        if ((SCREENWIDTH >> crispy->hires) != ST_WIDTH)
+            RefreshBackground();
+
         // draw main status bar
-        V_DrawPatch(ST_X, ST_Y, invback);
+        // [crispy] support wide status bars with 0 offset
+        if (SHORT(invback->width) > ORIGWIDTH && SHORT(invback->leftoffset) == 0)
+        {
+            V_DrawPatch(ST_X + (ORIGWIDTH - SHORT(invback->width)) / 2, ST_Y, invback);
+        }
+        else
+        {
+            V_DrawPatch(ST_X, ST_Y, invback);
+        }
 
         // draw multiplayer armor backdrop if netgame
         // haleyjd 20131031: BUG - vanilla is accessing a NULL pointer here when
@@ -1120,8 +1209,11 @@ void ST_doRefresh(void)
 
 void ST_Drawer (boolean fullscreen, boolean refresh)
 {
-    st_statusbaron = (!fullscreen) || automapactive;
+    st_statusbaron = (!fullscreen) || (automapactive && !crispy->automapoverlay);
     st_firsttime = st_firsttime || refresh;
+
+    // [crispy] Crispy HUD
+    st_crispyhud = screenblocks > 11 && (!automapactive || crispy->automapoverlay);
 
     // Do red-/gold-shifts from damage/items
     ST_doPaletteStuff();
@@ -1313,6 +1405,113 @@ static boolean ST_drawKeysPopup(void)
     return true;
 }
 
+// [crispy] draw patch + number pair for Crispy HUD
+static void ST_drawCrispyPair(int x, int y, patch_t *patch, int num)
+{
+    int xp = x + SHORT(patch->leftoffset) - SHORT(patch->width) / 2 - 3;
+    int yp = y + SHORT(patch->topoffset) - SHORT(patch->height) - 2;
+
+    V_DrawPatch(xp, yp, patch);
+    ST_drawNumFontY(x, y, MAX(0, num));
+}
+
+// [crispy] Crispy HUD: heavily modified version of the original status bar in
+// ST_doRefresh(), the original fullscreen HUD, and the SVE fullscreen HUD
+static void ST_drawCrispyHUD(void)
+{
+    patch_t *patch;
+    ammotype_t ammo;
+    const boolean draw_inv = plyr->numinventory && plyr->inventorycursor >= 0 &&
+                             plyr->inventorycursor < plyr->numinventory;
+
+    // [crispy] health
+    patch = W_CacheLumpName(DEH_String("I_MDKT"), PU_STATIC);
+    ST_drawCrispyPair(ST_HEALTHX2, ST_HEALTHY2, patch, plyr->health);
+
+    // [crispy] armor
+    if (plyr->armortype)
+    {
+        patch = invarmor[plyr->armortype - 1];
+        ST_drawCrispyPair(ST_ARMORX, ST_ARMORY, patch, plyr->armorpoints);
+    }
+
+    // [crispy] inventory item
+    if (draw_inv)
+    {
+        int lumpnum;
+        char iconname[8];
+        inventory_t *inv = &plyr->inventory[plyr->inventorycursor];
+
+        DEH_snprintf(iconname, sizeof(iconname), "I_%s",
+                     DEH_String(sprnames[inv->sprite]));
+
+        lumpnum = W_CheckNumForName(iconname);
+        if (lumpnum == -1)
+            patch = W_CacheLumpName(DEH_String("STCFN063"), PU_CACHE);
+        else
+            patch = W_CacheLumpNum(lumpnum, PU_STATIC);
+
+        ST_drawCrispyPair(ST_INVX, ST_INVY, patch, inv->amount);
+    }
+
+    // [crispy] ammo
+    ammo = weaponinfo[plyr->readyweapon].ammo;
+    if (ammo != am_noammo)
+    {
+        patch = invammo[ammo];
+        ST_drawCrispyPair(ST_AMMOX2, ST_AMMOY2, patch, plyr->ammo[ammo]);
+    }
+
+    // [crispy] inventory bar
+    if (st_invtics > 0 && draw_inv)
+    {
+        int firstinventory, icon_x, i, numdrawn;
+        const int max_slots =
+            (((SCREENWIDTH >> crispy->hires) >= ORIGWIDTH + ST_SLOTWIDTH) &&
+             screenblocks == 13) ? 6 : 5;
+        const int num_slots = MIN(plyr->numinventory, max_slots);
+        const int bar_min = (ORIGWIDTH - ST_SLOTWIDTH * num_slots) / 2;
+        const int bar_max = bar_min + ST_SLOTWIDTH * num_slots;
+
+        if (plyr->inventorycursor >= max_slots)
+            firstinventory = plyr->inventorycursor - (max_slots - 1);
+        else
+            firstinventory = 0;
+
+        // [crispy] cursor
+        V_DrawPatch(ST_SLOTWIDTH * (plyr->inventorycursor - firstinventory) +
+                    bar_min, 180, invcursor);
+
+        // [crispy] inventory items
+        for (icon_x = bar_min + 5, i = firstinventory, numdrawn = 0;
+             icon_x < bar_max + 5;
+             icon_x += ST_SLOTWIDTH, i++, numdrawn++)
+        {
+            int lumpnum;
+            patch_t *patch;
+            char iconname[8];
+
+            if (numdrawn > max_slots - 1)
+                break;
+
+            if (plyr->numinventory <= numdrawn)
+                break;
+
+            DEH_snprintf(iconname, sizeof(iconname), "I_%s",
+                         DEH_String(sprnames[plyr->inventory[i].sprite]));
+
+            lumpnum = W_CheckNumForName(iconname);
+            if (lumpnum == -1)
+                patch = W_CacheLumpName(DEH_String("STCFN063"), PU_CACHE);
+            else
+                patch = W_CacheLumpNum(lumpnum, PU_STATIC);
+
+            V_DrawPatch(icon_x, 182, patch);
+            ST_drawNumFontY2(icon_x + 20, 191, plyr->inventory[i].amount);
+        }
+    }
+}
+
 //
 // ST_DrawExternal
 //
@@ -1323,13 +1522,30 @@ boolean ST_DrawExternal(void)
 {
     int i;
 
+    // [crispy] don't draw fullscreen HUD for a clean screenshot
+    if (crispy->cleanscreenshot && !st_statusbaron)
+        return false;
+
     if(st_statusbaron)
     {
-        V_DrawPatchDirect(0, 160, invtop);
+        // [crispy] support wide status bars with 0 offset
+        if (SHORT(invtop->width) > ORIGWIDTH && SHORT(invtop->leftoffset) == 0)
+        {
+            V_DrawPatchDirect((ORIGWIDTH - SHORT(invtop->width)) / 2, 160, invtop);
+        }
+        else
+        {
+            V_DrawPatchDirect(0, 160, invtop);
+        }
+
         STlib_drawNumPositive(&w_health);
         STlib_drawNumPositive(&w_ready);
     }
-    else
+    else if (st_crispyhud) // [crispy] draw Crispy HUD
+    {
+        ST_drawCrispyHUD();
+    }
+    else // [crispy] draw original fullscreen HUD
     {
         ammotype_t ammo;
 
@@ -1339,7 +1555,8 @@ boolean ST_DrawExternal(void)
             ST_drawNumFontY2(310, 194, plyr->ammo[ammo]);
     }
 
-    if(!st_displaypopup)
+    // [crispy] don't draw popups for a clean screenshot
+    if (!st_displaypopup || crispy->cleanscreenshot)
         return false;
 
     // villsa [STRIFE] added 20100926
@@ -1609,6 +1826,7 @@ void ST_Init (void)
     ST_loadData();
 
     // haleyjd 20100919: This is not used by Strife. More memory for voices!
-    //st_backing_screen = (byte *) Z_Malloc(ST_WIDTH * ST_HEIGHT, PU_STATIC, 0);
+    // [crispy] For status bar background in widescreen mode and widgets.
+    st_backing_screen = (pixel_t *) Z_Malloc(MAXWIDTH * (ST_HEIGHT << 1) * sizeof(*st_backing_screen), PU_STATIC, 0);
 }
 

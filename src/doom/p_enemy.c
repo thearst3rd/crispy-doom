@@ -709,7 +709,7 @@ void A_Chase (mobj_t*	actor)
     // turn towards movement direction if not there yet
     if (actor->movedir < 8)
     {
-	actor->angle &= (7<<29);
+        actor->angle &= (7u << 29);
 	delta = actor->angle - (actor->movedir << 29);
 	
 	if (delta > 0)
@@ -1565,6 +1565,10 @@ A_PainShootSkull
 	return;
     }
 		
+    // [crispy] Lost Souls bleed Puffs
+    if (crispy->coloredblood == COLOREDBLOOD_ALL)
+        newmobj->flags |= MF_NOBLOOD;
+
     newmobj->target = actor->target;
     A_SkullAttack (newmobj);
 }

@@ -19,6 +19,7 @@
 
 #include "crispy.h"
 #include "doomstat.h"
+#include "i_input.h" // [crispy] start/stop text input
 #include "m_menu.h" // [crispy] M_SetDefaultDifficulty()
 #include "p_local.h" // [crispy] thinkercap
 #include "s_sound.h"
@@ -40,6 +41,13 @@ multiitem_t multiitem_brightmaps[NUM_BRIGHTMAPS] =
     {BRIGHTMAPS_TEXTURES, "walls"},
     {BRIGHTMAPS_SPRITES, "items"},
     {BRIGHTMAPS_BOTH, "both"},
+};
+
+multiitem_t multiitem_coloredblood[NUM_COLOREDBLOOD] =
+{
+    {COLOREDBLOOD_OFF, "off"},
+    {COLOREDBLOOD_BLOOD, "blood"},
+    {COLOREDBLOOD_ALL, "all"}
 };
 
 multiitem_t multiitem_centerweapon[NUM_CENTERWEAPON] =
@@ -167,32 +175,41 @@ multiitem_t multiitem_widescreen[NUM_RATIOS] =
 extern void AM_LevelInit (boolean reinit);
 extern void EnableLoadingDisk (void);
 extern void P_SegLengths (boolean contrast_only);
-extern void R_ExecuteSetViewSize (void);
 extern void R_InitLightTables (void);
 extern void I_ReInitGraphics (int reinit);
 
+static void ChangeSettingEnum(int *setting, int choice, int num_values)
+{
+    if (choice == 1)
+    {
+        *setting += 1;
+    }
+    else
+    {
+        *setting += num_values - 1;
+    }
+
+    *setting %= num_values;
+}
+
 void M_CrispyToggleAutomapstats(int choice)
 {
-    choice = 0;
-    crispy->automapstats = (crispy->automapstats + 1) % NUM_WIDGETS;
+    ChangeSettingEnum(&crispy->automapstats, choice, NUM_WIDGETS);
 }
 
 void M_CrispyToggleBobfactor(int choice)
 {
-    choice = 0;
-    crispy->bobfactor = (crispy->bobfactor + 1) % NUM_BOBFACTORS;
+    ChangeSettingEnum(&crispy->bobfactor, choice, NUM_BOBFACTORS);
 }
 
 void M_CrispyToggleBrightmaps(int choice)
 {
-    choice = 0;
-    crispy->brightmaps = (crispy->brightmaps + 1) % NUM_BRIGHTMAPS;
+    ChangeSettingEnum(&crispy->brightmaps, choice, NUM_BRIGHTMAPS);
 }
 
 void M_CrispyToggleCenterweapon(int choice)
 {
-    choice = 0;
-    crispy->centerweapon = (crispy->centerweapon + 1) % NUM_CENTERWEAPON;
+    ChangeSettingEnum(&crispy->centerweapon, choice, NUM_CENTERWEAPON);
 }
 
 void M_CrispyToggleColoredblood(int choice)
@@ -204,8 +221,7 @@ void M_CrispyToggleColoredblood(int choice)
 	return;
     }
 
-    choice = 0;
-    crispy->coloredblood = !crispy->coloredblood;
+    ChangeSettingEnum(&crispy->coloredblood, choice, NUM_COLOREDBLOOD);
 
     // [crispy] switch NOBLOOD flag for Lost Souls
     for (th = thinkercap.next; th && th != &thinkercap; th = th->next)
@@ -216,7 +232,7 @@ void M_CrispyToggleColoredblood(int choice)
 
 		if (mobj->type == MT_SKULL)
 		{
-			if (crispy->coloredblood)
+			if (crispy->coloredblood == COLOREDBLOOD_ALL)
 			{
 				mobj->flags |= MF_NOBLOOD;
 			}
@@ -231,14 +247,12 @@ void M_CrispyToggleColoredblood(int choice)
 
 void M_CrispyToggleColoredhud(int choice)
 {
-    choice = 0;
-    crispy->coloredhud = (crispy->coloredhud + 1) % NUM_COLOREDHUD;
+    ChangeSettingEnum(&crispy->coloredhud, choice, NUM_COLOREDHUD);
 }
 
 void M_CrispyToggleCrosshair(int choice)
 {
-    choice = 0;
-    crispy->crosshair = (crispy->crosshair + 1) % NUM_CROSSHAIRS;
+    ChangeSettingEnum(&crispy->crosshair, choice, NUM_CROSSHAIRS);
 }
 
 void M_CrispyToggleCrosshairHealth(int choice)
@@ -260,13 +274,7 @@ void M_CrispyToggleCrosshairtype(int choice)
 	return;
     }
 
-    choice = 0;
-    crispy->crosshairtype = crispy->crosshairtype + 1;
-
-    if (!laserpatch[crispy->crosshairtype].c)
-    {
-	crispy->crosshairtype = 0;
-    }
+    ChangeSettingEnum(&crispy->crosshairtype, choice, NUM_CROSSHAIRTYPES);
 }
 
 void M_CrispyToggleDemoBar(int choice)
@@ -277,8 +285,7 @@ void M_CrispyToggleDemoBar(int choice)
 
 void M_CrispyToggleDemoTimer(int choice)
 {
-    choice = 0;
-    crispy->demotimer = (crispy->demotimer + 1) % NUM_DEMOTIMERS;
+    ChangeSettingEnum(&crispy->demotimer, choice, NUM_DEMOTIMERS);
 }
 
 void M_CrispyToggleDemoTimerDir(int choice)
@@ -322,8 +329,7 @@ void M_CrispyToggleFreeaim(int choice)
 	return;
     }
 
-    choice = 0;
-    crispy->freeaim = (crispy->freeaim + 1) % NUM_FREEAIMS;
+    ChangeSettingEnum(&crispy->freeaim, choice, NUM_FREEAIMS);
 
     // [crispy] update the "critical" struct
     CheckCrispySingleplayer(!demorecording && !demoplayback && !netgame);
@@ -335,11 +341,57 @@ static void M_CrispyToggleSkyHook (void)
     R_InitSkyMap();
 }
 
+void M_CrispyToggleFpsLimit(int choice)
+{
+    if (!crispy->uncapped)
+    {
+        return;
+    }
+
+    if (choice == 0)
+    {
+        crispy->fpslimit--;
+    }
+    else if (choice == 1)
+    {
+        if (crispy->fpslimit < TICRATE)
+        {
+            crispy->fpslimit = TICRATE;
+        }
+        else
+        {
+            crispy->fpslimit++;
+        }
+    }
+    else if (choice == 2)
+    {
+        if (numeric_enter)
+        {
+            crispy->fpslimit = numeric_entry;
+            numeric_enter = false;
+            I_StopTextInput();
+        }
+        else
+        {
+            numeric_enter = true;
+            I_StartTextInput(0, 0, 0, 0);
+            return;
+        }
+    }
+
+    if (crispy->fpslimit < TICRATE)
+    {
+        crispy->fpslimit = 0;
+    }
+    else if (crispy->fpslimit > CRISPY_FPSLIMIT_MAX)
+    {
+        crispy->fpslimit = CRISPY_FPSLIMIT_MAX;
+    }
+}
+
 void M_CrispyToggleFreelook(int choice)
 {
-    choice = 0;
-    crispy->freelook = (crispy->freelook + 1) % NUM_FREELOOKS;
-
+    ChangeSettingEnum(&crispy->freelook, choice, NUM_FREELOOKS);
     crispy->post_rendering_hook = M_CrispyToggleSkyHook;
 }
 
@@ -390,8 +442,7 @@ void M_CrispyToggleJumping(int choice)
 	return;
     }
 
-    choice = 0;
-    crispy->jump = (crispy->jump + 1) % NUM_JUMPS;
+    ChangeSettingEnum(&crispy->jump, choice, NUM_JUMPS);
 
     // [crispy] update the "critical" struct
     CheckCrispySingleplayer(!demorecording && !demoplayback && !netgame);
@@ -399,8 +450,7 @@ void M_CrispyToggleJumping(int choice)
 
 void M_CrispyToggleLeveltime(int choice)
 {
-    choice = 0;
-    crispy->leveltime = (crispy->leveltime + 1) % (NUM_WIDGETS - 1);
+    ChangeSettingEnum(&crispy->leveltime, choice, NUM_WIDGETS - 1);
 }
 
 void M_CrispyToggleMouseLook(int choice)
@@ -419,8 +469,7 @@ void M_CrispyToggleNeghealth(int choice)
 
 void M_CrispyToggleDefaultSkill(int choice)
 {
-    choice = 0;
-    crispy->defaultskill = (crispy->defaultskill + 1) % NUM_SKILLS;
+    ChangeSettingEnum(&crispy->defaultskill, choice, NUM_SKILLS);
     M_SetDefaultDifficulty();
 }
 
@@ -448,14 +497,13 @@ void M_CrispyTogglePitch(int choice)
 
 void M_CrispyTogglePlayerCoords(int choice)
 {
-    choice = 0;
-    crispy->playercoords = (crispy->playercoords + 1) % (NUM_WIDGETS - 2); // [crispy] disable "always" setting
+    // [crispy] disable "always" setting
+    ChangeSettingEnum(&crispy->playercoords, choice, NUM_WIDGETS - 2);
 }
 
 void M_CrispyToggleSecretmessage(int choice)
 {
-    choice = 0;
-    crispy->secretmessage = (crispy->secretmessage + 1) % NUM_SECRETMESSAGE;
+    ChangeSettingEnum(&crispy->secretmessage, choice, NUM_SECRETMESSAGE);
 }
 
 void M_CrispyToggleSmoothScaling(int choice)
@@ -494,9 +542,7 @@ void M_CrispyToggleSmoothMap(int choice)
 
 void M_CrispyToggleSndChannels(int choice)
 {
-    choice = 0;
-
-    S_UpdateSndChannels();
+    S_UpdateSndChannels(choice);
 }
 
 void M_CrispyToggleSoundfixes(int choice)
@@ -515,14 +561,12 @@ void M_CrispyToggleSoundMono(int choice)
 
 void M_CrispyToggleStatsFormat(int choice)
 {
-    choice = 0;
-    crispy->statsformat = (crispy->statsformat + 1) % NUM_STATSFORMATS;
+    ChangeSettingEnum(&crispy->statsformat, choice, NUM_STATSFORMATS);
 }
 
 void M_CrispyToggleTranslucency(int choice)
 {
-    choice = 0;
-    crispy->translucency = (crispy->translucency + 1) % NUM_TRANSLUCENCY;
+    ChangeSettingEnum(&crispy->translucency, choice, NUM_TRANSLUCENCY);
 }
 
 void M_CrispyToggleUncapped(int choice)
@@ -536,7 +580,7 @@ void M_CrispyToggleVsyncHook (void)
 {
     crispy->vsync = !crispy->vsync;
 
-    I_ReInitGraphics(REINIT_RENDERER | REINIT_TEXTURES | REINIT_ASPECTRATIO);
+    I_ToggleVsync();
 }
 
 void M_CrispyToggleVsync(int choice)
@@ -551,9 +595,10 @@ void M_CrispyToggleVsync(int choice)
     crispy->post_rendering_hook = M_CrispyToggleVsyncHook;
 }
 
+static int hookchoice;
 static void M_CrispyToggleWidescreenHook (void)
 {
-    crispy->widescreen = (crispy->widescreen + 1) % NUM_RATIOS;
+    ChangeSettingEnum(&crispy->widescreen, hookchoice, NUM_RATIOS);
 
 #ifdef __WIIU__
     if (crispy->widescreen == RATIO_MATCH_SCREEN || crispy->widescreen == RATIO_16_10)
@@ -577,7 +622,7 @@ static void M_CrispyToggleWidescreenHook (void)
 
 void M_CrispyToggleWidescreen(int choice)
 {
-    choice = 0;
+    hookchoice = choice;
 
     crispy->post_rendering_hook = M_CrispyToggleWidescreenHook;
 }

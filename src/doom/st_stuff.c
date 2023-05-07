@@ -545,7 +545,7 @@ void ST_refreshBackground(boolean force)
         V_RestoreBuffer();
 
 	// [crispy] copy entire SCREENWIDTH, to preserve the pattern
-	// to the left and right of the status bar in widescren mode
+	// to the left and right of the status bar in widescreen mode
 	if (!force)
 	{
 	    V_CopyRect(ST_X, 0, st_backing_screen, SCREENWIDTH >> crispy->hires, ST_HEIGHT, ST_X, ST_Y);
@@ -1165,11 +1165,6 @@ ST_Responder (event_t* ev)
 	    plyr->message = msg;
 	}
       }
-      // [crispy] snow
-      else if (cht_CheckCheatSP(&cheat_snow, ev->data2))
-      {
-    crispy->snowflakes = !crispy->snowflakes;
-      }
     }
 
 // [crispy] now follow "harmless" Crispy Doom specific cheats
@@ -1213,6 +1208,11 @@ ST_Responder (event_t* ev)
       M_snprintf(msg, sizeof(msg), "Skill: %s",
                  skilltable[BETWEEN(0,5,(int) gameskill+1)]);
       plyr->message = msg;
+    }
+    // [crispy] snow
+    else if (cht_CheckCheat(&cheat_snow, ev->data2))
+    {
+      crispy->snowflakes = !crispy->snowflakes;
     }
     
     // 'clev' change-level cheat
@@ -1879,6 +1879,15 @@ static byte* ST_WidgetColor(int i)
 
 // [crispy] draw the gibbed death state frames in the Health widget
 // in sync with the actual player sprite
+static inline boolean ST_PlayerIsGibbed (void)
+{
+       const int state = plyr->mo->state - states;
+
+       return (plyr->health <= 0 &&
+               ((state >= S_PLAY_XDIE1 && state <= S_PLAY_XDIE9) ||
+               state == S_GIBS));
+}
+
 static inline void ST_DrawGibbedPlayerSprites (void)
 {
 	state_t const *state = plyr->mo->state;
@@ -1952,10 +1961,9 @@ void ST_drawWidgets(boolean refresh)
 
 	// [crispy] draw the gibbed death state frames in the Health widget
 	// in sync with the actual player sprite
-	if (plyr->health <= 0 && plyr->mo->state - states >= mobjinfo[plyr->mo->type].xdeathstate)
+	if ((gibbed = ST_PlayerIsGibbed()))
 	{
 		ST_DrawGibbedPlayerSprites();
-		gibbed = true;
 	}
    }
 
@@ -1987,7 +1995,10 @@ void ST_drawWidgets(boolean refresh)
     // [crispy] draw the actual face widget background
     if (st_crispyhud && (screenblocks % 3 == 0))
     {
-	V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen, SHORT(faceback[0]->width), ST_HEIGHT - 1, ST_FX + WIDESCREENDELTA, ST_Y + 1);
+		if (netgame)
+		V_DrawPatch(ST_FX, ST_Y + 1, faceback[displayplayer]);
+		else
+		V_CopyRect(ST_FX + WIDESCREENDELTA, 1, st_backing_screen, SHORT(faceback[0]->width), ST_HEIGHT - 1, ST_FX + WIDESCREENDELTA, ST_Y + 1);
     }
 
     STlib_updateMultIcon(&w_faces, refresh);

@@ -25,6 +25,7 @@
 #include "i_input.h"
 #include "i_timer.h"
 #include "i_system.h"
+#include "i_swap.h"
 #include "m_argv.h"
 #include "m_controls.h"
 #include "m_misc.h"
@@ -32,6 +33,9 @@
 #include "p_local.h"
 #include "s_sound.h"
 #include "v_video.h"
+
+#include "deh_main.h" // [crispy] for demo footer
+#include "memio.h"
 
 // Macros
 
@@ -42,7 +46,6 @@
 
 // Functions
 
-boolean G_CheckDemoStatus(void);
 void G_ReadDemoTiccmd(ticcmd_t * cmd);
 void G_WriteDemoTiccmd(ticcmd_t * cmd);
 void G_PlayerReborn(int player);
@@ -290,9 +293,6 @@ static int G_NextWeapon(int direction)
 ====================
 */
 
-extern boolean inventory;
-extern int curpos;
-extern int inv_ptr;
 
 boolean usearti = true;
 
@@ -314,8 +314,6 @@ void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
 
     static unsigned int mbmlookctrl = 0; // [crispy]
     static unsigned int kbdlookctrl = 0; // [crispy]
-
-    extern boolean noartiskip;
 
     // haleyjd: removed externdriver crap
 
@@ -722,20 +720,28 @@ void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
     {
         if (demorecording || lowres_turn)
         {
-            // [crispy] Map mouse movement to look variable when recording
-            look += mouse_y_invert ? -mousey / MLOOKUNITLOWRES
-                                        : mousey / MLOOKUNITLOWRES;
+            // [Dasperal] Skip mouse look if it is TOCENTER cmd
+            if (look != TOCENTER)
+            {
+                // [crispy] Map mouse movement to look variable when recording
+                look += mouse_y_invert ? -mousey / MLOOKUNITLOWRES
+                                       :  mousey / MLOOKUNITLOWRES;
 
-            // [crispy] Limit to max speed of keyboard look up/down
-            if (look > 2)
-                look = 2;
-            else if (look < -2)
-                look = -2;
+                // [crispy] Limit to max speed of keyboard look up/down
+                if (look > 2)
+                    look = 2;
+                else if (look < -2)
+                    look = -2;
+            }
         }
         else
         {
             cmd->lookdir = mouse_y_invert ? -mousey : mousey;
-            cmd->lookdir /= MLOOKUNIT;
+            // [Dasperal] Allow precise vertical look with near 0 mouse movement
+            if (cmd->lookdir > 0)
+                cmd->lookdir = (cmd->lookdir + MLOOKUNIT - 1) / MLOOKUNIT;
+            else
+                cmd->lookdir = (cmd->lookdir - MLOOKUNIT + 1) / MLOOKUNIT;
         }
     }
     else if (!novert)
@@ -1377,7 +1383,6 @@ void G_InitPlayer(int player)
 = Can when a player completes a level
 ====================
 */
-extern int playerkeys;
 
 void G_PlayerFinishLevel(int player)
 {
@@ -2367,6 +2372,124 @@ void G_TimeDemo(char *name)
     }
 }
 
+#define DEMO_FOOTER_SEPARATOR "\n"
+#define NUM_DEMO_FOOTER_LUMPS 4
+
+static size_t WriteCmdLineLump(MEMFILE *stream)
+{
+    int i;
+    long pos;
+    char *tmp, **filenames;
+
+    filenames = W_GetWADFileNames();
+
+    pos = mem_ftell(stream);
+
+    tmp = M_StringJoin("-iwad \"", M_BaseName(filenames[0]), "\"", NULL);
+    mem_fputs(tmp, stream);
+    free(tmp);
+
+    if (filenames[1])
+    {
+        mem_fputs(" -file", stream);
+
+        for (i = 1; filenames[i]; i++)
+        {
+            tmp = M_StringJoin(" \"", M_BaseName(filenames[i]), "\"", NULL);
+            mem_fputs(tmp, stream);
+            free(tmp);
+        }
+    }
+
+    filenames = DEH_GetFileNames();
+
+    if (filenames)
+    {
+        mem_fputs(" -deh", stream);
+
+        for (i = 0; filenames[i]; i++)
+        {
+            tmp = M_StringJoin(" \"", M_BaseName(filenames[i]), "\"", NULL);
+            mem_fputs(tmp, stream);
+            free(tmp);
+        }
+    }
+
+    mem_fputs(" -complevel 0", stream);
+
+    if (M_CheckParm("-solo-net"))
+    {
+        mem_fputs(" -solo-net", stream);
+    }
+
+    return mem_ftell(stream) - pos;
+}
+
+static void WriteFileInfo(const char *name, size_t size, MEMFILE *stream)
+{
+    filelump_t fileinfo = { 0 };
+    static long filepos = sizeof(wadinfo_t);
+
+    fileinfo.filepos = LONG(filepos);
+    fileinfo.size = LONG(size);
+
+    if (name)
+    {
+        size_t len = strnlen(name, 8);
+        if (len < 8)
+        {
+            len++;
+        }
+        memcpy(fileinfo.name, name, len);
+    }
+
+    mem_fwrite(&fileinfo, 1, sizeof(fileinfo), stream);
+
+    filepos += size;
+}
+
+static void G_AddDemoFooter(void)
+{
+    byte *data;
+    size_t size;
+    char *project_string;
+
+    MEMFILE *stream = mem_fopen_write();
+
+    wadinfo_t header = { "PWAD" };
+    header.numlumps = LONG(NUM_DEMO_FOOTER_LUMPS);
+    mem_fwrite(&header, 1, sizeof(header), stream);
+
+    project_string = M_StringReplace(PACKAGE_STRING, "Doom", "Heretic");
+
+    mem_fputs(project_string, stream);
+    mem_fputs(DEMO_FOOTER_SEPARATOR, stream);
+    size = WriteCmdLineLump(stream);
+    mem_fputs(DEMO_FOOTER_SEPARATOR, stream);
+
+    header.infotableofs = LONG(mem_ftell(stream));
+    mem_fseek(stream, 0, MEM_SEEK_SET);
+    mem_fwrite(&header, 1, sizeof(header), stream);
+    mem_fseek(stream, 0, MEM_SEEK_END);
+
+    WriteFileInfo("PORTNAME", strlen(project_string), stream);
+    WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), stream);
+    WriteFileInfo("CMDLINE", size, stream);
+    WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), stream);
+
+    mem_get_buf(stream, (void **)&data, &size);
+
+    while (demo_p > demoend - size)
+    {
+        IncreaseDemoBuffer();
+    }
+
+    memcpy(demo_p, data, size);
+    demo_p += size;
+
+    free(project_string);
+    mem_fclose(stream);
+}
 
 /*
 ===================
@@ -2408,6 +2531,7 @@ boolean G_CheckDemoStatus(void)
     if (demorecording)
     {
         *demo_p++ = DEMOMARKER;
+        G_AddDemoFooter();
         M_WriteFile(demoname, demobuffer, demo_p - demobuffer);
         Z_Free(demobuffer);
         demorecording = false;

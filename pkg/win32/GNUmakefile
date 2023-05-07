@@ -14,7 +14,7 @@ DOOM_ZIP=$(PROGRAM_PREFIX)doom-$(PACKAGE_VERSION)-$(POSTFIX).zip
 HERETIC_ZIP=$(PROGRAM_PREFIX)heretic-$(PACKAGE_VERSION)-$(POSTFIX).zip
 HEXEN_ZIP=$(PROGRAM_PREFIX)hexen-$(PACKAGE_VERSION)-$(POSTFIX).zip
 STRIFE_ZIP=$(PROGRAM_PREFIX)strife-$(PACKAGE_VERSION)-$(POSTFIX).zip
-ZIPS=$(DOOM_ZIP) $(HERETIC_ZIP) $(HEXEN_ZIP) # $(STRIFE_ZIP)
+ZIPS=$(DOOM_ZIP) $(HERETIC_ZIP) $(HEXEN_ZIP) $(STRIFE_ZIP)
 
 DLL_FILES=$(TOPLEVEL)/src/SDL.dll                      \
           $(TOPLEVEL)/src/SDL_mixer.dll                \
@@ -44,9 +44,9 @@ hook-strife: staging-strife
 
 staging-%:
 	mkdir $@
-	LC_ALL=C ./cp-with-libs --ldflags="$(LDFLAGS)" \
+	LC_ALL=C ./cp-with-libs --ldflags="$(LDFLAGS)" --dll_path="$(MSYSTEM_PREFIX)/bin" \
 	               $(TOPLEVEL)/src/$(PROGRAM_PREFIX)$*.exe $@
-	LC_ALL=C ./cp-with-libs --ldflags="$(LDFLAGS)" \
+	LC_ALL=C ./cp-with-libs --ldflags="$(LDFLAGS)" --dll_path="$(MSYSTEM_PREFIX)/bin" \
 	               $(TOPLEVEL)/src/$(PROGRAM_PREFIX)setup.exe \
 	               $@/$(PROGRAM_PREFIX)$*-setup.exe
 

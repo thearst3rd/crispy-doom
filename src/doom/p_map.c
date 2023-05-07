@@ -916,10 +916,6 @@ fixed_t		attackrange;
 
 fixed_t		aimslope;
 
-// slopes to top and bottom of target
-extern fixed_t	topslope;
-extern fixed_t	bottomslope;	
-
 extern degenmobj_t *laserspot;
 
 //
@@ -1577,6 +1573,10 @@ boolean PIT_ChangeSector (mobj_t*	thing)
 
 	// [crispy] connect blood object with the monster that bleeds it
 	mo->target = thing;
+
+    // [crispy] Spectres bleed spectre blood
+    if (crispy->coloredblood == COLOREDBLOOD_ALL)
+        mo->flags |= (thing->flags & MF_SHADOW);
     }
 
     // keep checking (crush other things)	

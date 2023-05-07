@@ -45,6 +45,7 @@
 #include "s_sound.h"
 #include "w_main.h"
 #include "v_video.h"
+#include "am_map.h"
 #include "v_trans.h" // [crispy] dp_translation
 
 #include "heretic_icon.c"
@@ -75,7 +76,6 @@ static int graphical_startup = 0;
 static boolean using_graphical_startup;
 static boolean main_loop_started = false;
 boolean autostart;
-extern boolean automapactive;
 
 boolean advancedemo;
 
@@ -165,7 +165,6 @@ void DrawCenterMessage(void)
 //---------------------------------------------------------------------------
 
 int left_widget_w, right_widget_w; // [crispy]
-extern int screenblocks; // [crispy]
 
 static void CrispyDrawStats (void)
 {
@@ -248,14 +247,8 @@ static void CrispyDrawStats (void)
     }
 }
 
-void R_ExecuteSetViewSize(void);
-
-extern boolean finalestage;
-
 void D_Display(void)
 {
-    extern boolean askforquit;
-
     // Change the view size if needed
     if (setsizeneeded)
     {
@@ -815,7 +808,6 @@ void InitThermo(int max)
 
 void D_BindVariables(void)
 {
-    extern int snd_Channels;
     int i;
 
     M_ApplyPlatformDefaults();
@@ -867,12 +859,16 @@ void D_BindVariables(void)
     M_BindIntVariable("crispy_automaprotate",   &crispy->automaprotate);
     M_BindIntVariable("crispy_automapstats",    &crispy->automapstats);
     M_BindIntVariable("crispy_brightmaps",      &crispy->brightmaps);
+    M_BindIntVariable("crispy_bobfactor",       &crispy->bobfactor);
+    M_BindIntVariable("crispy_centerweapon",    &crispy->centerweapon);
     M_BindIntVariable("crispy_defaultskill",    &crispy->defaultskill);
+    M_BindIntVariable("crispy_fpslimit",        &crispy->fpslimit);
     M_BindIntVariable("crispy_freelook",        &crispy->freelook_hh);
     M_BindIntVariable("crispy_leveltime",       &crispy->leveltime);
     M_BindIntVariable("crispy_mouselook",       &crispy->mouselook);
     M_BindIntVariable("crispy_playercoords",    &crispy->playercoords);
     M_BindIntVariable("crispy_secretmessage",   &crispy->secretmessage);
+    M_BindIntVariable("crispy_soundmono",       &crispy->soundmono);
     M_BindIntVariable("crispy_uncapped",        &crispy->uncapped);
     M_BindIntVariable("crispy_vsync",           &crispy->vsync);
     M_BindIntVariable("crispy_widescreen",      &crispy->widescreen);
@@ -1090,7 +1086,6 @@ void D_DoomMain(void)
 
     //!
     // @category game
-    // @category mod
     //
     // Automatic wand start when advancing from one level to the next. At the
     // beginning of each level, the player's health is reset to 100, their
@@ -1103,7 +1098,6 @@ void D_DoomMain(void)
 
     //!
     // @category game
-    // @category mod
     //
     // Ammo pickups give 50% more ammo. This option is not allowed when recording a
     // demo, playing back a demo or when starting a network game.
@@ -1113,7 +1107,6 @@ void D_DoomMain(void)
 
     //!
     // @category game
-    // @category mod
     //
     // Fast monsters. This option is not allowed when recording a demo,
     // playing back a demo or when starting a network game.
@@ -1123,7 +1116,6 @@ void D_DoomMain(void)
 
     //!
     // @category game
-    // @category mod
     //
     // Automatic use of Quartz flasks and Mystic urns.
     //
@@ -1132,7 +1124,6 @@ void D_DoomMain(void)
 
     //!
     // @category game
-    // @category mod
     //
     // Show the location of keys on the automap.
     //
@@ -1144,7 +1135,7 @@ void D_DoomMain(void)
     //
     // Disable auto-loading of .wad files.
     //
-    if (!M_ParmExists("-noautoload"))
+    if (!M_ParmExists("-noautoload") && gamemode != shareware)
     {
         char *autoload_dir;
         autoload_dir = M_GetAutoloadDir("heretic.wad", true);
@@ -1164,7 +1155,7 @@ void D_DoomMain(void)
 
     // [crispy] add wad files from autoload PWAD directories
 
-    if (!M_ParmExists("-noautoload"))
+    if (!M_ParmExists("-noautoload") && gamemode != shareware)
     {
         int i;
 
@@ -1185,6 +1176,11 @@ void D_DoomMain(void)
                 }
             }
         }
+    }
+
+    if (W_CheckNumForName("HEHACKED") != -1)
+    {
+        DEH_LoadLumpByName("HEHACKED", true, true);
     }
 
     //!
@@ -1248,7 +1244,7 @@ void D_DoomMain(void)
 
     // [crispy] process .deh files from PWADs autoload directories
 
-    if (!M_ParmExists("-noautoload"))
+    if (!M_ParmExists("-noautoload") && gamemode != shareware)
     {
         int i;
 

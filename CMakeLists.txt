@@ -1,7 +1,7 @@
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 cmake_minimum_required(VERSION 3.7.2)
-project("Crispy Doom" VERSION 5.12.0 LANGUAGES C)
+project("Crispy Doom" VERSION 6.0.0 LANGUAGES C)
 
 # Autotools variables
 set(top_srcdir ${CMAKE_CURRENT_SOURCE_DIR})
@@ -15,7 +15,7 @@ set(PACKAGE_STRING "${PROJECT_NAME} ${PROJECT_VERSION}")
 set(PACKAGE_BUGREPORT "https://github.com/fabiangreffrath/crispy-doom/issues")
 
 string(REGEX REPLACE " Doom$" "" PACKAGE_SHORTNAME "${PACKAGE_NAME}")
-set(PACKAGE_COPYRIGHT "Copyright (C) 1993-2022")
+set(PACKAGE_COPYRIGHT "Copyright (C) 1993-2023")
 set(PACKAGE_LICENSE "GNU General Public License, version 2")
 
 # Any settings that should apply to all targets in this directory and all
@@ -27,6 +27,9 @@ else()
     add_compile_options("-Wall" "-Wdeclaration-after-statement"
                         "-Wredundant-decls")
 endif()
+
+option(CMAKE_FIND_PACKAGE_PREFER_CONFIG
+       "Lookup package config files before using find modules" On)
 
 option(ENABLE_SDL2_NET "Enable SDL2_net" On)
 option(ENABLE_SDL2_MIXER "Enable SDL2_mixer" On)
@@ -47,8 +50,8 @@ endif()
 option(CRISPY_TRUECOLOR "True color rendering" OFF)
 
 # Check for libsamplerate.
-find_package(samplerate)
-if(SAMPLERATE_FOUND)
+find_package(SampleRate)
+if(SampleRate_FOUND)
     set(HAVE_LIBSAMPLERATE TRUE)
 endif()
 
@@ -56,6 +59,12 @@ endif()
 find_package(PNG)
 if(PNG_FOUND)
     set(HAVE_LIBPNG TRUE)
+endif()
+
+# Check for FluidSynth.
+find_package(FluidSynth 2.2.0)
+if(FluidSynth_FOUND AND ENABLE_SDL2_MIXER)
+    set(HAVE_FLUIDSYNTH TRUE)
 endif()
 
 find_package(m)

@@ -74,12 +74,13 @@ static fixed_t PolyStartY;
 //
 //==========================================================================
 
-void T_RotatePoly(polyevent_t * pe)
+void T_RotatePoly(thinker_t *thinker)
 {
+    polyevent_t *pe = (polyevent_t *) thinker;
     int absSpeed;
     polyobj_t *poly;
 
-    if (PO_RotatePolyobj(pe->polyobj, pe->speed))
+    if (PO_RotatePolyobj(pe->polyobj, pe->speed, true))
     {
         absSpeed = abs(pe->speed);
 
@@ -208,12 +209,13 @@ boolean EV_RotatePoly(line_t * line, byte * args, int direction, boolean
 //
 //==========================================================================
 
-void T_MovePoly(polyevent_t * pe)
+void T_MovePoly(thinker_t *thinker)
 {
+    polyevent_t *pe = (polyevent_t *) thinker;
     int absSpeed;
     polyobj_t *poly;
 
-    if (PO_MovePolyobj(pe->polyobj, pe->xSpeed, pe->ySpeed))
+    if (PO_MovePolyobj(pe->polyobj, pe->xSpeed, pe->ySpeed, true))
     {
         absSpeed = abs(pe->speed);
         pe->dist -= absSpeed;
@@ -326,8 +328,9 @@ boolean EV_MovePoly(line_t * line, byte * args, boolean timesEight, boolean
 //
 //==========================================================================
 
-void T_PolyDoor(polydoor_t * pd)
+void T_PolyDoor(thinker_t *thinker)
 {
+    polydoor_t *pd = (polydoor_t *) thinker;
     int absSpeed;
     polyobj_t *poly;
 
@@ -344,7 +347,7 @@ void T_PolyDoor(polydoor_t * pd)
     switch (pd->type)
     {
         case PODOOR_SLIDE:
-            if (PO_MovePolyobj(pd->polyobj, pd->xSpeed, pd->ySpeed))
+            if (PO_MovePolyobj(pd->polyobj, pd->xSpeed, pd->ySpeed, true))
             {
                 absSpeed = abs(pd->speed);
                 pd->dist -= absSpeed;
@@ -394,7 +397,7 @@ void T_PolyDoor(polydoor_t * pd)
             }
             break;
         case PODOOR_SWING:
-            if (PO_RotatePolyobj(pd->polyobj, pd->speed))
+            if (PO_RotatePolyobj(pd->polyobj, pd->speed, true))
             {
                 absSpeed = abs(pd->speed);
                 if (pd->dist == -1)
@@ -764,7 +767,7 @@ static void TranslatePolyVertices(polyobj_t *po, fixed_t dx, fixed_t dy)
 //
 //==========================================================================
 
-boolean PO_MovePolyobj(int num, int x, int y)
+boolean PO_MovePolyobj(int num, int x, int y, boolean interp)
 {
     int count;
     seg_t **segList;
@@ -841,7 +844,7 @@ boolean PO_MovePolyobj(int num, int x, int y)
 
     // [crispy] Move points back after calculating bounding boxes. We'll handle
     // the actual movement in PO_InterpolatePolyObjects().
-    if (crispy->uncapped)
+    if (crispy->uncapped && interp)
     {
         TranslatePolyVertices(po, -x, -y);
         po->dx = x;
@@ -975,7 +978,7 @@ static void RotatePt(int an, fixed_t * x, fixed_t * y, fixed_t startSpotX,
 //
 //==========================================================================
 
-boolean PO_RotatePolyobj(int num, angle_t angle)
+boolean PO_RotatePolyobj(int num, angle_t angle, boolean interp)
 {
     int count;
     seg_t **segList;
@@ -1037,7 +1040,9 @@ boolean PO_RotatePolyobj(int num, angle_t angle)
 
     // [crispy] Move points back after calculating bounding boxes. We'll handle
     // the actual movement in PO_InterpolatePolyObjects().
-    if (crispy->uncapped)
+    // Note: 180 degree rotations can be called for during loading of the
+    // level. Don't try to interpolate those.
+    if (crispy->uncapped && interp && angle != ANG180)
     {
         segList = po->segs;
         prevPts = po->prevPts;

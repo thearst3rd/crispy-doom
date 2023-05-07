@@ -95,6 +95,7 @@ static void SensibleDefaults(void)
     novert = 1;
     snd_dmxoption = "-opl3 -reverse";
     png_screenshots = 1;
+    runcentering = 0; // [crispy]
 }
 
 static int MainMenuKeyPress(txt_window_t *window, int key, void *user_data)
@@ -228,13 +229,21 @@ void MainMenu(void)
                        (TxtWidgetSignalFunc) ConfigMouse, NULL),
         TXT_NewButton2("Configure Gamepad/Joystick",
                        (TxtWidgetSignalFunc) ConfigJoystick, NULL),
+        NULL);
 // [crispy]
 /*
         TXT_NewButton2("Compatibility",
                        (TxtWidgetSignalFunc) CompatibilitySettings, NULL),
 */
-        TXT_NewButton2("Accessibility",
-                       (TxtWidgetSignalFunc) AccessibilitySettings, NULL),
+    // [crispy]
+    if (gamemission == doom)
+    {
+        TXT_AddWidget(window,
+            TXT_NewButton2("Accessibility",
+                           (TxtWidgetSignalFunc) AccessibilitySettings, NULL));
+    }
+
+    TXT_AddWidgets(window,
         GetLaunchButton(),
         TXT_NewStrut(0, 1),
         TXT_NewButton2("Start a Network Game",
@@ -285,8 +294,8 @@ static void SetIcon(void)
 
     surface = SDL_CreateRGBSurfaceFrom((void *) setup_icon_data, setup_icon_w,
                                        setup_icon_h, 32, setup_icon_w * 4,
-                                       0xff << 24, 0xff << 16,
-                                       0xff << 8, 0xff << 0);
+                                       0xffu << 24, 0xffu << 16,
+                                       0xffu << 8, 0xffu << 0);
 
     SDL_SetWindowIcon(TXT_SDLWindow, surface);
     SDL_FreeSurface(surface);

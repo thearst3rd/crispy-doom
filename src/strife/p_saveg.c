@@ -40,6 +40,7 @@
 FILE *save_stream;
 int savegamelength;
 boolean savegame_error;
+static int restoretargets_fail; // [crispy]
 
 // Get the filename of a temporary file to write the savegame to.  After
 // the file has been successfully saved, it will be renamed to the 
@@ -406,6 +407,7 @@ static void saveg_read_mobj_t(mobj_t *str)
     {
         str->player = &players[pl - 1];
         str->player->mo = str;
+        str->player->so = Crispy_PlayerSO(pl - 1); // [crispy] weapon sound sources
     }
     else
     {
@@ -423,6 +425,59 @@ static void saveg_read_mobj_t(mobj_t *str)
 
     // byte miscdata;
     str->miscdata = saveg_read8(); // [STRIFE] Only change to mobj_t.
+
+    // [crispy] new mobj_t fields used for interpolation
+    str->interp = 0;
+    str->oldx = 0;
+    str->oldy = 0;
+    str->oldz = 0;
+    str->oldangle = 0;
+}
+
+// [crispy] enumerate all thinker pointers
+uint32_t P_ThinkerToIndex(thinker_t *thinker)
+{
+    thinker_t*  th;
+    uint32_t    i;
+
+    if (!thinker)
+        return 0;
+
+    for (th = thinkercap.next, i = 0; th != &thinkercap; th = th->next)
+    {
+        if (th->function.acp1 == (actionf_p1) P_MobjThinker)
+        {
+            i++;
+            if (th == thinker)
+                return i;
+        }
+    }
+
+    return 0;
+}
+
+// [crispy] replace indizes with corresponding pointers
+thinker_t *P_IndexToThinker(uint32_t index)
+{
+    thinker_t*  th;
+    uint32_t    i;
+
+    if (!index)
+        return NULL;
+
+    for (th = thinkercap.next, i = 0; th != &thinkercap; th = th->next)
+    {
+        if (th->function.acp1 == (actionf_p1) P_MobjThinker)
+        {
+            i++;
+            if (i == index)
+                return th;
+        }
+    }
+
+    restoretargets_fail++;
+
+    return NULL;
 }
 
 static void saveg_write_mobj_t(mobj_t *str)
@@ -512,7 +567,9 @@ static void saveg_write_mobj_t(mobj_t *str)
     saveg_write32(str->movecount);
 
     // struct mobj_s* target;
-    saveg_writep(str->target);
+    // [crispy] instead of the actual pointer, store the
+    // corresponding index in the mobj->target field
+    saveg_writep((void *)(uintptr_t) P_ThinkerToIndex((thinker_t *) str->target));
 
     // int reactiontime;
     saveg_write32(str->reactiontime);
@@ -537,7 +594,9 @@ static void saveg_write_mobj_t(mobj_t *str)
     saveg_write_mapthing_t(&str->spawnpoint);
 
     // struct mobj_s* tracer;
-    saveg_writep(str->tracer);
+    // [crispy] instead of the actual pointer, store the
+    // corresponding index in the mobj->tracers field
+    saveg_writep((void *)(uintptr_t) P_ThinkerToIndex((thinker_t *) str->tracer));
 
     // byte miscdata;
     saveg_write8(str->miscdata); // [STRIFE] Only change to mobj_t.
@@ -634,6 +693,10 @@ static void saveg_read_pspdef_t(pspdef_t *str)
 
     // fixed_t sy;
     str->sy = saveg_read32();
+
+    // [crispy] variable weapon sprite bob
+    str->sx2 = str->sx;
+    str->sy2 = str->sy;
 }
 
 static void saveg_write_pspdef_t(pspdef_t *str)
@@ -713,6 +776,9 @@ static void saveg_read_player_t(player_t *str)
 
     // fixed_t bob;
     str->bob = saveg_read32();
+
+    // [crispy] variable player view bob
+    str->bob2 = str->bob;
 
     // int health;
     str->health = saveg_read32();
@@ -1946,15 +2012,19 @@ void P_UnArchiveThinkers (void)
             // the objects removed, including the player's previous body, from
             // being passed to Z_Free. One glitch relying on another!
 
+            // [crispy] restore mobj->target
+            /*
             if(mobj->target != NULL && (mobj->flags & MF_ALLY) != MF_ALLY)
                 mobj->target = players[0].mo;
             else
                 mobj->target = NULL;
+            */
 
             // WARNING! Strife does not seem to set tracer! I am leaving it be
             // for now because so far no crashes have been observed, and failing
             // to set this here will almost certainly crash Choco.
-            mobj->tracer = NULL;
+            // [crispy] restore mobj->tracer
+            //mobj->tracer = NULL;
             P_SetThingPosition (mobj);
             mobj->info = &mobjinfo[mobj->type];
             // [STRIFE]: doesn't set these
@@ -1970,6 +2040,31 @@ void P_UnArchiveThinkers (void)
     }
 }
 
+// [crispy] after all the thinkers have been restored, replace all indices in
+// the mobj->target and mobj->tracers fields by the corresponding current pointers again
+void P_RestoreTargets(void)
+{
+    mobj_t*     mo;
+    thinker_t*  th;
+
+    for (th = thinkercap.next; th != &thinkercap; th = th->next)
+    {
+        if (th->function.acp1 == (actionf_p1) P_MobjThinker)
+        {
+            mo = (mobj_t *) th;
+            mo->target = (mobj_t *) P_IndexToThinker((uintptr_t) mo->target);
+            mo->tracer = (mobj_t *) P_IndexToThinker((uintptr_t) mo->tracer);
+        }
+    }
+
+    if (restoretargets_fail)
+    {
+        fprintf(stderr,
+                "P_RestoreTargets: Failed to restore %d target pointers.\n",
+                restoretargets_fail);
+        restoretargets_fail = 0;
+    }
+}
 
 //
 // P_ArchiveSpecials

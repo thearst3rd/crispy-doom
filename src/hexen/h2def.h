@@ -159,8 +159,12 @@ typedef enum
 ===============================================================================
 */
 
+
+struct thinker_s;
+
+
 // think_t is a function pointer to a routine to handle an actor
-typedef void (*think_t) ();
+typedef void (*think_t)(struct thinker_s *);
 
 typedef struct thinker_s
 {
@@ -361,11 +365,12 @@ typedef enum
     NUMPSPRITES
 } psprnum_t;
 
-typedef struct
+typedef struct pspdef_s
 {
     state_t *state;             // a NULL state means not active
     int tics;
     fixed_t sx, sy;
+    fixed_t sx2, sy2; // [crispy] variable weapon sprite bob
 } pspdef_t;
 
 /* Old Heretic key type
@@ -580,12 +585,16 @@ typedef struct player_s
 
     // [AM] Previous position of viewz before think.
     //      Used to interpolate between camera positions.
-    angle_t		oldviewz;
+    fixed_t		oldviewz;
+
+    // [crispy] variable player view bob
+    fixed_t bob2;
 } player_t;
 
 #define CF_NOCLIP		1
 #define	CF_GODMODE		2
 #define	CF_NOMOMENTUM	4       // not really a cheat, just a debug aid
+#define CF_SHOWFPS      8       // [crispy] "Cheat" to show FPS
 
 #define ORIGSBARHEIGHT          39 // [crispy]
 #define	SBARHEIGHT	(ORIGSBARHEIGHT << crispy->hires)      // status bar height at bottom of screen
@@ -627,14 +636,14 @@ extern boolean altpal;          // checkparm to use an alternate palette routine
 
 extern boolean cdrom;           // true if cd-rom mode active ("-cdrom")
 
+extern boolean viewactive;
+
 extern boolean deathmatch;      // only if started as net death
 
 extern boolean netgame;         // only true if >1 player
 
 extern boolean cmdfrag;         // true if a CMD_FRAG packet should be sent out every
                                                 // kill
-
-extern boolean demorecording;
 
 extern boolean playeringame[MAXPLAYERS];
 extern pclass_t PlayerClass[MAXPLAYERS];
@@ -649,6 +658,7 @@ extern player_t players[MAXPLAYERS];
 
 extern boolean DebugSound;      // debug flag for displaying sound info
 
+extern boolean demorecording;
 extern boolean demoplayback;
 extern boolean demoextend;      // allow demos to persist through exit/respawn
 extern int maxzone;             // Maximum chunk allocated for zone heap
@@ -697,12 +707,18 @@ extern skill_t startskill;
 extern int startepisode;
 extern int startmap;
 extern boolean autostart;
+extern boolean advancedemo;
 
 extern boolean testcontrols;
 extern int testcontrols_mousespeed;
 
 extern int vanilla_savegame_limit;
 extern int vanilla_demo_limit;
+
+extern boolean usearti;
+
+extern int right_widget_h; // [crispy]
+
 
 /*
 ===============================================================================
@@ -730,6 +746,12 @@ void H2_GameLoop(void);
 // manages timing and IO
 // calls all ?_Responder, ?_Ticker, and ?_Drawer functions
 // calls I_GetTime, I_StartFrame, and I_StartTic
+
+void H2_StartTitle(void);
+
+
+extern boolean artiskip;
+
 
 //---------
 //SYSTEM IO
@@ -773,6 +795,10 @@ typedef struct
 //GAME
 //----
 
+
+#define NUMKEYS 256
+
+
 void G_DeathMatchSpawnPlayer(int playernum);
 
 void G_InitNew(skill_t skill, int episode, int map);
@@ -793,6 +819,12 @@ void G_DoLoadGame(void);
 void G_SaveGame(int slot, char *description);
 // called by M_Responder
 
+void H2_ProcessEvents(void);
+
+void H2_DoAdvanceDemo(void);
+
+boolean G_CheckDemoStatus(void);
+
 void G_RecordDemo(skill_t skill, int numplayers, int episode, int map,
                   const char *name);
 // only called by startup code
@@ -811,10 +843,16 @@ void G_StartNewInit(void);
 
 void G_WorldDone(void);
 
+void G_BuildTiccmd(ticcmd_t *cmd, int maketic);
 void G_Ticker(void);
 boolean G_Responder(event_t * ev);
 
 void G_ScreenShot(void);
+
+
+extern int LeaveMap;
+extern boolean gamekeydown[NUMKEYS];
+
 
 //-------
 //SV_SAVE
@@ -1066,6 +1104,9 @@ void F_StartFinale(void);
 
 extern int inv_ptr;
 extern int curpos;
+extern boolean inventory;
+
+
 void SB_Init(void);
 void SB_SetClassData(void);
 boolean SB_Responder(event_t * event);
@@ -1092,7 +1133,15 @@ void MN_DrTextB(const char *text, int x, int y);
 int MN_TextBWidth(const char *text);
 
 extern int messageson;
+extern boolean MenuActive;
+extern boolean askforquit;
+extern boolean mn_SuicideConsole;
+extern int detailLevel;
+
 
 #include "sounds.h"
+
+#include "p_action.h"
+
 
 #endif // __H2DEF__

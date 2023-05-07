@@ -35,6 +35,7 @@ mn_menu.c                                            \
 p_ceilng.c                                           \
 p_doors.c                                            \
 p_enemy.c                                            \
+p_extnodes.c           p_extnodes.h                  \
 p_floor.c                                            \
 p_inter.c                                            \
 p_lights.c                                           \
@@ -60,6 +61,7 @@ r_draw.c                                             \
 r_main.c                                             \
 r_plane.c                                            \
 r_segs.c                                             \
+r_swirl.c              r_swirl.h                     \
 r_things.c                                           \
 sb_bar.c                                             \
 sounds.c               sounds.h                      \

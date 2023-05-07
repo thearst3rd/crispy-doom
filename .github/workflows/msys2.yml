@@ -1,27 +1,22 @@
-name: release
+name: msys2
 
 on:
   push:
+    branches:
+      - "master"
     tags:
-      - '*'
+      - "*"
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches:
+      - "master"
+    paths-ignore:
+      - "**.md"
+      - "**.yml"
 
 jobs:
-  create_release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF##*-}
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Crispy Doom ${{ steps.get_version.outputs.VERSION }}
-
-  build_release:
-    name: Build Release
+  build:
     runs-on: windows-latest
 
     defaults:
@@ -40,6 +35,10 @@ jobs:
         shell: cmd
         run: choco install pandoc
 
+      - name: Extract Version Number
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF##*-}" >> $GITHUB_ENV
+
       - name: Setup MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -55,8 +54,9 @@ jobs:
             mingw-w64-${{matrix.env}}-SDL2_net
             mingw-w64-${{matrix.env}}-libpng
             mingw-w64-${{matrix.env}}-libsamplerate
+            mingw-w64-${{matrix.env}}-fluidsynth
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Configure
         run: |
@@ -70,9 +70,17 @@ jobs:
           cd pkg/win32
           make
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
-          tag_name: ${{ needs.create_release.outputs.tag-name }}
-          body_path: CHANGELOG.md
-          files: pkg/win32/*.zip
+          name: Win-${{ matrix.env }}
+          path: pkg/win32/*.zip
+
+      - name: Release
+        if: ${{ contains(github.ref, 'tags') }}
+        uses: ncipollo/release-action@v1
+        with:
+          name: Crispy Doom ${{ env.VERSION }}
+          bodyFile: CHANGELOG.md
+          allowUpdates: true
+          artifacts: pkg/win32/*.zip

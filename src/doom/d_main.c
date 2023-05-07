@@ -113,11 +113,7 @@ boolean         nomonsters;	// checkparm of -nomonsters
 boolean         respawnparm;	// checkparm of -respawn
 boolean         fastparm;	// checkparm of -fast
 
-//extern int soundVolume;
-//extern  int	sfxVolume;
-//extern  int	musicVolume;
 
-extern  boolean	inhelpscreens;
 
 skill_t		startskill;
 int             startepisode;
@@ -174,9 +170,6 @@ void D_ProcessEvents (void)
 
 // wipegamestate can be set to -1 to force a wipe on the next draw
 gamestate_t     wipegamestate = GS_DEMOSCREEN;
-extern  boolean setsizeneeded;
-extern  int             showMessages;
-void R_ExecuteSetViewSize (void);
 
 boolean D_Display (void)
 {
@@ -468,6 +461,7 @@ void D_BindVariables(void)
     M_BindIntVariable("crispy_demotimerdir",    &crispy->demotimerdir);
     M_BindIntVariable("crispy_extautomap",      &crispy->extautomap);
     M_BindIntVariable("crispy_flipcorpses",     &crispy->flipcorpses);
+    M_BindIntVariable("crispy_fpslimit",        &crispy->fpslimit);
     M_BindIntVariable("crispy_freeaim",         &crispy->freeaim);
     M_BindIntVariable("crispy_freelook",        &crispy->freelook);
     M_BindIntVariable("crispy_hires",           &crispy->hires);
@@ -1654,8 +1648,6 @@ void D_DoomMain (void)
     if ( (p=M_CheckParm ("-turbo")) )
     {
 	int     scale = 200;
-	extern int forwardmove[2];
-	extern int sidemove[2];
 	
 	if (p<myargc-1)
 	    scale = atoi (myargv[p+1]);
@@ -1785,7 +1777,6 @@ void D_DoomMain (void)
 
     //!
     // @category game
-    // @category mod
     //
     // Automatic pistol start when advancing from one level to the next. At the
     // beginning of each level, the player's health is reset to 100, their
@@ -1800,7 +1791,6 @@ void D_DoomMain (void)
 #ifndef __WIIU__
     //!
     // @category game
-    // @category mod
     //
     // Double ammo pickup rate. This option is not allowed when recording a
     // demo, playing back a demo or when starting a network game.
@@ -2030,6 +2020,13 @@ void D_DoomMain (void)
     W_GenerateHashTable();
 
     // [crispy] allow overriding of special-casing
+
+    //!
+    // @category mod
+    //
+    // Disable automatic loading of Master Levels, No Rest for the Living and
+    // Sigil.
+    //
     if (!M_ParmExists("-nosideload") && gamemode != shareware && !demolumpname[0])
     {
 	if (gamemode == retail &&
@@ -2050,13 +2047,13 @@ void D_DoomMain (void)
     // Load DEHACKED lumps from WAD files - but only if we give the right
     // command line parameter.
 
+    // [crispy] load DEHACKED lumps by default, but allow overriding
+
     //!
     // @category mod
     //
-    // Load Dehacked patches from DEHACKED lumps contained in one of the
-    // loaded PWAD files.
+    // Disable automatic loading of embedded DEHACKED lumps in wad files.
     //
-    // [crispy] load DEHACKED lumps by default, but allow overriding
     if (!M_ParmExists("-nodehlump") && !M_ParmExists("-nodeh"))
     {
         int i, loaded = 0;

@@ -343,12 +343,12 @@ vissprite_t *R_NewVisSprite(void)
 int *mfloorclip;   // [crispy] 32-bit integer math
 int *mceilingclip; // [crispy] 32-bit integer math
 fixed_t spryscale;
-fixed_t sprtopscreen;
+int64_t sprtopscreen; // [crispy] WiggleFix
 fixed_t sprbotscreen;
 
 void R_DrawMaskedColumn(column_t * column, signed int baseclip)
 {
-    int topscreen, bottomscreen;
+    int64_t topscreen, bottomscreen; // [crispy] WiggleFix
     fixed_t basetexturemid;
 
     basetexturemid = dc_texturemid;
@@ -359,8 +359,8 @@ void R_DrawMaskedColumn(column_t * column, signed int baseclip)
 // calculate unclipped screen coordinates for post
         topscreen = sprtopscreen + spryscale * column->topdelta;
         bottomscreen = topscreen + spryscale * column->length;
-        dc_yl = (topscreen + FRACUNIT - 1) >> FRACBITS;
-        dc_yh = (bottomscreen - 1) >> FRACBITS;
+        dc_yl = (int)((topscreen + FRACUNIT - 1) >> FRACBITS); // [crispy] WiggleFix
+        dc_yh = (int)((bottomscreen - 1) >> FRACBITS); // [crispy] WiggleFix
 
         if (dc_yh >= mfloorclip[dc_x])
             dc_yh = mfloorclip[dc_x] - 1;
@@ -717,6 +717,8 @@ int PSpriteSY[NUMWEAPONS] = {
     15 * FRACUNIT               // beak
 };
 
+boolean pspr_interp = true; // [crispy]
+
 void R_DrawPSprite(pspdef_t * psp)
 {
     fixed_t tx;
@@ -751,7 +753,7 @@ void R_DrawPSprite(pspdef_t * psp)
 //
 // calculate edges of the shape
 //
-    tx = psp->sx - 160 * FRACUNIT;
+    tx = psp->sx2 - 160 * FRACUNIT;
 
     tx -= spriteoffset[lump];
     if (viewangleoffset)
@@ -780,7 +782,7 @@ void R_DrawPSprite(pspdef_t * psp)
     vis->psprite = true;
     vis->footclip = 0;
     vis->texturemid =
-        (BASEYCENTER << FRACBITS) /* + FRACUNIT / 2 */ - (psp->sy -
+        (BASEYCENTER << FRACBITS) /* + FRACUNIT / 2 */ - (psp->sy2 -
                                                     spritetopoffset[lump]);
     if (viewheight == SCREENHEIGHT)
     {
@@ -827,6 +829,42 @@ void R_DrawPSprite(pspdef_t * psp)
         vis->colormap[1] = colormaps;
     }
     vis->brightmap = R_BrightmapForState(psp->state - states);
+
+    // [crispy] interpolate weapon bobbing
+    if (crispy->uncapped)
+    {
+        static int     oldx1, x1_saved;
+        static fixed_t oldtexturemid, texturemid_saved;
+        static int     oldlump = -1;
+        static int     oldgametic = -1;
+
+        if (oldgametic < gametic)
+        {
+            oldx1 = x1_saved;
+            oldtexturemid = texturemid_saved;
+            oldgametic = gametic;
+        }
+
+        x1_saved = vis->x1;
+        texturemid_saved = vis->texturemid;
+
+        if (lump == oldlump && pspr_interp)
+        {
+            int deltax = vis->x2 - vis->x1;
+            vis->x1 = oldx1 + FixedMul(vis->x1 - oldx1, fractionaltic);
+            vis->x2 = vis->x1 + deltax;
+            vis->x2 = vis->x2 >= viewwidth ? viewwidth - 1 : vis->x2;
+            vis->texturemid = oldtexturemid + FixedMul(vis->texturemid - oldtexturemid, fractionaltic);
+        }
+        else
+        {
+            oldx1 = vis->x1;
+            oldtexturemid = vis->texturemid;
+            oldlump = lump;
+            pspr_interp = true;
+        }
+    }
+
     R_DrawVisSprite(vis, vis->x1, vis->x2);
 }
 

@@ -21,6 +21,7 @@
 #include "i_system.h"
 #include "r_bmaps.h" // [crispy] R_BrightmapForTexName()
 #include "r_local.h"
+#include "r_swirl.h" // [crispy] R_DistortedFlat()
 
 planefunction_t floorfunc, ceilingfunc;
 
@@ -258,7 +259,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum,
 {
     visplane_t *check;
 
-    if (picnum == skyflatnum)
+    // [crispy] add support for MBF sky transfers
+    if (picnum == skyflatnum || picnum & PL_SKYFLAT)
     {
         // all skies map together
         height = 0;
@@ -405,6 +407,7 @@ void R_MakeSpans(int x, unsigned int t1, unsigned int b1, unsigned int t2, unsig
 
 void R_DrawPlanes(void)
 {
+    boolean swirling;
     visplane_t *pl;
     int light;
     int x, stop;
@@ -416,9 +419,6 @@ void R_DrawPlanes(void)
     int count;
     fixed_t frac, fracstep;
     int heightmask; // [crispy]
-
-    extern byte *ylookup[MAXHEIGHT];
-    extern int columnofs[MAXWIDTH];
 
 #ifdef RANGECHECK
     if (ds_p - drawsegs > numdrawsegs)
@@ -438,23 +438,40 @@ void R_DrawPlanes(void)
             continue;
         //
         // sky flat
-        //
-        if (pl->picnum == skyflatnum)
+        // [crispy] add support for MBF sky transfers
+        if (pl->picnum == skyflatnum || pl->picnum & PL_SKYFLAT)
         {
+            int texture;
+	    angle_t an = viewangle, flip;
+	    if (pl->picnum & PL_SKYFLAT)
+	    {
+		const line_t *l = &lines[pl->picnum & ~PL_SKYFLAT];
+		const side_t *s = *l->sidenum + sides;
+		texture = texturetranslation[s->toptexture];
+		dc_texturemid = s->rowoffset - 28*FRACUNIT;
+		flip = (l->special == 272) ? 0u : ~0u;
+		an += s->textureoffset;
+	    }
+	    else
+	    {
+		texture = skytexture;
+		dc_texturemid = skytexturemid;
+		flip = 0;
+	    }
             dc_iscale = skyiscale;
             // [crispy] no brightmaps for sky
             dc_colormap[0] = dc_colormap[1] = colormaps;    // sky is allways drawn full bright
-            dc_texturemid = skytexturemid;
-            dc_texheight = textureheight[skytexture]>>FRACBITS;
+            dc_texheight = textureheight[texture]>>FRACBITS;
+
             for (x = pl->minx; x <= pl->maxx; x++)
             {
                 dc_yl = pl->top[x];
                 dc_yh = pl->bottom[x];
                 if ((unsigned) dc_yl <= dc_yh) // [crispy] 32-bit integer math
                 {
-                    angle = (viewangle + xtoviewangle[x]) >> ANGLETOSKYSHIFT;
+                    angle = ((an + xtoviewangle[x]) ^ flip) >> ANGLETOSKYSHIFT;
                     dc_x = x;
-                    dc_source = R_GetColumn(skytexture, angle);
+                    dc_source = R_GetColumn(texture, angle);
 
                     count = dc_yh - dc_yl;
                     if (count < 0)
@@ -514,6 +531,9 @@ void R_DrawPlanes(void)
         //
         // regular flat
         //
+        swirling = flattranslation[pl->picnum] == -1;
+        if (!swirling) // [crispy] adapt swirl from src/doom to src/heretic
+        {
         lumpnum = firstflat + flattranslation[pl->picnum];
 
         tempSource = W_CacheLumpNum(lumpnum, PU_STATIC);
@@ -557,6 +577,12 @@ void R_DrawPlanes(void)
             default:
                 ds_source = tempSource;
         }
+        }
+        else 
+        {
+            lumpnum = firstflat+pl->picnum;
+            ds_source = R_DistortedFlat(lumpnum);
+        }
         ds_brightmap = R_BrightmapForFlatNum(lumpnum-firstflat);
         planeheight = abs(pl->height - viewz);
         light = (pl->lightlevel >> LIGHTSEGSHIFT) + extralight;
@@ -574,6 +600,7 @@ void R_DrawPlanes(void)
             R_MakeSpans(x, pl->top[x - 1], pl->bottom[x - 1], pl->top[x],
                         pl->bottom[x]);
 
+        if (!swirling)
         W_ReleaseLumpNum(lumpnum);
     }
 }

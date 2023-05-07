@@ -26,6 +26,7 @@ set(STRIFE_SOURCES
     hu_lib.c        hu_lib.h
     hu_stuff.c      hu_stuff.h
     info.c          info.h
+    m_crispy.c      m_crispy.h
     m_menu.c        m_menu.h
     m_random.c      m_random.h
     m_saves.c       m_saves.h
@@ -72,8 +73,8 @@ add_library(strife STATIC ${STRIFE_SOURCES})
 target_include_directories(strife PRIVATE "../" "../../win32/" "${CMAKE_CURRENT_BINARY_DIR}/../../")
 target_link_libraries(strife textscreen SDL2::SDL2)
 if(ENABLE_SDL2_MIXER)
-    target_link_libraries(strife SDL2::mixer)
+    target_link_libraries(strife SDL2_mixer::SDL2_mixer)
 endif()
 if(ENABLE_SDL2_NET)
-    target_link_libraries(strife SDL2::net)
+    target_link_libraries(strife SDL2_net::SDL2_net)
 endif()

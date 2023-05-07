@@ -93,8 +93,6 @@ static char cheat_kills[] = { 'k', 'i', 'l', 'l', 's' };
 static boolean ShowKills = 0;
 static unsigned ShowKillsCount = 0;
 
-extern boolean viewactive;
-
 // [crispy] gradient table for map normal mode
 static byte antialias_normal[NUMALIAS][8] = {
     {83, 84, 85, 86, 87, 88, 89, 90},
@@ -931,7 +929,7 @@ void AM_clearFB(int color)
     int dmapy;
     int x1, x2, x3;
 
-    if (followplayer)
+    if (followplayer && !paused)
     {
         dmapx = (MTOF(plr->mo->x) >> FRACTOMAPBITS) - (MTOF(plr->mo->oldx) >> FRACTOMAPBITS);
         dmapy = (MTOF(plr->mo->oldy) >> FRACTOMAPBITS) - (MTOF(plr->mo->y) >> FRACTOMAPBITS);
@@ -1816,6 +1814,7 @@ void AM_Drawer(void)
     if (!crispy->automapoverlay)
     {
         AM_clearFB(BACKGROUND);
+        pspr_interp = false; // [crispy]
     }
     if (grid)
         AM_drawGrid(GRIDCOLORS);
@@ -1953,7 +1952,7 @@ static void DrawWorldTimer(void)
 
     M_snprintf(timeBuffer, sizeof(timeBuffer),
                "%.2d : %.2d : %.2d", hours, minutes, seconds);
-    MN_DrTextA(timeBuffer, 240, 8);
+    MN_DrTextA(timeBuffer, 240 + WIDESCREENDELTA, 8 + right_widget_h);
 
     if (days)
     {
@@ -1965,10 +1964,10 @@ static void DrawWorldTimer(void)
         {
             M_snprintf(dayBuffer, sizeof(dayBuffer), "%.2d DAYS", days);
         }
-        MN_DrTextA(dayBuffer, 240, 20);
+        MN_DrTextA(dayBuffer, 240 + WIDESCREENDELTA, 20 + right_widget_h);
         if (days >= 5)
         {
-            MN_DrTextA("YOU FREAK!!!", 230, 35);
+            MN_DrTextA("YOU FREAK!!!", 230, 35 + right_widget_h);
         }
     }
 }

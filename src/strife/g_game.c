@@ -206,6 +206,7 @@ static boolean *mousebuttons = &mousearray[1];  // allow [-1]
 
 // mouse values are used once 
 int             mousex;
+int             mousex2; // [crispy]
 int             mousey;         
 
 static int      dclicktime;
@@ -329,7 +330,9 @@ static int G_NextWeapon(int direction)
 // If recording a demo, write it out 
 // 
 
-static boolean speedkeydown (void)
+// [crispy] holding down the "Run" key may trigger special behavior,
+// e.g. quick exit, automap pan/zoom speed
+boolean speedkeydown (void)
 {
     return (key_speed < NUMKEYS && gamekeydown[key_speed]) ||
            (joybspeed < MAX_JOY_BUTTONS && joybuttons[joybspeed]) ||
@@ -345,39 +348,75 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     int		tspeed; 
     int		forward;
     int		side;
+    player_t *const player = &players[consoleplayer]; // [crispy]
+    static char playermessage[48]; // [crispy]
+    static unsigned int mbmlookctrl = 0; // [crispy]
+    static unsigned int kbdlookctrl = 0; // [crispy]
 
     memset(cmd, 0, sizeof(ticcmd_t));
 
     cmd->consistancy = 
         consistancy[consoleplayer][maketic%BACKUPTICS]; 
 
-    // villsa [STRIFE] look up key
-    if(gamekeydown[key_lookup] || joylook < 0)
-        cmd->buttons2 |= BT2_LOOKUP;
+    // villsa [STRIFE] look up/down keys
+    // [crispy] center view key and lookspring support
+    if (crispy->freelook_hh == FREELOOK_HH_SPRING)
+    {
+        if (gamekeydown[key_lookup] || joylook < 0)
+        {
+            cmd->buttons2 |= BT2_LOOKUP;
+            kbdlookctrl += ticdup;
+        }
+        else if (gamekeydown[key_lookdown] || joylook > 0)
+        {
+            cmd->buttons2 |= BT2_LOOKDOWN;
+            kbdlookctrl += ticdup;
+        }
+        else if (gamekeydown[key_lookcenter] || kbdlookctrl)
+        {
+            cmd->buttons2 |= BT2_CENTERVIEW;
+            if (!player->mo->reactiontime) // teleport delay
+                kbdlookctrl = 0;
+        }
+    }
+    else
+    {
+        if (gamekeydown[key_lookup] || joylook < 0)
+            cmd->buttons2 |= BT2_LOOKUP;
 
-    // villsa [STRIFE] look down key
-    if(gamekeydown[key_lookdown] || joylook > 0)
-        cmd->buttons2 |= BT2_LOOKDOWN;
+        if (gamekeydown[key_lookdown] || joylook > 0)
+            cmd->buttons2 |= BT2_LOOKDOWN;
+
+        if (gamekeydown[key_lookcenter])
+            cmd->buttons2 |= BT2_CENTERVIEW;
+    }
 
     // villsa [STRIFE] inventory use key
-    if(gamekeydown[key_invuse])
+    // [crispy] mouse inventory use
+    if(gamekeydown[key_invuse] || mousebuttons[mousebinvuse])
     {
-        player_t* player = &players[consoleplayer];
         if(player->numinventory > 0)
         {
             cmd->buttons2 |= BT2_INVUSE;
             cmd->inventory = player->inventory[player->inventorycursor].sprite;
+
+            // [crispy] Crispy HUD: keep inventory visible when using an item
+            if (st_invtics)
+                st_invtics = 5 * 35;
         }
     }
 
     // villsa [STRIFE] inventory drop key
     if(gamekeydown[key_invdrop])
     {
-        player_t* player = &players[consoleplayer];
         if(player->numinventory > 0)
         {
             cmd->buttons2 |= BT2_INVDROP;
             cmd->inventory = player->inventory[player->inventorycursor].sprite;
+
+            // [crispy] Crispy HUD: keep inventory visible when dropping an item
+            if (st_invtics)
+                st_invtics = 5 * 35;
         }
     }
 
@@ -393,6 +432,8 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     // fraggle: support the old "joyb_speed = 31" hack which
     // allowed an autorun effect
 
+    // [crispy] when "always run" is active,
+    // pressing the "run" key will result in walking
     speed = (key_speed >= NUMKEYS
          || joybspeed >= MAX_JOY_BUTTONS);
     speed ^= speedkeydown();
@@ -400,11 +441,12 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     forward = side = 0;
 
     // villsa [STRIFE] running causes centerview to occur
-    if(speed)
+    // [crispy] decouple run from centerview
+    if(speed && runcentering)
         cmd->buttons2 |= BT2_CENTERVIEW;
 
     // villsa [STRIFE] disable running if low on health
-    if (players[consoleplayer].health <= 15)
+    if (player->health <= 15)
         speed = 0;
     
     // use two stage accelerative turning
@@ -424,6 +466,44 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     else 
         tspeed = speed;
     
+    // [crispy] toggle "always run"
+    if (gamekeydown[key_toggleautorun])
+    {
+        static int joybspeed_old = 2;
+
+        if (joybspeed >= MAX_JOY_BUTTONS)
+        {
+            joybspeed = joybspeed_old;
+        }
+        else
+        {
+            joybspeed_old = joybspeed;
+            joybspeed = 29;
+        }
+
+        M_snprintf(playermessage, sizeof(playermessage),
+                   "Always Run %s",
+                   (joybspeed >= MAX_JOY_BUTTONS) ? "On" : "Off");
+        player->message = playermessage;
+        S_StartSound(NULL, sfx_swtchn);
+
+        gamekeydown[key_toggleautorun] = false;
+    }
+
+    // [crispy] toggle vertical mouse movement
+    if (gamekeydown[key_togglenovert])
+    {
+        novert = !novert;
+
+        M_snprintf(playermessage, sizeof(playermessage),
+                   "Vertical Mouse Movement %s",
+                   !novert ? "On" : "Off");
+        player->message = playermessage;
+        S_StartSound(NULL, sfx_swtchn);
+
+        gamekeydown[key_togglenovert] = false;
+    }
+
     // let movement keys cancel each other out
     if (strafe) 
     { 
@@ -455,12 +535,12 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             cmd->angleturn += angleturn[tspeed]; 
     } 
 
-    if (gamekeydown[key_up]) 
+    if (gamekeydown[key_up] || gamekeydown[key_alt_up]) // [crispy] add key_alt_*
     {
         // fprintf(stderr, "up\n");
         forward += forwardmove[speed]; 
     }
-    if (gamekeydown[key_down]) 
+    if (gamekeydown[key_down] || gamekeydown[key_alt_down]) // [crispy] add key_alt_*
     {
         // fprintf(stderr, "down\n");
         forward -= forwardmove[speed]; 
@@ -471,7 +551,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
     if (joyymove > 0) 
         forward -= forwardmove[speed]; 
 
-    if (gamekeydown[key_strafeleft]
+    if (gamekeydown[key_strafeleft] || gamekeydown[key_alt_strafeleft] // [crispy] add key_alt_*
      || joybuttons[joybstrafeleft]
      || mousebuttons[mousebstrafeleft]
      || joystrafemove < 0)
@@ -479,7 +559,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         side -= sidemove[speed];
     }
 
-    if (gamekeydown[key_straferight]
+    if (gamekeydown[key_straferight] || gamekeydown[key_alt_straferight] // [crispy] add key_alt_*
      || joybuttons[joybstraferight]
      || mousebuttons[mousebstraferight]
      || joystrafemove > 0)
@@ -610,11 +690,45 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         } 
     }
 
-    if (!novert)
+    // [crispy] mouse look
+    cmd->lookdir = 0;
+    if ((crispy->mouselook || mousebuttons[mousebmouselook]) &&
+        crispy->singleplayer)
+    {
+        static fixed_t carry_lookdir = 0;
+        fixed_t desired_lookdir;
+
+        // [crispy] repurpose lookdir and carry error like low-res turning
+        cmd->lookdir = mouse_y_invert ? -mousey : mousey;
+        desired_lookdir = FixedDiv(cmd->lookdir << FRACBITS, MLOOKUNIT << FRACBITS) +
+                          carry_lookdir;
+        cmd->lookdir = desired_lookdir >> FRACBITS;
+        carry_lookdir = desired_lookdir - (cmd->lookdir << FRACBITS);
+    }
+    else if (!novert)
+    {
         forward += mousey;
+    }
+
+    // [crispy] single click on mouse look button centers view
+    if (mousebuttons[mousebmouselook]) // [crispy] clicked
+    {
+        mbmlookctrl += ticdup;
+    }
+    else if (mbmlookctrl) // [crispy] released
+    {
+        if (crispy->freelook_hh == FREELOOK_HH_SPRING ||
+            mbmlookctrl < SLOWTURNTICS) // [crispy] short click
+        {
+            cmd->buttons2 |= BT2_CENTERVIEW;
+        }
+
+        if (!player->mo->reactiontime) // [crispy] teleport delay
+            mbmlookctrl = 0;
+    }
 
     if (strafe) 
-        side += mousex*2; 
+        side += mousex2*2; // [crispy]
     else 
         cmd->angleturn -= mousex*0x8;
 
@@ -625,7 +739,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
         testcontrols_mousespeed = 0;
     }
     
-    mousex = mousey = 0; 
+    mousex = mousex2 = mousey = 0; // [crispy]
 
     if (forward > MAXPLMOVE) 
         forward = MAXPLMOVE; 
@@ -724,7 +838,7 @@ void G_DoLoadLevel (void)
 
     memset (gamekeydown, 0, sizeof(gamekeydown));
     joyxmove = joyymove = joystrafemove = joylook = 0;
-    mousex = mousey = 0;
+    mousex = mousex2 = mousey = 0; // [crispy]
     sendpause = sendsave = paused = false;
     memset(mousearray, 0, sizeof(mousearray));
     memset(joyarray, 0, sizeof(joyarray));
@@ -768,6 +882,7 @@ static void SetJoyButtons(unsigned int buttons_mask)
 static void SetMouseButtons(unsigned int buttons_mask)
 {
     int i;
+    player_t *const player = &players[consoleplayer]; // [crispy]
 
     for (i=0; i<MAX_MOUSE_BUTTONS; ++i)
     {
@@ -784,6 +899,18 @@ static void SetMouseButtons(unsigned int buttons_mask)
             else if (i == mousebnextweapon)
             {
                 next_weapon = 1;
+            }
+            else if (i == mousebinvleft) // [crispy] mouse inventory left
+            {
+                if (player->inventorycursor > 0)
+                    player->inventorycursor--;
+                st_invtics = 5 * 35; // [crispy] Crispy HUD
+            }
+            else if (i == mousebinvright) // [crispy] mouse inventory right
+            {
+                if (player->inventorycursor < player->numinventory - 1)
+                    player->inventorycursor++;
+                st_invtics = 5 * 35; // [crispy] Crispy HUD
             }
         }
 
@@ -823,7 +950,13 @@ boolean G_Responder (event_t* ev)
             if(devparm && ev->data1 == 'g')
                 D_PageTicker(); // [STRIFE]: wat? o_O
             else
+            {
+                // [crispy] play a sound if the menu is activated with a different key than ESC
+                if (!menuactive && crispy->soundfix)
+                    S_StartSound(NULL, sfx_swtchn);
+
                 M_StartControlPanel (); 
+            }
             return true; 
         } 
         return false; 
@@ -895,8 +1028,18 @@ boolean G_Responder (event_t* ev)
 
     case ev_mouse: 
         SetMouseButtons(ev->data1);
-        mousex = ev->data2*(mouseSensitivity+5)/10; 
-        mousey = ev->data3*(mouseSensitivity+5)/10; 
+        if (mouseSensitivity)
+            mousex = ev->data2*(mouseSensitivity+5)/10; 
+        else
+            mousex = 0; // [crispy] disable entirely
+        if (mouseSensitivity_x2)
+            mousex2 = ev->data2*(mouseSensitivity_x2+5)/10; // [crispy] separate sensitivity for strafe
+        else
+            mousex2 = 0; // [crispy] disable entirely
+        if (mouseSensitivity_y)
+            mousey = ev->data3*(mouseSensitivity_y+5)/10; // [crispy] separate sensitivity for y-axis
+        else
+            mousey = 0; // [crispy] disable entirely
         return true;    // eat events 
 
     case ev_joystick: 
@@ -913,6 +1056,16 @@ boolean G_Responder (event_t* ev)
 
     return false; 
 } 
+
+// [crispy] take a screenshot after rendering the next frame
+static void G_CrispyScreenShot()
+{
+    // [crispy] increase screenshot filename limit
+    V_ScreenShot("STRIFE%04i.%s"); // [STRIFE] file name, message
+    players[consoleplayer].message = DEH_String("STRIFE  by Rogue entertainment");
+    crispy->cleanscreenshot = 0;
+    crispy->screenshotmsg = 2;
+}
 
 //
 // G_Ticker
@@ -963,8 +1116,16 @@ void G_Ticker (void)
             G_DoWorldDone (); 
             break; 
         case ga_screenshot: 
-            V_ScreenShot("STRIFE%02i.%s"); // [STRIFE] file name, message
-            players[consoleplayer].message = DEH_String("STRIFE  by Rogue entertainment");
+            // [crispy] redraw view without weapons and HUD
+            if (gamestate == GS_LEVEL && (crispy->cleanscreenshot || crispy->screenshotmsg == 1))
+            {
+                crispy->screenshotmsg = 4;
+                crispy->post_rendering_hook = G_CrispyScreenShot;
+            }
+            else
+            {
+                G_CrispyScreenShot();
+            }
             gameaction = ga_nothing; 
             break; 
         case ga_nothing: 
@@ -1073,6 +1234,7 @@ void G_Ticker (void)
     */
 
     oldgamestate = gamestate;
+    oldleveltime = leveltime; // [crispy] Track if game is running
 
     // do main actions
     switch (gamestate) 
@@ -1695,6 +1857,8 @@ void G_LoadGame (char* name)
 void G_DoLoadGame (boolean userload) 
 {
     int savedleveltime;
+    skill_t currentskill; // [crispy]
+    skill_t skill; // [crispy]
 
     gameaction = ga_nothing;
 
@@ -1709,11 +1873,18 @@ void G_DoLoadGame (boolean userload)
 
     savegame_error = false;
 
+    // [crispy] save current gameskill before calling P_ReadSaveGameHeader()
+    currentskill = gameskill;
+
     if (!P_ReadSaveGameHeader())
     {
         fclose(save_stream);
         return;
     }
+
+    // [crispy] fix skill and gameskill checks in G_InitNew() (haleyjd)
+    skill = gameskill;
+    gameskill = currentskill;
 
     // haleyjd: A comment would be good here, fraggle...
     // Evidently this is a Choco-ism, necessitated by reading the savegame
@@ -1724,7 +1895,7 @@ void G_DoLoadGame (boolean userload)
 
     // STRIFE-TODO: ????
     if(userload)
-        G_InitNew(gameskill, gamemap); 
+        G_InitNew(skill, gamemap); // [crispy] use skill
     else
         G_DoLoadLevel();
  
@@ -1737,6 +1908,7 @@ void G_DoLoadGame (boolean userload)
     P_UnArchiveWorld (); 
     P_UnArchiveThinkers (); 
     P_UnArchiveSpecials (); 
+    P_RestoreTargets (); // [crispy] restore mobj->target and mobj->tracer pointers
  
     if (!P_ReadSaveGameEOF())
         I_Error ("Bad savegame");
@@ -1981,6 +2153,7 @@ G_InitNew
     // BUG: None of this code runs properly when loading save games, so
     // basically it's impossible to play any skill level properly unless
     // you never quit and reload from the command line.
+    // [crispy] fixed in G_DoLoadGame()
     if(!skill && gameskill)
     {
         // Setting to Baby skill... make things easier.
@@ -2398,6 +2571,9 @@ void G_DoPlayDemo (void)
 
     usergame = false; 
     demoplayback = true; 
+
+    // [crispy] update the "singleplayer" variable
+    CheckCrispySingleplayer(!demorecording && !demoplayback && !netgame);
 } 
 
 //

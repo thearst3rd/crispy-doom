@@ -52,12 +52,14 @@ void S_Start(void);
 //
 
 void S_StartSound(void *origin, int sound_id);
+void S_StartSoundOnce(void *origin, int sound_id); // [crispy]
 
 // haleyjd 09/11/10: [STRIFE] Start a voice.
 void I_StartVoice(const char *lumpname);
 
 // Stop sound for thing at <origin>
 void S_StopSound(mobj_t *origin);
+void S_UnlinkSound(mobj_t *origin); // [crispy]
 
 
 // Start music using <music_id> from sounds.h
@@ -90,6 +92,10 @@ void S_SetVoiceVolume(int volume); // haleyjd 09/11/10: [STRIFE]
 extern int snd_channels;
 
 extern int disable_voices;
+
+// [crispy]
+void S_UpdateSndChannels (int choice);
+void S_UpdateStereoSeparation (void);
 
 #endif
 

@@ -216,11 +216,14 @@ void T_VerticalDoor(vldoor_t* door)
 int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
 {
     player_t* p;
+    mobj_t* pmo; // [crispy]
 
     p = thing->player;
 
     if(!p)
         return 0;
+
+    pmo = p->mo; // [crispy]
 
     switch(line->special)
     {
@@ -229,7 +232,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_IDCard])
         {
             p->message = DEH_String("You need an id card");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -239,7 +242,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_IDBadge])
         {
             p->message = DEH_String("You need an id badge");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -249,7 +252,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_Passcard])
         {
             p->message = DEH_String("You need a pass card");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -259,7 +262,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_GoldKey])
         {
             p->message = DEH_String("You need a gold key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -269,7 +272,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_SilverKey])
         {
             p->message = DEH_String("You need a silver key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -279,7 +282,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_BrassKey])
         {
             p->message = DEH_String("You need a brass key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -289,7 +292,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_SeveredHand])
         {
             p->message = DEH_String("Hand print not on file");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -298,7 +301,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_PrisonKey])
         {
             p->message = DEH_String("You don't have the key to the prison");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -307,7 +310,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_Power1Key])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -316,7 +319,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_Power2Key])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -325,7 +328,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_Power3Key])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -334,7 +337,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_OracleKey])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -343,7 +346,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_MilitaryID])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -352,7 +355,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_WarehouseKey])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -361,7 +364,7 @@ int EV_DoLockedDoor(line_t* line, vldoor_e type, mobj_t* thing)
         if(!p->cards[key_MineKey])
         {
             p->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return 0;
         }
         break;
@@ -538,6 +541,7 @@ boolean EV_ClearForceFields(line_t* line)
 void EV_VerticalDoor(line_t* line, mobj_t* thing)
 {
     player_t*   player;
+    mobj_t*     pmo; // [crispy]
     sector_t*   sec;
     vldoor_t*   door;
     int         side;
@@ -546,6 +550,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
 
     //	Check for locks
     player = thing->player;
+    pmo = player ? player->mo : NULL; // [crispy]
 
     // haleyjd 09/15/10: [STRIFE] myriad checks here...
     switch(line->special)
@@ -555,7 +560,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_IDCard])
         {
             player->message = DEH_String("You need an id card to open this door");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -565,7 +570,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_Passcard])
         {
             player->message = DEH_String("You need a pass card key to open this door");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -575,7 +580,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_IDBadge])
         {
             player->message = DEH_String("You need an id badge to open this door");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -585,7 +590,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_BrassKey])
         {
             player->message = DEH_String("You need a brass key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -595,7 +600,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_SilverKey])
         {
             player->message = DEH_String("You need a silver key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -605,7 +610,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_GoldKey])
         {
             player->message = DEH_String("You need a gold key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -613,14 +618,14 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         // villsa [STRIFE] added 09/15/10
     case 165:
         player->message = DEH_String("That doesn't seem to work");
-        S_StartSound(NULL, sfx_oof);
+        S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
         return;
 
     case 166: // DR Hand Print door
         if(!player->cards[key_SeveredHand])
         {
             player->message = DEH_String("Hand print not on file");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -629,7 +634,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_BaseKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -638,7 +643,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_GovsKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -647,7 +652,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_OrderKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -655,14 +660,14 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
     case 205: // DR "Only in retail"
         player->message = DEH_String("THIS AREA IS ONLY AVAILABLE IN THE "
                                      "RETAIL VERSION OF STRIFE");
-        S_StartSound(NULL, sfx_oof);
+        S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
         return;
 
     case 213: // DR Chalice door
         if(!P_PlayerHasItem(player, MT_INV_CHALICE))
         {
             player->message = DEH_String("You need the chalice!");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -671,7 +676,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_CoreKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -680,7 +685,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_MaulerKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -689,7 +694,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_ChapelKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -698,7 +703,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!player->cards[key_CatacombKey])
         {
             player->message = DEH_String("You don't have the key");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -707,7 +712,7 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         if(!(player->questflags & QF_QUEST18))
         {
             player->message = DEH_String("You need the Oracle Pass!");
-            S_StartSound(NULL, sfx_oof);
+            S_StartSound(crispy->soundfix ? pmo : NULL, sfx_oof); // [crispy]
             return;
         }
         break;
@@ -746,7 +751,16 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
         case 213:       // villsa
         case 232:       // villsa
             if(door->direction == -1)
+            {
                 door->direction = 1;    // go back up
+                // [crispy] play sound effect when the door is opened again while going down
+                if (crispy->soundfix &&
+                    door->thinker.function.acp1 == (actionf_p1) T_VerticalDoor)
+                {
+                    S_StartSound(&door->sector->soundorg,
+                                 line->special == 117 ? sfx_bdopn : door->opensound);
+                }
+            }
             else
             {
                 if (!thing->player)
@@ -759,6 +773,12 @@ void EV_VerticalDoor(line_t* line, mobj_t* thing)
                 if (door->thinker.function.acp1 == (actionf_p1) T_VerticalDoor)
                 {
                     door->direction = -1;   // start going down immediately
+                    // [crispy] play sound effect when the door is closed manually
+                    if (crispy->soundfix)
+                    {
+                        S_StartSound(&door->sector->soundorg,
+                                     line->special == 117 ? sfx_bdcls : door->closesound);
+                    }
                 }
                 else if (door->thinker.function.acp1 == (actionf_p1) T_PlatRaise)
                 {
@@ -1299,6 +1319,12 @@ void EV_SlidingDoor(line_t* line, mobj_t* thing)
             {
                 door->status = sd_closing;
                 door->timer = SWAITTICS;    // villsa [STRIFE]
+                // [crispy] play sound effect when the door is closed manually
+                if (crispy->soundfix)
+                {
+                    S_StartSound(&sec->soundorg,
+                                 slideCloseSounds[door->whichDoorIndex]);
+                }
             }
         }
         else
@@ -1308,6 +1334,9 @@ void EV_SlidingDoor(line_t* line, mobj_t* thing)
     // Init sliding door vars
     if(!door)
     {
+        // [crispy] Don't interpolate sliding doors.
+        sec->interpolate = false;
+
         door = Z_Malloc (sizeof(*door), PU_LEVSPEC, 0);
         P_AddThinker (&door->thinker);
 

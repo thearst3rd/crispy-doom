@@ -54,10 +54,14 @@ void M_StartControlPanel (void);
 // [crispy] Propagate default difficulty setting change
 void M_SetDefaultDifficulty (void);
 
-
 extern int detailLevel;
 extern int screenblocks;
 
+extern boolean inhelpscreens;
+extern int showMessages;
 
+// [crispy] Numeric entry
+extern boolean numeric_enter;
+extern int numeric_entry;
 
-#endif    
+#endif

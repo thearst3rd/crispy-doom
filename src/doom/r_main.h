@@ -49,6 +49,8 @@ extern int		validcount;
 extern int		linecount;
 extern int		loopcount;
 
+extern  boolean setsizeneeded;
+
 
 //
 // Lighting LUT.
@@ -100,6 +102,10 @@ extern void		(*fuzzcolfunc) (void);
 extern void		(*tlcolfunc) (void);
 // No shadow effects on floors.
 extern void		(*spanfunc) (void);
+
+
+// [crispy] smooth texture scrolling
+extern void R_InterpolateTextureOffsets (void);
 
 
 //
@@ -168,5 +174,8 @@ void R_Init (void);
 
 // Called by M_Responder.
 void R_SetViewSize (int blocks, int detail);
+
+void R_ExecuteSetViewSize(void);
+
 
 #endif

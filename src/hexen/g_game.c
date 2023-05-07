@@ -40,7 +40,6 @@
 
 // Functions
 
-boolean G_CheckDemoStatus(void);
 void G_ReadDemoTiccmd(ticcmd_t * cmd);
 void G_WriteDemoTiccmd(ticcmd_t * cmd);
 
@@ -60,7 +59,6 @@ void G_DoSingleReborn(void);
 void H2_PageTicker(void);
 void H2_AdvanceDemo(void);
 
-extern boolean mn_SuicideConsole;
 
 gameaction_t gameaction;
 gamestate_t gamestate;
@@ -147,7 +145,6 @@ static int next_weapon = 0;
 
 #define SLOWTURNTICS    6
 
-#define NUMKEYS 256
 boolean gamekeydown[NUMKEYS];
 int turnheld;                   // for accelerative turning
 int lookheld;
@@ -196,7 +193,6 @@ int testcontrols_mousespeed;
 ====================
 */
 
-extern boolean inventory;
 boolean usearti = true;
 
 boolean speedkeydown (void)
@@ -218,8 +214,6 @@ void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
 
     static unsigned int mbmlookctrl = 0; // [crispy]
     static unsigned int kbdlookctrl = 0; // [crispy]
-
-    extern boolean artiskip;
 
     // haleyjd: removed externdriver crap
 
@@ -662,20 +656,28 @@ void G_BuildTiccmd(ticcmd_t *cmd, int maketic)
     {
         if (demorecording || lowres_turn)
         {
-            // [crispy] Map mouse movement to look variable when recording
-            look += mouse_y_invert ? -mousey / MLOOKUNITLOWRES
-                                        : mousey / MLOOKUNITLOWRES;
+            // [Dasperal] Skip mouse look if it is TOCENTER cmd
+            if (look != TOCENTER)
+            {
+                // [crispy] Map mouse movement to look variable when recording
+                look += mouse_y_invert ? -mousey / MLOOKUNITLOWRES
+                                       :  mousey / MLOOKUNITLOWRES;
 
-            // [crispy] Limit to max speed of keyboard look up/down
-            if (look > 2)
-                look = 2;
-            else if (look < -2)
-                look = -2;
+                // [crispy] Limit to max speed of keyboard look up/down
+                if (look > 2)
+                    look = 2;
+                else if (look < -2)
+                    look = -2;
+            }
         }
         else
         {
             cmd->lookdir = mouse_y_invert ? -mousey : mousey;
-            cmd->lookdir /= MLOOKUNIT;
+            // [Dasperal] Allow precise vertical look with near 0 mouse movement
+            if (cmd->lookdir > 0)
+                cmd->lookdir = (cmd->lookdir + MLOOKUNIT - 1) / MLOOKUNIT;
+            else
+                cmd->lookdir = (cmd->lookdir - MLOOKUNIT + 1) / MLOOKUNIT;
         }
     }
     else if (!novert)
@@ -971,7 +973,6 @@ static void SetMouseButtons(unsigned int buttons_mask)
 boolean G_Responder(event_t * ev)
 {
     player_t *plr;
-    extern boolean MenuActive;
 
     plr = &players[consoleplayer];
     if (ev->type == ev_keyup && ev->data1 == key_useartifact)

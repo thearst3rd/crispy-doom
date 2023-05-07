@@ -1,20 +1,20 @@
 
-SUBDIRS = doom heretic hexen setup # strife
+SUBDIRS = doom heretic hexen strife setup
 
 execgamesdir = ${bindir}
 
 execgames_PROGRAMS = @PROGRAM_PREFIX@doom     \
                      @PROGRAM_PREFIX@heretic  \
                      @PROGRAM_PREFIX@hexen    \
+                     @PROGRAM_PREFIX@strife   \
                      @PROGRAM_PREFIX@server
-EXTRA_PROGRAMS =     @PROGRAM_PREFIX@strife
 
 noinst_PROGRAMS = @PROGRAM_PREFIX@setup
 
 SETUP_BINARIES = @PROGRAM_PREFIX@doom-setup$(EXEEXT)    \
                  @PROGRAM_PREFIX@heretic-setup$(EXEEXT) \
-                 @PROGRAM_PREFIX@hexen-setup$(EXEEXT)   
-#                @PROGRAM_PREFIX@strife-setup$(EXEEXT)
+                 @PROGRAM_PREFIX@hexen-setup$(EXEEXT)   \
+                 @PROGRAM_PREFIX@strife-setup$(EXEEXT)
 
 execgames_SCRIPTS = $(SETUP_BINARIES)
 
@@ -70,6 +70,7 @@ deh_str.c            deh_str.h             \
 gusconf.c            gusconf.h             \
 i_cdmus.c            i_cdmus.h             \
 i_endoom.c           i_endoom.h            \
+i_flmusic.c                                \
 i_glob.c             i_glob.h              \
 i_input.c            i_input.h             \
 i_joystick.c         i_joystick.h          \
@@ -83,7 +84,8 @@ i_sound.c            i_sound.h             \
 i_timer.c            i_timer.h             \
 i_video.c            i_video.h             \
 i_videohr.c          i_videohr.h           \
-i_winmusic.c         i_winmusic.h          \
+i_winmusic.c                               \
+midifallback.c       midifallback.h        \
 midifile.c           midifile.h            \
 mus2mid.c            mus2mid.h             \
 m_bbox.c             m_bbox.h              \
@@ -238,8 +240,8 @@ metainfodir = $(prefix)/share/metainfo
 metainfo_DATA =                             \
         @PACKAGE_RDNS@.Doom.metainfo.xml    \
         @PACKAGE_RDNS@.Heretic.metainfo.xml \
-        @PACKAGE_RDNS@.Hexen.metainfo.xml   
-#       @PACKAGE_RDNS@.Strife.metainfo.xml
+        @PACKAGE_RDNS@.Hexen.metainfo.xml   \
+        @PACKAGE_RDNS@.Strife.metainfo.xml
 
 @PACKAGE_RDNS@.Doom.metainfo.xml : Doom.metainfo.xml
 	cp Doom.metainfo.xml $@
@@ -257,8 +259,8 @@ appdir = $(prefix)/share/applications
 app_DATA =                                 \
            @PACKAGE_RDNS@.Doom.desktop    \
            @PACKAGE_RDNS@.Heretic.desktop \
-           @PACKAGE_RDNS@.Hexen.desktop   
-#          @PACKAGE_RDNS@.Strife.desktop
+           @PACKAGE_RDNS@.Hexen.desktop   \
+           @PACKAGE_RDNS@.Strife.desktop
 
 @PACKAGE_RDNS@.Doom.desktop : Doom.desktop
 	cp Doom.desktop $@

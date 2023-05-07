@@ -64,11 +64,6 @@
 
 #include "v_trans.h" // [crispy] colored "invert mouse" message
 
-extern patch_t*		hu_font[HU_FONTSIZE];
-extern boolean		message_dontfuckwithme;
-
-extern boolean		chat_on;		// in heads-up code
-
 //
 // defaulted values
 //
@@ -127,6 +122,13 @@ static boolean          joypadSave = false; // was the save action initiated by 
 // old save description before edit
 char			saveOldString[SAVESTRINGSIZE];  
 
+// [crispy] for entering numeric values
+#define NUMERIC_ENTRY_NUMDIGITS 3
+boolean numeric_enter;
+int numeric_entry;
+static char numeric_entry_str[NUMERIC_ENTRY_NUMDIGITS + 1];
+static int numeric_entry_index;
+
 boolean			inhelpscreens;
 boolean			menuactive;
 
@@ -134,7 +136,6 @@ boolean			menuactive;
 #define LINEHEIGHT		16
 #define CRISPY_LINEHEIGHT	10 // [crispy] Crispness menu
 
-extern boolean		sendpause;
 char			savegamestrings[10][SAVESTRINGSIZE];
 
 // [FG] support up to 8 pages of savegames
@@ -153,6 +154,8 @@ extern boolean speedkeydown (void);
 typedef struct
 {
     // 0 = no cursor here, 1 = ok, 2 = arrows ok
+    // [crispy] 3 = arrows ok, no mouse x
+    // [crispy] 4 = arrows ok, enter for numeric entry, no mouse x
     short	status;
     
     char	name[10];
@@ -160,6 +163,8 @@ typedef struct
     // choice = menu item #.
     // if status = 2,
     //   choice=0:leftarrow,1:rightarrow
+    // [crispy] if status = 3,
+    //   choice=0:leftarrow,1:rightarrow,2:enter
     void	(*routine)(int choice);
     
     // hotkey in menu
@@ -379,8 +384,8 @@ enum
 menuitem_t OptionsMenu[]=
 {
     {1,"M_ENDGAM",	M_EndGame,'e', "End Game"},
-    {1,"M_MESSG",	M_ChangeMessages,'m', "Messages: "},
-    {1,"M_DETAIL",	M_ChangeDetail,'g', "Graphic Detail: "},
+    {3,"M_MESSG",	M_ChangeMessages,'m', "Messages: "},
+    {3,"M_DETAIL",	M_ChangeDetail,'g', "Graphic Detail: "},
     {2,"M_SCRNSZ",	M_SizeDisplay,'s', "Screen Size"},
     {-1,"",0,'\0'},
 #ifndef __WIIU__
@@ -421,7 +426,7 @@ static menuitem_t MouseMenu[]=
     {-1,"",0,'\0'},
     {2,"",	M_ChangeSensitivity_y,'v'},
     {-1,"",0,'\0'},
-    {1,"",	M_MouseInvert,'i'},
+    {3,"",	M_MouseInvert,'i'},
 };
 
 static menu_t  MouseDef =
@@ -441,6 +446,7 @@ enum
     crispness_hires,
     crispness_widescreen,
     crispness_uncapped,
+    crispness_fpslimit,
 #ifndef __WIIU__
     crispness_vsync,
 #endif // !__WIIU__
@@ -464,21 +470,22 @@ enum
 static menuitem_t Crispness1Menu[]=
 {
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleHires,'h'},
-    {1,"",	M_CrispyToggleWidescreen,'w'},
-    {1,"",	M_CrispyToggleUncapped,'u'},
+    {3,"",	M_CrispyToggleHires,'h'},
+    {3,"",	M_CrispyToggleWidescreen,'w'},
+    {3,"",	M_CrispyToggleUncapped,'u'},
+    {4,"",	M_CrispyToggleFpsLimit,'f'},
 #ifndef __WIIU__
-    {1,"",	M_CrispyToggleVsync,'v'},
+    {3,"",	M_CrispyToggleVsync,'v'},
 #endif // !__WIIU__
-    {1,"",	M_CrispyToggleSmoothScaling,'s'},
+    {3,"",	M_CrispyToggleSmoothScaling,'s'},
     {-1,"",0,'\0'},
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleColoredhud,'c'},
-    {1,"",	M_CrispyToggleTranslucency,'e'},
-    {1,"",	M_CrispyToggleSmoothLighting,'s'},
-    {1,"",	M_CrispyToggleBrightmaps,'b'},
-    {1,"",	M_CrispyToggleColoredblood,'c'},
-    {1,"",	M_CrispyToggleFlipcorpses,'r'},
+    {3,"",	M_CrispyToggleColoredhud,'c'},
+    {3,"",	M_CrispyToggleTranslucency,'e'},
+    {3,"",	M_CrispyToggleSmoothLighting,'s'},
+    {3,"",	M_CrispyToggleBrightmaps,'b'},
+    {3,"",	M_CrispyToggleColoredblood,'c'},
+    {3,"",	M_CrispyToggleFlipcorpses,'r'},
     {-1,"",0,'\0'},
     {1,"",	M_CrispnessNext,'n'},
     {1,"",	M_CrispnessPrev,'p'},
@@ -490,7 +497,7 @@ static menu_t  Crispness1Def =
     &OptionsDef,
     Crispness1Menu,
     M_DrawCrispness1,
-    48,28,
+    48,18,
     1
 };
 
@@ -521,19 +528,19 @@ enum
 static menuitem_t Crispness2Menu[]=
 {
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleFullsounds,'p'},
-    {1,"",	M_CrispyToggleSoundfixes,'m'},
-    {1,"",	M_CrispyToggleSndChannels,'s'},
-    {1,"",	M_CrispyToggleSoundMono,'m'},
+    {3,"",	M_CrispyToggleFullsounds,'p'},
+    {3,"",	M_CrispyToggleSoundfixes,'m'},
+    {3,"",	M_CrispyToggleSndChannels,'s'},
+    {3,"",	M_CrispyToggleSoundMono,'m'},
     {-1,"",0,'\0'},
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleExtAutomap,'e'},
-    {1,"",	M_CrispyToggleSmoothMap,'m'},
-    {1,"",	M_CrispyToggleAutomapstats,'s'},
-    {1,"",	M_CrispyToggleStatsFormat,'f'},
-    {1,"",	M_CrispyToggleLeveltime,'l'},
-    {1,"",	M_CrispyTogglePlayerCoords,'p'},
-    {1,"",	M_CrispyToggleSecretmessage,'s'},
+    {3,"",	M_CrispyToggleExtAutomap,'e'},
+    {3,"",	M_CrispyToggleSmoothMap,'m'},
+    {3,"",	M_CrispyToggleAutomapstats,'s'},
+    {3,"",	M_CrispyToggleStatsFormat,'f'},
+    {3,"",	M_CrispyToggleLeveltime,'l'},
+    {3,"",	M_CrispyTogglePlayerCoords,'p'},
+    {3,"",	M_CrispyToggleSecretmessage,'s'},
     {-1,"",0,'\0'},
     {1,"",	M_CrispnessNext,'n'},
     {1,"",	M_CrispnessPrev,'p'},
@@ -545,7 +552,7 @@ static menu_t  Crispness2Def =
     &OptionsDef,
     Crispness2Menu,
     M_DrawCrispness2,
-    48,28,
+    48,18,
     1
 };
 
@@ -578,21 +585,21 @@ enum
 static menuitem_t Crispness3Menu[]=
 {
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleFreelook,'a'},
+    {3,"",	M_CrispyToggleFreelook,'a'},
 #ifndef __WIIU__
-    {1,"",	M_CrispyToggleMouseLook,'p'},
+    {3,"",	M_CrispyToggleMouseLook,'p'},
 #endif // !__WIIU__
-    {1,"",	M_CrispyToggleBobfactor,'p'},
-    {1,"",	M_CrispyToggleCenterweapon,'c'},
-    {1,"",	M_CrispyTogglePitch,'w'},
-    {1,"",	M_CrispyToggleNeghealth,'n'},
-    {1,"",	M_CrispyToggleDefaultSkill,'d'},
+    {3,"",	M_CrispyToggleBobfactor,'p'},
+    {3,"",	M_CrispyToggleCenterweapon,'c'},
+    {3,"",	M_CrispyTogglePitch,'w'},
+    {3,"",	M_CrispyToggleNeghealth,'n'},
+    {3,"",	M_CrispyToggleDefaultSkill,'d'},
     {-1,"",0,'\0'},
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleCrosshair,'d'},
-    {1,"",	M_CrispyToggleCrosshairtype,'c'},
-    {1,"",	M_CrispyToggleCrosshairHealth,'c'},
-    {1,"",	M_CrispyToggleCrosshairTarget,'h'},
+    {3,"",	M_CrispyToggleCrosshair,'d'},
+    {3,"",	M_CrispyToggleCrosshairtype,'c'},
+    {3,"",	M_CrispyToggleCrosshairHealth,'c'},
+    {3,"",	M_CrispyToggleCrosshairTarget,'h'},
     {-1,"",0,'\0'},
     {1,"",	M_CrispnessNext,'n'},
     {1,"",	M_CrispnessPrev,'p'},
@@ -604,7 +611,7 @@ static menu_t  Crispness3Def =
     &OptionsDef,
     Crispness3Menu,
     M_DrawCrispness3,
-    48,28,
+    48,18,
     1
 };
 
@@ -633,16 +640,16 @@ enum
 static menuitem_t Crispness4Menu[]=
 {
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleFreeaim,'v'},
-    {1,"",	M_CrispyToggleJumping,'a'},
-    {1,"",	M_CrispyToggleOverunder,'w'},
-    {1,"",	M_CrispyToggleBlockmapfix,'b'},
+    {3,"",	M_CrispyToggleFreeaim,'v'},
+    {3,"",	M_CrispyToggleJumping,'a'},
+    {3,"",	M_CrispyToggleOverunder,'w'},
+    {3,"",	M_CrispyToggleBlockmapfix,'w'},
     {-1,"",0,'\0'},
     {-1,"",0,'\0'},
-    {1,"",	M_CrispyToggleDemoTimer,'v'},
-    {1,"",	M_CrispyToggleDemoTimerDir,'a'},
-    {1,"",	M_CrispyToggleDemoBar,'w'},
-    {1,"",	M_CrispyToggleDemoUseTimer,'u'},
+    {3,"",	M_CrispyToggleDemoTimer,'v'},
+    {3,"",	M_CrispyToggleDemoTimerDir,'a'},
+    {3,"",	M_CrispyToggleDemoBar,'w'},
+    {3,"",	M_CrispyToggleDemoUseTimer,'u'},
     {-1,"",0,'\0'},
     {1,"",	M_CrispnessNext,'n'},
     {1,"",	M_CrispnessPrev,'p'},
@@ -654,7 +661,7 @@ static menu_t  Crispness4Def =
     &OptionsDef,
     Crispness4Menu,
     M_DrawCrispness4,
-    48,28,
+    48,18,
     1
 };
 
@@ -1476,7 +1483,7 @@ static void M_DrawCrispnessHeader(const char *item)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s", crstr[CR_GOLD], item);
-    M_WriteText(ORIGWIDTH/2 - M_StringWidth(item) / 2, 12, crispy_menu_text);
+    M_WriteText(ORIGWIDTH/2 - M_StringWidth(item) / 2, 6, crispy_menu_text);
 }
 
 static void M_DrawCrispnessSeparator(int y, const char *item)
@@ -1504,6 +1511,27 @@ static void M_DrawCrispnessMultiItem(int y, const char *item, multiitem_t *multi
     M_WriteText(currentMenu->x, currentMenu->y + CRISPY_LINEHEIGHT * y, crispy_menu_text);
 }
 
+static void M_DrawCrispnessNumericItem(int y, const char *item, int feat, const char *zero, boolean cond, const char *disabled)
+{
+    char number[NUMERIC_ENTRY_NUMDIGITS + 2];
+    const int size = NUMERIC_ENTRY_NUMDIGITS + 2;
+
+    if (numeric_enter)
+    {
+        M_snprintf(number, size, "%s_", numeric_entry_str);
+    }
+    else
+    {
+        M_snprintf(number, size, "%d", feat);
+    }
+
+    M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
+               "%s%s: %s%s", cond ? crstr[CR_NONE] : crstr[CR_DARK], item,
+               cond ? (feat || numeric_enter ? crstr[CR_GREEN] : crstr[CR_DARK]) : crstr[CR_DARK],
+               cond ? (feat || numeric_enter ? number : zero) : disabled);
+    M_WriteText(currentMenu->x, currentMenu->y + CRISPY_LINEHEIGHT * y, crispy_menu_text);
+}
+
 static void M_DrawCrispnessGoto(int y, const char *item)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
@@ -1521,17 +1549,18 @@ static void M_DrawCrispness1(void)
     M_DrawCrispnessItem(crispness_hires, "High Resolution Rendering", crispy->hires, true);
     M_DrawCrispnessMultiItem(crispness_widescreen, "Widescreen Aspect Ratio", multiitem_widescreen, crispy->widescreen, aspect_ratio_correct == 1);
     M_DrawCrispnessItem(crispness_uncapped, "Uncapped Framerate", crispy->uncapped, true);
+    M_DrawCrispnessNumericItem(crispness_fpslimit, "Framerate Limit", crispy->fpslimit, "None", crispy->uncapped, "35");
 #ifndef __WIIU__
     M_DrawCrispnessItem(crispness_vsync, "Enable VSync", crispy->vsync, !force_software_renderer);
 #endif // !__WIIU__
-    M_DrawCrispnessItem(crispness_smoothscaling, "Smooth Pixel Scaling", crispy->smoothscaling, true);
+    M_DrawCrispnessItem(crispness_smoothscaling, "Smooth Pixel Scaling", crispy->smoothscaling, !force_software_renderer);
 
     M_DrawCrispnessSeparator(crispness_sep_visual, "Visual");
     M_DrawCrispnessMultiItem(crispness_coloredhud, "Colorize HUD Elements", multiitem_coloredhud, crispy->coloredhud, true);
     M_DrawCrispnessMultiItem(crispness_translucency, "Enable Translucency", multiitem_translucency, crispy->translucency, true);
     M_DrawCrispnessItem(crispness_smoothlight, "Smooth Diminishing Lighting", crispy->smoothlight, true);
     M_DrawCrispnessMultiItem(crispness_brightmaps, "Apply Brightmaps to", multiitem_brightmaps, crispy->brightmaps, true);
-    M_DrawCrispnessItem(crispness_coloredblood, "Colored Blood", crispy->coloredblood, gameversion != exe_chex);
+    M_DrawCrispnessMultiItem(crispness_coloredblood, "Colored Blood", multiitem_coloredblood, crispy->coloredblood, gameversion != exe_chex);
     M_DrawCrispnessItem(crispness_flipcorpses, "Randomly Mirrored Corpses", crispy->flipcorpses, gameversion != exe_chex);
 
     M_DrawCrispnessGoto(crispness1_next, "Next Page >");
@@ -2290,6 +2319,7 @@ boolean M_Responder (event_t* ev)
     static  int     lasty = 0;
     static  int     mousex = 0;
     static  int     lastx = 0;
+    boolean mousextobutton = false;
 
     // In testcontrols mode, none of the function keys should do anything
     // - the only key is escape to quit.
@@ -2483,7 +2513,7 @@ boolean M_Responder (event_t* ev)
     }
     else
     {
-	if (ev->type == ev_mouse && mousewait < I_GetTime())
+	if (ev->type == ev_mouse && mousewait < I_GetTime() && menuactive)
 	{
 	    // [crispy] novert disables controlling the menus with the mouse
 	    if (!novert)
@@ -2509,12 +2539,14 @@ boolean M_Responder (event_t* ev)
 		key = key_menu_left;
 		mousewait = I_GetTime() + 5;
 		mousex = lastx -= 30;
+		mousextobutton = true;
 	    }
 	    else if (mousex > lastx+30)
 	    {
 		key = key_menu_right;
 		mousewait = I_GetTime() + 5;
 		mousex = lastx += 30;
+		mousextobutton = true;
 	    }
 		
 	    if (ev->data1&1)
@@ -2623,6 +2655,63 @@ boolean M_Responder (event_t* ev)
 	    break;
 	}
 	return true;
+    }
+
+    // [crispy] Enter numeric value
+    if (numeric_enter)
+    {
+        switch(key)
+        {
+            case KEY_BACKSPACE:
+                if (numeric_entry_index > 0)
+                {
+                    numeric_entry_index--;
+                    numeric_entry_str[numeric_entry_index] = '\0';
+                }
+                break;
+            case KEY_ESCAPE:
+                numeric_enter = false;
+                I_StopTextInput();
+                break;
+            case KEY_ENTER:
+                if (numeric_entry_str[0] != '\0')
+                {
+                    numeric_entry = atoi(numeric_entry_str);
+                    currentMenu->menuitems[itemOn].routine(2);
+                }
+                else
+                {
+                    numeric_enter = false;
+                    I_StopTextInput();
+                }
+                break;
+            default:
+                if (ev->type != ev_keydown)
+                {
+                    break;
+                }
+
+                if (vanilla_keyboard_mapping)
+                {
+                    ch = ev->data1;
+                }
+                else
+                {
+                    ch = ev->data3;
+                }
+
+                if (ch >= '0' && ch <= '9' &&
+                        numeric_entry_index < NUMERIC_ENTRY_NUMDIGITS)
+                {
+                    numeric_entry_str[numeric_entry_index++] = ch;
+                    numeric_entry_str[numeric_entry_index] = '\0';
+                }
+                else
+                {
+                    break;
+                }
+        }
+        return true;
     }
 
     // Take care of any messages that need input
@@ -2836,11 +2925,26 @@ boolean M_Responder (event_t* ev)
         // Slide slider left
 
 	if (currentMenu->menuitems[itemOn].routine &&
-	    currentMenu->menuitems[itemOn].status == 2)
+	    currentMenu->menuitems[itemOn].status)
 	{
-	    S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
-	    currentMenu->menuitems[itemOn].routine(0);
-	}
+            if (currentMenu->menuitems[itemOn].status == 2)
+            {
+                S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(0);
+            }
+            // [crispy] LR non-slider
+            else if (currentMenu->menuitems[itemOn].status == 3 && !mousextobutton)
+            {
+                S_StartSoundOptional(NULL, sfx_mnuact, sfx_pistol); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(0);
+            }
+            // [crispy] Numeric entry
+            else if (currentMenu->menuitems[itemOn].status == 4 && !mousextobutton)
+            {
+                S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(0);
+            }
+        }
 	return true;
     }
     else if (key == key_menu_right)
@@ -2848,11 +2952,26 @@ boolean M_Responder (event_t* ev)
         // Slide slider right
 
 	if (currentMenu->menuitems[itemOn].routine &&
-	    currentMenu->menuitems[itemOn].status == 2)
+	    currentMenu->menuitems[itemOn].status)
 	{
-	    S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
-	    currentMenu->menuitems[itemOn].routine(1);
-	}
+            if (currentMenu->menuitems[itemOn].status == 2)
+            {
+                S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(1);
+            }
+            // [crispy] LR non-slider
+            else if (currentMenu->menuitems[itemOn].status == 3 && !mousextobutton)
+            {
+                S_StartSoundOptional(NULL, sfx_mnuact, sfx_pistol); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(1);
+            }
+            // [crispy] Numeric entry
+            else if (currentMenu->menuitems[itemOn].status == 4 && !mousextobutton)
+            {
+                S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
+                currentMenu->menuitems[itemOn].routine(1);
+            }
+        }
 	return true;
     }
     else if (key == key_menu_forward)
@@ -2868,6 +2987,13 @@ boolean M_Responder (event_t* ev)
 		currentMenu->menuitems[itemOn].routine(1);      // right arrow
 		S_StartSoundOptional(NULL, sfx_mnusli, sfx_stnmov); // [NS] Optional menu sounds.
 	    }
+            else if (currentMenu->menuitems[itemOn].status == 4) // [crispy]
+            {
+                currentMenu->menuitems[itemOn].routine(2); // enter key
+                numeric_entry_index = 0;
+                numeric_entry_str[0] = '\0';
+                S_StartSoundOptional(NULL, sfx_mnuact, sfx_pistol);
+            }
 	    else
 	    {
 		currentMenu->menuitems[itemOn].routine(itemOn);

@@ -33,6 +33,7 @@
 #include "hu_lib.h"
 #include "m_controls.h"
 #include "m_misc.h"
+#include "m_menu.h"
 #include "w_wad.h"
 #include "m_argv.h" // [crispy] M_ParmExists()
 #include "st_stuff.h" // [crispy] ST_HEIGHT
@@ -112,11 +113,8 @@ static int		message_counter;
 static hu_stext_t	w_secret;
 static int		secret_counter;
 
-extern int		showMessages;
 
 static boolean		headsupactive = false;
-
-extern int		screenblocks; // [crispy]
 
 //
 // Builtin map names.
@@ -791,7 +789,7 @@ static void HU_DrawCrosshair (void)
 
     if (weaponinfo[plr->readyweapon].ammo == am_noammo ||
         plr->playerstate != PST_LIVE ||
-        automapactive ||
+        (automapactive && !crispy->automapoverlay) ||
         menuactive ||
         paused ||
         secret_on)
@@ -1019,6 +1017,8 @@ void HU_Ticker(void)
 
     } // else message_on = false;
 
+    w_kills.y = HU_MSGY + 1 * 8;
+
     // check for incoming chat characters
     if (netgame)
     {
@@ -1109,9 +1109,6 @@ void HU_Ticker(void)
     if ((crispy->automapstats & WIDGETS_ALWAYS) || (automapactive && crispy->automapstats == WIDGETS_AUTOMAP))
     {
 	crispy_statsline_func_t crispy_statsline = crispy_statslines[crispy->statsformat];
-
-	if (crispy->automapstats == WIDGETS_STBAR)
-	w_kills.y = HU_MSGY + 1 * 8;
 
 	crispy_statsline(str, sizeof(str), kills, plr->killcount, totalkills, extrakills);
 	HUlib_clearTextLine(&w_kills);
@@ -1287,12 +1284,12 @@ boolean HU_Responder(event_t *ev)
 	    message_counter = HU_MSGTIMEOUT;
 	    eatkey = true;
 	}
-	else if (netgame && ev->data2 == key_multi_msg)
+	else if (netgame && !demoplayback && ev->data2 == key_multi_msg)
 	{
 	    eatkey = true;
             StartChatInput(HU_BROADCAST);
 	}
-	else if (netgame && numplayers > 2)
+	else if (netgame && !demoplayback && numplayers > 2)
 	{
 	    for (i=0; i<MAXPLAYERS ; i++)
 	    {

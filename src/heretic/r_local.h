@@ -18,9 +18,11 @@
 #ifndef __R_LOCAL__
 #define __R_LOCAL__
 
+#include "doomdef.h"
 #include "i_video.h"
 #include "v_patch.h"
 
+#define PL_SKYFLAT (0x80000000)
 #define	ANGLETOSKYSHIFT		22      // sky map is 256*128*4 maps
 
 #define	BASEYCENTER			100
@@ -95,6 +97,12 @@ typedef struct
     int linecount;
     struct line_s **lines;      // [linecount] size
 
+    // [crispy] WiggleFix: [kb] for R_FixWiggle()
+    int cachedheight;
+    int scaleindex;
+
+    // [crispy] add support for MBF sky transfers
+    int		sky;
     // [AM] Previous position of floor and ceiling before
     //      think.  Used to interpolate between positions.
     fixed_t	oldfloorheight;
@@ -132,9 +140,10 @@ typedef struct line_s
 {
     vertex_t *v1, *v2;
     fixed_t dx, dy;             // v2 - v1 for side checking
-    short flags;
+    unsigned short flags; // [crispy] extended nodes
     short special, tag;
-    short sidenum[2];           // sidenum[1] will be -1 if one sided
+    // sidenum[1] will be NO_INDEX if one sided
+    unsigned short sidenum[2]; // [crispy] extended nodes
     fixed_t bbox[4];
     slopetype_t slopetype;      // to aid move clipping
     sector_t *frontsector, *backsector;
@@ -146,8 +155,8 @@ typedef struct line_s
 typedef struct subsector_s
 {
     sector_t *sector;
-    short numlines;
-    short firstline;
+    int numlines; // [crispy] extended nodes
+    int firstline; // [crispy] extended nodes
 } subsector_t;
 
 typedef struct
@@ -159,13 +168,17 @@ typedef struct
     line_t *linedef;
     sector_t *frontsector;
     sector_t *backsector;       // NULL for one sided lines
+
+    uint32_t length; // [crispy] fix long wall wobble
+    angle_t r_angle; // [crispy] recalculated angle used for rendering
 } seg_t;
 
 typedef struct
 {
     fixed_t x, y, dx, dy;       // partition line
     fixed_t bbox[2][4];         // bounding box for each child
-    unsigned short children[2]; // if NF_SUBSECTOR its a subsector
+    // if NF_SUBSECTOR its a subsector
+    int children[2]; // [crispy] extended nodes
 } node_t;
 
 
@@ -328,20 +341,28 @@ extern fixed_t viewcos, viewsin;
 
 extern int detailshift;         // 0 = high, 1 = low
 
+extern int detailLevel;
+extern int screenblocks;
+
 extern void (*colfunc) (void);
 extern void (*basecolfunc) (void);
 extern void (*tlcolfunc) (void);
 extern void (*spanfunc) (void);
 
+// [crispy] smooth texture scrolling
+extern void R_InterpolateTextureOffsets (void);
+
 int R_PointOnSide(fixed_t x, fixed_t y, node_t * node);
 int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t * line);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
+angle_t R_PointToAngleCrispy(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 fixed_t R_PointToDist(fixed_t x, fixed_t y);
 fixed_t R_ScaleFromGlobalAngle(angle_t visangle);
 angle_t R_InterpolateAngle(angle_t oangle, angle_t nangle, fixed_t scale);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 void R_AddPointToBox(int x, int y, fixed_t * box);
+void R_ExecuteSetViewSize(void);
 
 
 //
@@ -376,6 +397,8 @@ void R_RenderBSPNode(int bspnum);
 // R_segs.c
 //
 extern int rw_angle1;           // angle to line origin
+extern lighttable_t **walllights;
+
 
 void R_RenderMaskedSegRange(drawseg_t * ds, int x1, int x2);
 
@@ -429,6 +452,9 @@ extern int *texturetranslation; // for global animation
 
 extern int firstspritelump, lastspritelump, numspritelumps;
 
+extern int columnofs[MAXWIDTH];
+
+
 byte *R_GetColumn(int tex, int col);
 void R_InitData(void);
 void R_PrecacheLevel(void);
@@ -450,11 +476,12 @@ extern int screenheightarray[MAXWIDTH]; // [crispy] 32-bit integer math
 extern int *mfloorclip;   // [crispy] 32-bit integer math
 extern int *mceilingclip; // [crispy] 32-bit integer math
 extern fixed_t spryscale;
-extern fixed_t sprtopscreen;
+extern int64_t sprtopscreen; // [crispy] WiggleFix
 extern fixed_t sprbotscreen;
 
 extern fixed_t pspritescale, pspriteiscale;
 
+extern boolean pspr_interp; // [crispy] interpolate weapon bobbing
 
 void R_DrawMaskedColumn(column_t * column, signed int baseclip);
 
@@ -484,6 +511,7 @@ extern fixed_t dc_texturemid;
 extern int dc_texheight;
 extern byte *dc_source;         // first pixel in a column
 extern const byte *dc_brightmap;  // [crispy] brightmaps
+extern byte *ylookup[MAXHEIGHT];
 
 void R_DrawColumn(void);
 void R_DrawColumnLow(void);

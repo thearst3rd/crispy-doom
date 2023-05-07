@@ -151,8 +151,8 @@ boolean P_SetMobjStateNF(mobj_t * mobj, statenum_t state);
 void P_ThrustMobj(mobj_t * mo, angle_t angle, fixed_t move);
 int P_FaceMobj(mobj_t * source, mobj_t * target, angle_t * delta);
 boolean P_SeekerMissile(mobj_t * actor, angle_t thresh, angle_t turnMax);
-void P_MobjThinker(mobj_t * mobj);
-void P_BlasterMobjThinker(mobj_t * mobj);
+void P_MobjThinker(thinker_t *thinker);
+void P_BlasterMobjThinker(thinker_t *thinker);
 void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z);
 void P_SpawnBlood(fixed_t x, fixed_t y, fixed_t z, int damage);
 void P_BloodSplatter(fixed_t x, fixed_t y, fixed_t z, mobj_t * originator);
@@ -186,14 +186,31 @@ void P_NoiseAlert(mobj_t * target, mobj_t * emmiter);
 int P_Massacre(void);
 boolean A_RaiseMobj(mobj_t * actor);
 boolean A_SinkMobj(mobj_t * actor);
-void A_NoBlocking(mobj_t * actor);
+void A_NoBlocking(mobj_t *actor, player_t *player, pspdef_t *psp);
 boolean P_LookForMonsters(mobj_t * actor);
 void P_InitCreatureCorpseQueue(boolean corpseScan);
 void A_DeQueueCorpse(mobj_t * actor);
-void A_Explode(mobj_t *actor);
-void A_CHolyAttack3(mobj_t *actor);
-void A_FSwordAttack2(mobj_t *actor);
-void A_MStaffAttack2(mobj_t *actor);
+void A_Explode(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_CHolyAttack3(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_FSwordAttack2(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_MStaffAttack2(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_FreezeDeathChunks(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcBallOrbit(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcSpinBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SpeedBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SlowBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_StopBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_AccelBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_DecelBalls(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcBossAttack(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SpawnFizzle(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_CastSorcererSpell(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcUpdateBallAngle(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_BounceCheck(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcFX1Seek(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcOffense1(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_SorcOffense2(mobj_t *actor, player_t *player, pspdef_t *psp);
+void A_MinotaurLook(mobj_t *actor, player_t *player, pspdef_t *psp);
 
 
 // ***** P_MAPUTL *****
@@ -332,7 +349,7 @@ void AM_Drawer(void);
 boolean A_LocalQuake(byte * args, mobj_t * victim);
 void P_SpawnDirt(mobj_t * actor, fixed_t radius);
 void A_BridgeRemove(mobj_t * actor);
-void A_UnHideThing(mobj_t *actor);
+void A_UnHideThing(mobj_t *actor, player_t *player, pspdef_t *psp);
 
 
 // ***** SB_BAR *****
@@ -391,17 +408,18 @@ extern int po_NumPolyobjs;
 extern polyblock_t **PolyBlockMap;
 
 
-void T_PolyDoor(polydoor_t * pd);
-void T_RotatePoly(polyevent_t * pe);
+void T_PolyDoor(thinker_t *thinker);
+void T_RotatePoly(thinker_t *thinker);
 boolean EV_RotatePoly(line_t * line, byte * args, int direction, boolean
                       overRide);
-void T_MovePoly(polyevent_t * pe);
+void T_MovePoly(thinker_t *thinker);
 boolean EV_MovePoly(line_t * line, byte * args, boolean timesEight, boolean
                     overRide);
 boolean EV_OpenPolyDoor(line_t * line, byte * args, podoortype_t type);
 
-boolean PO_MovePolyobj(int num, int x, int y);
-boolean PO_RotatePolyobj(int num, angle_t angle);
+// [crispy] add interp parameter to allow suppression of interpolation
+boolean PO_MovePolyobj(int num, int x, int y, boolean interp);
+boolean PO_RotatePolyobj(int num, angle_t angle, boolean interp);
 void PO_Init(int lump);
 boolean PO_Busy(int polyobj);
 

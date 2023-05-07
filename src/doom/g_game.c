@@ -77,6 +77,8 @@
 #include "g_game.h"
 #include "v_trans.h" // [crispy] colored "always run" message
 
+#include "deh_main.h" // [crispy] for demo footer
+#include "memio.h"
 
 #define SAVEGAMESIZE	0x2c000
 
@@ -1349,7 +1351,6 @@ void G_Ticker (void)
              && turbodetected[i])
             {
                 static char turbomessage[80];
-                extern char *player_names[4];
                 M_snprintf(turbomessage, sizeof(turbomessage),
                            "%s is turbo!", player_names[i]);
                 players[consoleplayer].message = turbomessage;
@@ -1801,7 +1802,6 @@ static const int npars[9] =
 // G_DoCompleted 
 //
 boolean		secretexit; 
-extern char*	pagename; 
  
 void G_ExitLevel (void) 
 { 
@@ -2235,8 +2235,6 @@ void G_DoWorldDone (void)
 // G_InitFromSavegame
 // Can be called by the startup code or the menu task. 
 //
-extern boolean setsizeneeded;
-void R_ExecuteSetViewSize (void);
 
 
 void G_LoadGame (char* name) 
@@ -3242,6 +3240,143 @@ void G_TimeDemo (char* name)
     gameaction = ga_playdemo; 
 } 
  
+#define DEMO_FOOTER_SEPARATOR "\n"
+#define NUM_DEMO_FOOTER_LUMPS 4
+
+static size_t WriteCmdLineLump(MEMFILE *stream)
+{
+    int i;
+    long pos;
+    char *tmp, **filenames;
+
+    filenames = W_GetWADFileNames();
+
+    pos = mem_ftell(stream);
+
+    tmp = M_StringJoin("-iwad \"", M_BaseName(filenames[0]), "\"", NULL);
+    mem_fputs(tmp, stream);
+    free(tmp);
+
+    if (filenames[1])
+    {
+        mem_fputs(" -file", stream);
+
+        for (i = 1; filenames[i]; i++)
+        {
+            tmp = M_StringJoin(" \"", M_BaseName(filenames[i]), "\"", NULL);
+            mem_fputs(tmp, stream);
+            free(tmp);
+        }
+    }
+
+    filenames = DEH_GetFileNames();
+
+    if (filenames)
+    {
+        mem_fputs(" -deh", stream);
+
+        for (i = 0; filenames[i]; i++)
+        {
+            tmp = M_StringJoin(" \"", M_BaseName(filenames[i]), "\"", NULL);
+            mem_fputs(tmp, stream);
+            free(tmp);
+        }
+    }
+
+    switch (gameversion)
+    {
+        case exe_doom_1_2:
+            mem_fputs(" -complevel 0", stream);
+            break;
+        case exe_doom_1_666:
+            mem_fputs(" -complevel 1", stream);
+            break;
+        case exe_doom_1_9:
+            if (gamemode == commercial)
+            {
+                mem_fputs(" -complevel 2", stream);
+            }
+            else
+            {
+                mem_fputs(" -complevel 3", stream);
+            }
+            break;
+        case exe_final:
+            mem_fputs(" -complevel 4", stream);
+            break;
+        default:
+            break;
+    }
+
+    if (M_CheckParm("-solo-net"))
+    {
+        mem_fputs(" -solo-net", stream);
+    }
+
+    return mem_ftell(stream) - pos;
+}
+
+static void WriteFileInfo(const char *name, size_t size, MEMFILE *stream)
+{
+    filelump_t fileinfo = { 0 };
+    static long filepos = sizeof(wadinfo_t);
+
+    fileinfo.filepos = LONG(filepos);
+    fileinfo.size = LONG(size);
+
+    if (name)
+    {
+        size_t len = strnlen(name, 8);
+        if (len < 8)
+        {
+            len++;
+        }
+        memcpy(fileinfo.name, name, len);
+    }
+
+    mem_fwrite(&fileinfo, 1, sizeof(fileinfo), stream);
+
+    filepos += size;
+}
+
+static void G_AddDemoFooter(void)
+{
+    byte *data;
+    size_t size;
+
+    MEMFILE *stream = mem_fopen_write();
+
+    wadinfo_t header = { "PWAD" };
+    header.numlumps = LONG(NUM_DEMO_FOOTER_LUMPS);
+    mem_fwrite(&header, 1, sizeof(header), stream);
+
+    mem_fputs(PACKAGE_STRING, stream);
+    mem_fputs(DEMO_FOOTER_SEPARATOR, stream);
+    size = WriteCmdLineLump(stream);
+    mem_fputs(DEMO_FOOTER_SEPARATOR, stream);
+
+    header.infotableofs = LONG(mem_ftell(stream));
+    mem_fseek(stream, 0, MEM_SEEK_SET);
+    mem_fwrite(&header, 1, sizeof(header), stream);
+    mem_fseek(stream, 0, MEM_SEEK_END);
+
+    WriteFileInfo("PORTNAME", strlen(PACKAGE_STRING), stream);
+    WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), stream);
+    WriteFileInfo("CMDLINE", size, stream);
+    WriteFileInfo(NULL, strlen(DEMO_FOOTER_SEPARATOR), stream);
+
+    mem_get_buf(stream, (void **)&data, &size);
+
+    while (demo_p > demoend - size)
+    {
+        IncreaseDemoBuffer();
+    }
+
+    memcpy(demo_p, data, size);
+    demo_p += size;
+
+    mem_fclose(stream);
+}
  
 /* 
 =================== 
@@ -3330,18 +3465,23 @@ boolean G_CheckDemoStatus (void)
  
     if (demorecording) 
     { 
+	boolean success;
+	char *msg;
+
 	*demo_p++ = DEMOMARKER; 
-	M_WriteFile (demoname, demobuffer, demo_p - demobuffer); 
+	G_AddDemoFooter();
+	success = M_WriteFile (demoname, demobuffer, demo_p - demobuffer);
+	msg = success ? "Demo %s recorded%c" : "Failed to record Demo %s%c";
 	Z_Free (demobuffer); 
 	demorecording = false; 
 	// [crispy] if a new game is started during demo recording, start a new demo
 	if (gameaction != ga_newgame)
 	{
-	I_Error ("Demo %s recorded",demoname); 
+	    I_Error (msg, demoname, '\0');
 	}
 	else
 	{
-	    fprintf(stderr, "Demo %s recorded\n",demoname);
+	    fprintf(stderr, msg, demoname, '\n');
 	}
     } 
 	 

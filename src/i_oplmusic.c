@@ -1197,7 +1197,7 @@ static void ControllerEvent(opl_track_data_t *track, midi_event_t *event)
 
     switch (controller)
     {
-        case MIDI_CONTROLLER_MAIN_VOLUME:
+        case MIDI_CONTROLLER_VOLUME_MSB:
             SetChannelVolume(channel, param, true);
             break;
 
@@ -1605,13 +1605,6 @@ static void I_OPL_UnRegisterSong(void *handle)
     }
 }
 
-// Determine whether memory block is a .mid file
-
-static boolean IsMid(byte *mem, int len)
-{
-    return len > 4 && !memcmp(mem, "MThd", 4);
-}
-
 static boolean ConvertMus(byte *musdata, int len, char *filename)
 {
     MEMFILE *instream;
@@ -1772,13 +1765,13 @@ static boolean I_OPL_InitMusic(void)
     return true;
 }
 
-static snddevice_t music_opl_devices[] =
+const static snddevice_t music_opl_devices[] =
 {
     SNDDEVICE_ADLIB,
     SNDDEVICE_SB,
 };
 
-music_module_t music_opl_module =
+const music_module_t music_opl_module =
 {
     music_opl_devices,
     arrlen(music_opl_devices),

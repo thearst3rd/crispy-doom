@@ -28,6 +28,7 @@ typedef struct
 
 extern multiitem_t multiitem_bobfactor[NUM_BOBFACTORS];
 extern multiitem_t multiitem_brightmaps[NUM_BRIGHTMAPS];
+extern multiitem_t multiitem_coloredblood[NUM_COLOREDBLOOD];
 extern multiitem_t multiitem_centerweapon[NUM_CENTERWEAPON];
 extern multiitem_t multiitem_coloredhud[NUM_COLOREDHUD];
 extern multiitem_t multiitem_crosshair[NUM_CROSSHAIRS];
@@ -65,6 +66,7 @@ extern void M_CrispyToggleFlipcorpses(int choice);
 extern void M_CrispyToggleFreeaim(int choice);
 extern void M_CrispyToggleFreelook(int choice);
 extern void M_CrispyToggleFullsounds(int choice);
+extern void M_CrispyToggleFpsLimit(int choice);
 extern void M_CrispyToggleHires(int choice);
 extern void M_CrispyToggleJumping(int choice);
 extern void M_CrispyToggleLeveltime(int choice);

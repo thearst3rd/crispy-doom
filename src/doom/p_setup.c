@@ -257,7 +257,7 @@ void P_LoadSegs (int lump)
                 if (li->sidedef->midtexture)
                 {
                     li->backsector = 0;
-                    fprintf(stderr, "P_LoadSegs: Linedef %d has two-sided flag set, but no second sidedef\n", i);
+                    fprintf(stderr, "P_LoadSegs: Linedef %d has two-sided flag set, but no second sidedef\n", linedef);
                 }
                 else
                 li->backsector = GetSectorAtNullAddress();
@@ -462,12 +462,12 @@ void P_LoadNodes (int lump)
 
 	    // [crispy] add support for extended nodes
 	    // from prboom-plus/src/p_setup.c:937-957
-	    if (no->children[j] == 0xFFFF)
+	    if (no->children[j] == NO_INDEX)
 		no->children[j] = -1;
 	    else
-	    if (no->children[j] & 0x8000)
+	    if (no->children[j] & NF_SUBSECTOR_VANILLA)
 	    {
-		no->children[j] &= ~0x8000;
+		no->children[j] &= ~NF_SUBSECTOR_VANILLA;
 
 		if (no->children[j] >= numsubsectors)
 		    no->children[j] = 0;

@@ -41,7 +41,7 @@
 
 
 #define MINZ				(FRACUNIT*4)
-#define BASEYCENTER			100
+#define BASEYCENTER			(ORIGHEIGHT/2)
 
 //void R_DrawColumn (void);
 //void R_DrawFuzzColumn (void);
@@ -75,8 +75,8 @@ lighttable_t**	spritelights;
 
 // constant arrays
 //  used for psprite clipping and initializing clipping
-short		negonearray[MAXWIDTH];
-short		screenheightarray[MAXWIDTH];
+int		negonearray[MAXWIDTH]; // [crispy] 32-bit integer math
+int		screenheightarray[MAXWIDTH]; // [crispy] 32-bit integer math
 
 
 //
@@ -338,11 +338,11 @@ vissprite_t* R_NewVisSprite (void)
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-short*		mfloorclip;
-short*		mceilingclip;
+int*		mfloorclip; // [crispy] 32-bit integer math
+int*		mceilingclip; // [crispy] 32-bit integer math
 
 fixed_t		spryscale;
-fixed_t		sprtopscreen;
+int64_t		sprtopscreen; // [crispy] WiggleFix
 
 //
 // R_DrawMaskedColumn
@@ -351,11 +351,12 @@ fixed_t		sprtopscreen;
 //
 void R_DrawMaskedColumn (column_t *column, int baseclip)
 {
-    int		topscreen;
-    int 	bottomscreen;
+    int64_t	topscreen; // [crispy] WiggleFix
+    int64_t 	bottomscreen; // [crispy] WiggleFix
     fixed_t	basetexturemid;
 
     basetexturemid = dc_texturemid;
+    dc_texheight = 0; // [crispy] Tutti-Frutti fix
 
     for ( ; column->topdelta != 0xff ; ) 
     {
@@ -364,8 +365,8 @@ void R_DrawMaskedColumn (column_t *column, int baseclip)
         topscreen = sprtopscreen + spryscale*column->topdelta;
         bottomscreen = topscreen + spryscale*column->length;
 
-        dc_yl = (topscreen+FRACUNIT-1)>>FRACBITS;
-        dc_yh = (bottomscreen-1)>>FRACBITS;
+        dc_yl = (int)((topscreen+FRACUNIT-1)>>FRACBITS); // [crispy] WiggleFix
+        dc_yh = (int)((bottomscreen-1)>>FRACBITS); // [crispy] WiggleFix
 
         if (dc_yh >= mfloorclip[dc_x])
             dc_yh = mfloorclip[dc_x]-1;
@@ -528,9 +529,30 @@ void R_ProjectSprite (mobj_t* thing)
     angle_t		ang;
     fixed_t		iscale;
     
+    fixed_t             interpx;
+    fixed_t             interpy;
+    fixed_t             interpz;
+    fixed_t             interpangle;
+
+    // [AM] Interpolate between current and last position, if prudent.
+    if (crispy->uncapped && thing->interp == true && leveltime > oldleveltime)
+    {
+        interpx = thing->oldx + FixedMul(thing->x - thing->oldx, fractionaltic);
+        interpy = thing->oldy + FixedMul(thing->y - thing->oldy, fractionaltic);
+        interpz = thing->oldz + FixedMul(thing->z - thing->oldz, fractionaltic);
+        interpangle = R_InterpolateAngle(thing->oldangle, thing->angle, fractionaltic);
+    }
+    else
+    {
+        interpx = thing->x;
+        interpy = thing->y;
+        interpz = thing->z;
+        interpangle = thing->angle;
+    }
+
     // transform the origin point
-    tr_x = thing->x - viewx;
-    tr_y = thing->y - viewy;
+    tr_x = interpx - viewx;
+    tr_y = interpy - viewy;
 	
     gxt = FixedMul(tr_x,viewcos); 
     gyt = -FixedMul(tr_y,viewsin);
@@ -568,8 +590,8 @@ void R_ProjectSprite (mobj_t* thing)
     if (sprframe->rotate)
     {
 	// choose a different rotation based on player view
-	ang = R_PointToAngle (thing->x, thing->y);
-	rot = (ang-thing->angle+(unsigned)(ANG45/2)*9)>>29;
+	ang = R_PointToAngle (interpx, interpy);
+	rot = (ang-interpangle+(unsigned)(ANG45/2)*9)>>29;
 	lump = sprframe->lump[rot];
 	flip = (boolean)sprframe->flip[rot];
     }
@@ -599,9 +621,9 @@ void R_ProjectSprite (mobj_t* thing)
     vis = R_NewVisSprite ();
     vis->mobjflags = thing->flags;
     vis->scale = xscale<<detailshift;
-    vis->gx = thing->x;
-    vis->gy = thing->y;
-    vis->gz = thing->z;
+    vis->gx = interpx;
+    vis->gy = interpy;
+    vis->gz = interpz;
 
     // villsa [STRIFE]
     if(thing->flags & MF_FEETCLIPPED)
@@ -682,7 +704,7 @@ void R_AddSprites (sector_t* sec)
     // Well, now it will be done.
     sec->validcount = validcount;
 	
-    lightnum = (sec->lightlevel >> LIGHTSEGSHIFT)+extralight;
+    lightnum = (sec->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT); // [crispy] smooth diminishing lighting
 
     if (lightnum < 0)		
 	spritelights = scalelight[0];
@@ -700,7 +722,10 @@ void R_AddSprites (sector_t* sec)
 //
 // R_DrawPSprite
 //
-void R_DrawPSprite (pspdef_t* psp)
+
+boolean pspr_interp = true; // [crispy] interpolate weapon bobbing
+
+void R_DrawPSprite (pspdef_t* psp, psprnum_t psprnum) // [crispy] read psprnum
 {
     fixed_t		tx;
     int			x1;
@@ -732,7 +757,7 @@ void R_DrawPSprite (pspdef_t* psp)
     flip = flipparm;
     
     // calculate edges of the shape
-    tx = psp->sx-160*FRACUNIT;
+    tx = psp->sx2-(ORIGWIDTH/2)*FRACUNIT;
 
     tx -= spriteoffset[lump];	
     x1 = (centerxfrac + FixedMul (tx,pspritescale) ) >>FRACBITS;
@@ -767,8 +792,9 @@ void R_DrawPSprite (pspdef_t* psp)
     }
 
     // villsa [STRIFE] calculate y offset with view pitch
-    vis->texturemid = ((BASEYCENTER<<FRACBITS)/*+FRACUNIT/2*/)-(psp->sy-spritetopoffset[lump])
-        + FixedMul(vis->xiscale, (centery-viewheight/2)<<FRACBITS);
+    // [crispy] weapons drawn 1 pixel too high when player is idle; moved free
+    // look to end of function after interpolation
+    vis->texturemid = ((BASEYCENTER<<FRACBITS)+FRACUNIT/4)-(psp->sy2-spritetopoffset[lump]);
 
     if (vis->x1 > x1)
         vis->startfrac += vis->xiscale*(vis->x1-x1);
@@ -812,6 +838,44 @@ void R_DrawPSprite (pspdef_t* psp)
         vis->colormap = colormaps + INVERSECOLORMAP * 256 * sizeof(lighttable_t);
     }
 
+    // [crispy] interpolate weapon bobbing; don't interpolate targeter
+    if (crispy->uncapped && psprnum < ps_targcenter)
+    {
+        static int     oldx1, x1_saved;
+        static fixed_t oldtexturemid, texturemid_saved;
+        static int     oldlump = -1;
+        static int     oldgametic = -1;
+
+        if (oldgametic < gametic)
+        {
+            oldx1 = x1_saved;
+            oldtexturemid = texturemid_saved;
+            oldgametic = gametic;
+        }
+
+        x1_saved = vis->x1;
+        texturemid_saved = vis->texturemid;
+
+        if (lump == oldlump && pspr_interp)
+        {
+            int deltax = vis->x2 - vis->x1;
+            vis->x1 = oldx1 + FixedMul(vis->x1 - oldx1, fractionaltic);
+            vis->x2 = vis->x1 + deltax;
+            vis->x2 = vis->x2 >= viewwidth ? viewwidth - 1 : vis->x2;
+            vis->texturemid = oldtexturemid + FixedMul(vis->texturemid - oldtexturemid, fractionaltic);
+        }
+        else
+        {
+            oldx1 = vis->x1;
+            oldtexturemid = vis->texturemid;
+            oldlump = lump;
+            pspr_interp = true;
+        }
+    }
+
+    // [crispy] free look
+    vis->texturemid += FixedMul(vis->xiscale, (centery - viewheight / 2) << FRACBITS);
+
     R_DrawVisSprite (vis, vis->x1, vis->x2);
 }
 
@@ -829,7 +893,7 @@ void R_DrawPlayerSprites (void)
     // get light level
     lightnum =
 	(viewplayer->mo->subsector->sector->lightlevel >> LIGHTSEGSHIFT) 
-	+extralight;
+	+(extralight * LIGHTBRIGHT); // [crispy] smooth diminishing lighting
 
     if (lightnum < 0)		
 	spritelights = scalelight[0];
@@ -848,7 +912,7 @@ void R_DrawPlayerSprites (void)
 	 i++,psp++)
     {
 	if (psp->state)
-	    R_DrawPSprite (psp);
+	    R_DrawPSprite (psp, i); // [crispy] pass psprnum
     }
 }
 
@@ -920,8 +984,8 @@ void R_SortVisSprites (void)
 void R_DrawSprite (vissprite_t* spr)
 {
     drawseg_t*		ds;
-    short		clipbot[MAXWIDTH];
-    short		cliptop[MAXWIDTH];
+    int		clipbot[MAXWIDTH]; // [crispy] 32-bit integer math
+    int		cliptop[MAXWIDTH]; // [crispy] 32-bit integer math
     int			x;
     int			r1;
     int			r2;
@@ -1057,6 +1121,10 @@ void R_DrawMasked (void)
 	if (ds->maskedtexturecol)
 	    R_RenderMaskedSegRange (ds, ds->x1, ds->x2);
     
+    // [crispy] don't draw player sprites for a fullscreen clean screenshot
+    if (crispy->cleanscreenshot == 2)
+        return;
+
     // draw the psprites on top of everything
     //  but does not draw on side views
     if (!viewangleoffset)		

@@ -896,7 +896,7 @@ void I_FinishUpdate (void)
 
     SDL_RenderClear(renderer);
 
-    if (crispy->smoothscaling)
+    if (crispy->smoothscaling && !force_software_renderer)
     {
     // Render this intermediate texture into the upscaled texture
     // using "nearest" integer scaling.
@@ -927,10 +927,37 @@ void I_FinishUpdate (void)
 
     SDL_RenderPresent(renderer);
 
-    // [AM] Figure out how far into the current tic we're in as a fixed_t.
-    if (crispy->uncapped)
+    if (crispy->uncapped && !singletics)
     {
-	fractionaltic = I_GetFracRealTime();
+        // Limit framerate
+        if (crispy->fpslimit >= TICRATE)
+        {
+            uint64_t target_time = 1000000ull / crispy->fpslimit;
+            static uint64_t start_time;
+
+            while (1)
+            {
+                uint64_t current_time = I_GetTimeUS();
+                uint64_t elapsed_time = current_time - start_time;
+                uint64_t remaining_time = 0;
+
+                if (elapsed_time >= target_time)
+                {
+                    start_time = current_time;
+                    break;
+                }
+
+                remaining_time = target_time - elapsed_time;
+
+                if (remaining_time > 1000)
+                {
+                    I_Sleep((remaining_time - 1000) / 1000);
+                }
+            }
+        }
+
+        // [AM] Figure out how far into the current tic we're in as a fixed_t.
+        fractionaltic = I_GetFracRealTime();
     }
 
     // Restore background and undo the disk indicator, if it was drawn.
@@ -1107,8 +1134,8 @@ void I_InitWindowIcon(void)
 
     surface = SDL_CreateRGBSurfaceFrom((void *) icon_data, icon_w, icon_h,
                                        32, icon_w * 4,
-                                       0xff << 24, 0xff << 16,
-                                       0xff << 8, 0xff << 0);
+                                       0xffu << 24, 0xffu << 16,
+                                       0xffu << 8, 0xffu << 0);
 
     SDL_SetWindowIcon(screen, surface);
     SDL_FreeSurface(surface);
@@ -1228,6 +1255,24 @@ void I_GraphicsCheckCommandLine(void)
             window_width = w;
             window_height = h;
             fullscreen = false;
+        }
+    }
+
+    //!
+    // @category video
+    // @arg <x>
+    //
+    // Specify the display number on which to show the screen.
+    //
+
+    i = M_CheckParmWithArgs("-display", 1);
+
+    if (i > 0)
+    {
+        int display = atoi(myargv[i + 1]);
+        if (display >= 0)
+        {
+            video_display = display;
         }
     }
 
@@ -1453,10 +1498,10 @@ static void SetVideoMode(void)
     // Turn on vsync if we aren't in a -timedemo
     if (!singletics && mode.refresh_rate > 0)
     {
-      if (crispy->vsync) // [crispy] uncapped vsync
-      {
-        renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
-      }
+        if (crispy->vsync) // [crispy] uncapped vsync
+        {
+            renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+        }
     }
 
     if (force_software_renderer)
@@ -1661,6 +1706,16 @@ void I_GetScreenDimensions (void)
 	}
 
 	WIDESCREENDELTA = ((SCREENWIDTH - NONWIDEWIDTH) >> crispy->hires) / 2;
+}
+
+// [crispy] calls native SDL vsync toggle
+void I_ToggleVsync (void)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+    SDL_RenderSetVSync(renderer, crispy->vsync);
+#else
+    I_ReInitGraphics(REINIT_RENDERER | REINIT_TEXTURES | REINIT_ASPECTRATIO);
+#endif
 }
 
 void I_InitGraphics(void)

@@ -248,10 +248,6 @@ fixed_t xspeed[8] =
 fixed_t yspeed[8] =
     { 0, 47000, FRACUNIT, 47000, 0, -47000, -FRACUNIT, -47000 };
 
-#define	MAXSPECIALCROSS		8
-extern line_t **spechit; // [crispy] remove SPECHIT limit
-extern int numspechit;
-
 boolean P_Move(mobj_t * actor)
 {
     fixed_t tryx, tryy;
@@ -711,7 +707,7 @@ void A_Chase(mobj_t *actor, player_t *player, pspdef_t *psp)
 //
     if (actor->movedir < 8)
     {
-        actor->angle &= (7 << 29);
+        actor->angle &= (7u << 29);
         delta = actor->angle - (actor->movedir << 29);
         if (delta > 0)
         {

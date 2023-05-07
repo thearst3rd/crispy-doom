@@ -1,5 +1,7 @@
 //
-// Copyright(C) 2021 Roman Fomin
+// Copyright(C) 1993-1996 Id Software, Inc.
+// Copyright(C) 2000, 2005-2014 Simon Howard
+// Copyright(C) 2019 Fabian Greffrath
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -12,26 +14,15 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//      Windows native MIDI
+//	[crispy] add support for SMMU swirling flats
+//
 
-#ifndef __I_WINMUSIC__
-#define __I_WINMUSIC__
-
-#ifdef _WIN32
+#ifndef __R_SWIRL__
+#define __R_SWIRL__
 
 #include "doomtype.h"
 
-boolean I_WIN_InitMusic(void);
-void I_WIN_PlaySong(boolean looping);
-void I_WIN_PauseSong(void);
-void I_WIN_ResumeSong(void);
-void I_WIN_StopSong(void);
-void I_WIN_SetMusicVolume(int volume);
-boolean I_WIN_RegisterSong(char* filename);
-void I_WIN_UnRegisterSong(void);
-void I_WIN_ShutdownMusic(void);
+void R_InitDistortedFlats();
+byte *R_DistortedFlat(int flatnum);
 
-
-#endif // _WIN32
-
-#endif // __I_WINMUSIC__
+#endif

@@ -925,6 +925,8 @@ void P_SpawnPlayer (mapthing_t* mthing)
     // [crispy] weapon sound source
     p->so = Crispy_PlayerSO(mthing->type-1);
 
+    pspr_interp = false; // interpolate weapon bobbing
+
     // setup gun psprite
     P_SetupPsprites (p);
     
@@ -1071,6 +1073,9 @@ void P_SpawnMapThing (mapthing_t* mthing)
     {
 	mobj->health = 1000 + musid;
     }
+    // [crispy] Lost Souls bleed Puffs
+    if (crispy->coloredblood == COLOREDBLOOD_ALL && i == MT_SKULL)
+        mobj->flags |= MF_NOBLOOD;
 
     // [crispy] blinking key or skull in the status bar
     if (mobj->sprite == SPR_BSKU)
@@ -1093,7 +1098,6 @@ void P_SpawnMapThing (mapthing_t* mthing)
 //
 // P_SpawnPuff
 //
-extern fixed_t attackrange;
 
 void
 P_SpawnPuff
@@ -1157,6 +1161,10 @@ P_SpawnBlood
 
     // [crispy] connect blood object with the monster that bleeds it
     th->target = target;
+
+    // [crispy] Spectres bleed spectre blood
+    if (crispy->coloredblood == COLOREDBLOOD_ALL)
+        th->flags |= (target->flags & MF_SHADOW);
 }
 
 
