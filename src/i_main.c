@@ -33,6 +33,9 @@
 
 #ifdef __WIIU__
 #include <whb/proc.h>
+#include <sysapp/launch.h>
+#include <coreinit/screen.h>
+#include <sndcore2/core.h>
 #include "wiiu_launcher.h"
 #include "wiiu_controller.h"
 #endif // __WIIU__
@@ -61,7 +64,22 @@ int main(int argc, char **argv)
 #ifdef __WIIU__
     WHBProcInit();
     WiiU_InitJoystick();
+    AXInit(); // Kill sounds
     launcherRun();
+
+    extern int launcherRunning;
+    if (launcherRunning < 0)
+    {
+        SYSLaunchMenu();
+        while (WHBProcIsRunning()) {
+            // wait...
+        }
+        OSScreenShutdown();
+        WiiU_ShutdownJoystick();
+        AXQuit();
+        WHBProcShutdown();
+        return 0;
+    }
 #endif // __WIIU__
 
     //!

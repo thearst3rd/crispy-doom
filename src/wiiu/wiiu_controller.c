@@ -113,7 +113,8 @@ void WiiU_InitJoystick()
 
 void WiiU_ShutdownJoystick()
 {
-    // Anything to do here?
+    KPADShutdown();
+    VPADShutdown();
 }
 
 static void read_vpad()
@@ -186,8 +187,8 @@ static void read_wpad_chan(WPADChan chan)
                 buttonsPressed |= (1 << i);
         }
 
-        stickX += status.nunchuck.stick.x * 0x7ff0;
-        stickY -= status.nunchuck.stick.y * 0x7ff0;
+        stickX += status.nunchuk.stick.x * 0x7ff0;
+        stickY -= status.nunchuk.stick.y * 0x7ff0;
         // no rStick...
     }
     else if (status.extensionType == WPAD_EXT_CLASSIC || status.extensionType == WPAD_EXT_MPLUS_CLASSIC)

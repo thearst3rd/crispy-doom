@@ -59,6 +59,7 @@
 #include <whb/proc.h>
 #include <whb/log.h>
 #include <whb/log_console.h>
+#include <sysapp/launch.h>
 #endif // __WIIU__
 
 
@@ -253,7 +254,16 @@ void I_BindVariables(void)
 // I_Quit
 //
 
+#ifdef __WIIU__
 void I_Quit (void)
+{
+    SYSLaunchMenu();
+}
+
+void I_Quit_Real (void)
+#else
+void I_Quit (void)
+#endif
 {
     atexit_listentry_t *entry;
 
@@ -270,15 +280,17 @@ void I_Quit (void)
     SDL_Quit();
 
 #ifdef __WIIU__
-    WHBProcShutdown();
     for (int i = 0; i < myargc; i++)
     {
         free(myargv[i]);
     }
     free(myargv);
+    WHBProcShutdown();
 #endif
 
+#ifndef __WIIU__
     exit(0);
+#endif
 }
 
 
