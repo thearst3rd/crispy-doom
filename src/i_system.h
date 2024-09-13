@@ -50,7 +50,12 @@ ticcmd_t* I_BaseTiccmd (void);
 
 // Called by M_Responder when quit is selected.
 // Clean exit, displays sell blurb.
+#ifdef __WIIU__
+void I_Quit (void);
+void I_Quit_Real (void);
+#else
 void I_Quit (void) NORETURN;
+#endif
 
 void I_Error (const char *error, ...) NORETURN PRINTF_ATTR(1, 2);
 

@@ -29,6 +29,8 @@
 #include <coreinit/screen.h>
 #include <coreinit/cache.h>
 #include <whb/proc.h>
+#include <sysapp/launch.h>
+#include <gx2/state.h>
 
 #include "config.h"
 
@@ -118,7 +120,7 @@ void launcherRun()
 
     if (!tvBuffer || !drcBuffer)
     {
-        GX2Init(NULL);
+        OSScreenShutdown();
         if (tvBuffer)
             free(tvBuffer);
         if (drcBuffer) // shouldn't happen?
@@ -167,7 +169,7 @@ void launcherRun()
         free(tvBuffer);
     if (drcBuffer)
         free(drcBuffer);
-    GX2Init(NULL);
+    //GX2Init(NULL);
 
     if (launcherRunning >= 0)
     {
@@ -177,12 +179,6 @@ void launcherRun()
     // Cleanup launcher states
     launcherMainCleanup();
     launcherNoWadsCleanup();
-
-    if (launcherRunning < 0)
-    {
-        WHBProcShutdown();
-        exit(0);
-    }
 }
 
 #endif // __WIIU__

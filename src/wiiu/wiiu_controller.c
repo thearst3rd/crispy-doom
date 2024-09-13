@@ -113,7 +113,8 @@ void WiiU_InitJoystick()
 
 void WiiU_ShutdownJoystick()
 {
-    // Anything to do here?
+    KPADShutdown();
+    VPADShutdown();
 }
 
 static void read_vpad()
